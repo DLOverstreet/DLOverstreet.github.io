@@ -340,12 +340,12 @@
                 <div class="logo">Dallin Overstreet</div>
                 <nav>
                     <ul>
-                        <li><a href="#" onclick="showPage('home')" class="nav-link active">Home</a></li>
-                        <li><a href="#" onclick="showPage('immigration')" class="nav-link">Immigration Stories</a></li>
-                        <li><a href="#" onclick="showPage('research')" class="nav-link">Research</a></li>
-                        <li><a href="#" onclick="showPage('applications')" class="nav-link">R Shiny Apps</a></li>
-                        <li><a href="#" onclick="showPage('blog')" class="nav-link">Blog</a></li>
-                        <li><a href="#" onclick="showPage('about')" class="nav-link">About</a></li>
+                        <li><a href="#home" class="nav-link active">Home</a></li>
+                        <li><a href="#immigration" class="nav-link">Immigration Stories</a></li>
+                        <li><a href="#research" class="nav-link">Research</a></li>
+                        <li><a href="#applications" class="nav-link">R Shiny Apps</a></li>
+                        <li><a href="#blog" class="nav-link">Blog</a></li>
+                        <li><a href="#about" class="nav-link">About</a></li>
                     </ul>
                 </nav>
             </div>
@@ -614,8 +614,8 @@
             // Show selected page
             document.getElementById(pageId).classList.add('active');
             
-            // Add active class to clicked nav link
-            event.target.classList.add('active');
+            // Add active class to corresponding nav link
+            document.querySelectorAll(`nav a[href="#${pageId}"]`).forEach(link => link.classList.add('active'));
             
             // Load blog posts when blog page is shown
             if (pageId === 'blog') {
@@ -625,6 +625,18 @@
             // Scroll to top
             window.scrollTo(0, 0);
         }
+
+        function handleHashChange() {
+            const hash = window.location.hash.substring(1);
+            const validPage = document.getElementById(hash);
+            if (validPage) {
+                showPage(hash);
+            } else {
+                showPage('home');
+            }
+        }
+
+        window.addEventListener('hashchange', handleHashChange);
 
         async function loadBlogPosts() {
             const blogContainer = document.getElementById('blog-posts');
@@ -669,10 +681,10 @@
             }
         }
 
-        // Add smooth scrolling and animations
+        // Initialize page based on hash or default to home
         document.addEventListener('DOMContentLoaded', function() {
-            // Simple fade in
             document.body.style.opacity = '1';
+            handleHashChange();  // ensure correct page is shown on load
         });
     </script>
 </body>
