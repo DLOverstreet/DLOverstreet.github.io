@@ -15,7 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
             color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f8f9fa;
             min-height: 100vh;
         }
 
@@ -23,18 +23,18 @@
             max-width: 1200px;
             margin: 0 auto;
             background: white;
-            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
             min-height: 100vh;
         }
 
         header {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: #2c3e50;
             color: white;
             padding: 1rem 0;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .header-content {
@@ -49,10 +49,7 @@
         .logo {
             font-size: 1.8rem;
             font-weight: bold;
-            background: linear-gradient(45deg, #fff, #ecf0f1);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: white;
         }
 
         nav ul {
@@ -65,15 +62,13 @@
             color: white;
             text-decoration: none;
             padding: 0.5rem 1rem;
-            border-radius: 25px;
+            border-radius: 5px;
             transition: all 0.3s ease;
             font-weight: 500;
         }
 
         nav a:hover, nav a.active {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            transform: translateY(-2px);
+            background: rgba(255,255,255,0.15);
         }
 
         .page {
@@ -94,60 +89,53 @@
 
         .hero {
             text-align: center;
-            padding: 4rem 0;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 3rem 0;
+            background: #f8f9fa;
             margin: -3rem -2rem 3rem -2rem;
-            border-radius: 0 0 30px 30px;
+            border-bottom: 1px solid #e9ecef;
         }
 
         .hero h1 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #2c3e50;
         }
 
         .hero p {
-            font-size: 1.3rem;
-            color: #555;
+            font-size: 1.2rem;
+            color: #6c757d;
             max-width: 600px;
-            margin: 0 auto 2rem;
+            margin: 0 auto;
         }
 
         .substack-feature {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #2c3e50;
             color: white;
             padding: 2rem;
-            border-radius: 15px;
+            border-radius: 5px;
             margin: 2rem 0;
             text-align: center;
-            transform: perspective(1000px) rotateX(5deg);
-            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
         }
 
         .substack-feature h3 {
-            font-size: 2rem;
+            font-size: 1.5rem;
             margin-bottom: 1rem;
         }
 
         .cta-button {
             display: inline-block;
             background: white;
-            color: #667eea;
-            padding: 1rem 2rem;
-            border-radius: 50px;
+            color: #2c3e50;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 500;
             margin-top: 1rem;
             transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: #f8f9fa;
         }
 
         .grid {
@@ -159,81 +147,84 @@
 
         .card {
             background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
-            border: 1px solid #eee;
+            border: 1px solid #e9ecef;
+            margin-bottom: 1.5rem;
         }
 
         .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
         .card h3 {
             color: #2c3e50;
             margin-bottom: 1rem;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
         }
 
         .publications {
             background: #f8f9fa;
             padding: 2rem;
-            border-radius: 15px;
+            border-radius: 5px;
             margin: 2rem 0;
+            border: 1px solid #e9ecef;
         }
 
         .publication-item {
             background: white;
-            padding: 1.5rem;
+            padding: 1.2rem;
             margin: 1rem 0;
-            border-radius: 10px;
-            border-left: 4px solid #3498db;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            border-radius: 5px;
+            border-left: 3px solid #2c3e50;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
         }
 
         .publication-item h4 {
             color: #2c3e50;
             margin-bottom: 0.5rem;
+            font-size: 1.1rem;
         }
 
         .publication-item p {
-            color: #666;
+            color: #6c757d;
             font-style: italic;
+            font-size: 0.95rem;
         }
 
         .app-showcase {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
+            gap: 1.5rem;
             margin: 2rem 0;
         }
 
         .app-card {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #2c3e50;
             color: white;
-            padding: 2rem;
-            border-radius: 15px;
+            padding: 1.5rem;
+            border-radius: 5px;
             text-align: center;
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
             transition: all 0.3s ease;
         }
 
         .app-card:hover {
-            transform: translateY(-5px) scale(1.02);
+            background: #34495e;
         }
 
         .app-card h3 {
             margin-bottom: 1rem;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
         }
 
         .blog-feed {
             background: #f8f9fa;
             padding: 2rem;
-            border-radius: 15px;
+            border-radius: 5px;
             text-align: center;
+            border: 1px solid #e9ecef;
         }
 
         .blog-feed h2 {
@@ -250,26 +241,58 @@
 
         .social-link {
             display: inline-block;
-            padding: 1rem;
-            background: #3498db;
+            padding: 0.8rem;
+            background: #2c3e50;
             color: white;
-            border-radius: 50%;
+            border-radius: 5px;
             text-decoration: none;
             transition: all 0.3s ease;
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .social-link:hover {
-            background: #2980b9;
-            transform: translateY(-3px);
+            background: #34495e;
         }
 
         .mobile-menu {
             display: none;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            min-height: 800px;
+            background: #f8f9fa;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            background: white;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .app-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .app-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.9;
         }
 
         @media (max-width: 768px) {
@@ -295,6 +318,10 @@
             .page {
                 padding: 2rem 1rem;
             }
+
+            .iframe-container iframe {
+                height: 600px;
+            }
         }
 
         footer {
@@ -317,6 +344,7 @@
                         <li><a href="#" onclick="showPage('about')" class="nav-link">About</a></li>
                         <li><a href="#" onclick="showPage('research')" class="nav-link">Research</a></li>
                         <li><a href="#" onclick="showPage('applications')" class="nav-link">R Shiny Apps</a></li>
+                        <li><a href="#" onclick="showPage('immigration')" class="nav-link">Immigration Stories</a></li>
                         <li><a href="#" onclick="showPage('blog')" class="nav-link">Blog</a></li>
                     </ul>
                 </nav>
@@ -328,33 +356,32 @@
             <div id="home" class="page active">
                 <div class="hero">
                     <h1>Dallin Overstreet</h1>
-                    <p>PhD in Public Administration & Policy | Public Finance Researcher | Data Analytics Expert</p>
+                    <p>PhD, Public Administration & Policy | Senior Analyst | State & Local Public Finance Researcher</p>
                 </div>
 
                 <div class="substack-feature">
                     <h3>📊 PoliMetrics</h3>
-                    <p>Dive deep into public economics, policy analysis, and data-driven insights on trending topics in public finance and administration.</p>
-                    <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button">Read My Latest Analysis</a>
+                    <p>Analysis and insights on public economics, fiscal federalism, and unemployment insurance policy.</p>
+                    <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button">Read Latest Analysis</a>
                 </div>
 
                 <div class="grid">
                     <div class="card">
-                        <h3>🎓 Education Excellence</h3>
-                        <p><strong>PhD Candidate</strong> - Public Administration & Policy, Arizona State University</p>
-                        <p><strong>M.P.P.</strong> - Arizona State University (2019, Summa Cum Laude, 3.98 GPA)</p>
-                        <p><strong>B.S. Economics</strong> - Arizona State University</p>
+                        <h3>🎓 Education</h3>
+                        <p><strong>PhD, Public Policy & Administration</strong> - Arizona State University (May 2025)</p>
+                        <p><strong>M.P.P.</strong> - Arizona State University (December 2019, Summa Cum Laude, 3.98 GPA)</p>
+                        <p><strong>B.A. Economics</strong> - Arizona State University (December 2017, Summa Cum Laude, 3.85 GPA)</p>
                     </div>
 
                     <div class="card">
                         <h3>🔬 Research Focus</h3>
-                        <p>Specializing in Public Finance, Public Economics, and Political Economy with expertise in econometrics and causal inference methods.</p>
-                        <p><strong>Key Areas:</strong> Unemployment Insurance systems, Fiscal Federalism, Policy Diffusion</p>
+                        <p>State & Local Public Finance and Fiscal Federalism, with emphasis on unemployment insurance financial governance systems and program solvency.</p>
                     </div>
 
                     <div class="card">
                         <h3>💼 Professional Experience</h3>
-                        <p><strong>Graduate Research Assistant</strong> - Arizona State University</p>
-                        <p><strong>Senior Analyst</strong> - Arizona Department of Economic Security</p>
+                        <p><strong>Senior Analyst</strong> - Arizona Department of Economic Security (July 2019 - Present)</p>
+                        <p><strong>Graduate Research Assistant/Course Instructor</strong> - Arizona State University (August 2021 - May 2025)</p>
                     </div>
                 </div>
 
@@ -371,30 +398,30 @@
                 
                 <div class="card">
                     <h3>Professional Background</h3>
-                    <p>I am a PhD candidate at Arizona State University's School of Public Affairs, specializing in Public Administration & Policy. My research focuses on the intersection of public finance, economics, and policy analysis, with a particular emphasis on understanding complex social problems through rigorous econometric and causal inference methods.</p>
+                    <p>I recently completed my PhD in Public Administration & Policy at Arizona State University's School of Public Affairs in May 2025. My research focuses on state and local public finance and fiscal federalism, with particular emphasis on unemployment insurance financial governance systems and program solvency.</p>
                     
-                    <p>Prior to pursuing my doctoral studies, I gained valuable experience as an analyst at the Arizona Department of Economic Security, where I developed practical insights into how policy decisions impact real-world outcomes. This experience informs my research approach and commitment to evidence-based policy solutions.</p>
+                    <p>I currently serve as a Senior Analyst at the Arizona Department of Economic Security, where I manage Arizona's $1B+ Unemployment Insurance Trust Fund, conducting comprehensive financial analysis and forecasting program expenditures, revenue streams, and long-term solvency trends.</p>
                 </div>
 
                 <div class="card">
-                    <h3>Research Philosophy</h3>
-                    <p>I believe in the power of data and rigorous analysis to solve complex social problems. My work combines theoretical foundations with empirical analysis to provide actionable insights for policymakers and public administrators. I'm particularly passionate about understanding how fiscal policies affect different communities and how we can design more effective and equitable public programs.</p>
+                    <h3>Research Interests</h3>
+                    <p>My research explores the incentives present in the U.S. unemployment insurance financial governance system and their effects on program solvency. I utilize econometric methods and statistical modeling to analyze policy impacts and inform evidence-based decision making.</p>
                 </div>
 
                 <div class="card">
                     <h3>Academic Achievements</h3>
                     <ul style="margin-left: 2rem; margin-top: 1rem;">
-                        <li>Summa Cum Laude graduate with M.P.P. from Arizona State University (3.98 GPA)</li>
-                        <li>Published researcher in top-tier journals including Public Finance Review and Economic Affairs</li>
-                        <li>Invited peer reviewer for Cambridge Journal of Public Policy</li>
-                        <li>Frédéric Bastiat Fellowship recipient</li>
-                        <li>Active contributor to policy research and public discourse</li>
+                        <li>PhD in Public Policy & Administration from Arizona State University (May 2025)</li>
+                        <li>Summa Cum Laude graduate with M.P.P. and B.A. degrees (3.98 and 3.85 GPA respectively)</li>
+                        <li>Published researcher in peer-reviewed journals including Urban Affairs Review, Public Finance Review, and Economic Affairs</li>
+                        <li>Dissertation Fellowship recipient - Mercatus Center at George Mason University (2023-2024)</li>
+                        <li>Frederic Bastiat Fellowship in Political Economy recipient (2019-2020, 2022-2023)</li>
                     </ul>
                 </div>
 
                 <div class="card">
-                    <h3>Leadership & Service</h3>
-                    <p></p>
+                    <h3>Professional Responsibilities</h3>
+                    <p>At the Arizona Department of Economic Security, I develop and present fiscal impact analyses for proposed legislation affecting UI program parameters, lead program evaluation initiatives analyzing UI claims patterns, and conduct comprehensive financial analysis using statistical modeling and time series analysis.</p>
                 </div>
             </div>
 
@@ -404,13 +431,13 @@
                 
                 <div class="card">
                     <h3>Research Interests</h3>
-                    <p>My research focuses on several interconnected areas within public policy and administration:</p>
+                    <p>My research focuses on several areas within state and local public finance:</p>
                     <ul style="margin-left: 2rem; margin-top: 1rem;">
-                        <li><strong>Public Finance:</strong> Trust fund solvency, fiscal federalism, and intergovernmental finance</li>
-                        <li><strong>Public Economics:</strong> Labor market policies, minimum wage effects, and income inequality</li>
-                        <li><strong>Political Economy:</strong> Regulatory capture, barriers to entry, and policy diffusion</li>
-                        <li><strong>Unemployment Insurance:</strong> System design, trust fund management, and policy effectiveness</li>
-                        <li><strong>Causal Inference:</strong> Econometric methods for policy evaluation</li>
+                        <li><strong>State & Local Public Finance:</strong> Trust fund management and fiscal sustainability</li>
+                        <li><strong>Fiscal Federalism:</strong> Intergovernmental finance and policy coordination</li>
+                        <li><strong>Unemployment Insurance:</strong> Financial governance systems and program solvency</li>
+                        <li><strong>Policy Analysis:</strong> Econometric evaluation of program effectiveness</li>
+                        <li><strong>Statistical Modeling:</strong> Time series analysis and forecasting methods</li>
                     </ul>
                 </div>
 
@@ -418,18 +445,23 @@
                     <h2>Recent Publications</h2>
                     
                     <div class="publication-item">
-                        <h4>Rent Control for Homeowners? Acquisition-Value Assessments and Housing Costs</h4>
-                        <p>James M. Strickland & Dallin Overstreet (2025) - Analysis of Proposition 13's effects on California housing costs</p>
+                        <h4>The Elusive Economic Blessings of Tithing: Mormon Temples and County Poverty</h4>
+                        <p>Overstreet, D. (2024). Journal of Economics, Theology and Religion, vol. 4: 40-58</p>
                     </div>
 
                     <div class="publication-item">
                         <h4>Can Local Government Mergers Reduce Costs When Capital Expenditures Are Low? Evidence from Court Mergers</h4>
-                        <p>Mughan, S., & Overstreet, D. (2024). Urban Affairs Review, 60(3), 892-922</p>
+                        <p>Mughan, S., & Overstreet, D. (2024). Urban Affairs Review, 10780874231209908</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Rent Control for Homeowners? Acquisition-Value Assessments and Housing Costs</h4>
+                        <p>Strickland, J. M., & Overstreet, D. (2023). Public Finance Review, 10911421231214886</p>
                     </div>
 
                     <div class="publication-item">
                         <h4>The Impact of Government Form on Resource Allocation in Local Government, Evidence from Municipal Court Closures</h4>
-                        <p>Mughan, S., & Overstreet, D. (2023). Public Budgeting & Finance, 43(2), 3-26</p>
+                        <p>Mughan, S., & Overstreet, D. (2023). Public Budgeting & Finance</p>
                     </div>
 
                     <div class="publication-item">
@@ -444,13 +476,18 @@
 
                     <div class="publication-item">
                         <h4>The Effect of Minimum Wage on Per Capita Income in Arizona: Empirical Analysis</h4>
-                        <p>Overstreet, D. (2019). Journal of Poverty & Public Policy</p>
+                        <p>Overstreet, D. (2019). Poverty & Public Policy, 11(1-2), 156-168</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Chapter 7: Exploring the Interplay of Taxation and Regulation in Institutional Arrangements</h4>
+                        <p>Overstreet, D. (2023). In Knowledge and Entrepreneurship in Public Policy. Lexington Books</p>
                     </div>
                 </div>
 
                 <div class="card">
                     <h3>Current Research Projects</h3>
-                    <p>I'm currently working on several research projects examining unemployment insurance trust fund solvency, the effects of federal policy changes on state responses, and innovative approaches to measuring policy effectiveness through causal inference methods.</p>
+                    <p>Current work includes projects on unemployment insurance trust fund solvency under federal policy changes, the impact of income disregard changes on state trust funds, and analysis of regional policy diffusion patterns.</p>
                 </div>
             </div>
 
@@ -505,54 +542,57 @@
                 </div>
             </div>
 
+            <!-- Immigration Stories App Page -->
+            <div id="immigration" class="page">
+                <h1>ICE Community Alert</h1>
+                
+                <div style="background: white; border: 1px solid #e9ecef; border-radius: 5px; overflow: hidden; margin: 2rem 0;">
+                    <iframe 
+                        src="https://ice-community-alert.shinyapps.io/ICE_Community_Alert/" 
+                        style="width: 100%; height: 700px; border: none; background: white;"
+                        title="ICE Community Alert R Shiny Application">
+                    </iframe>
+                </div>
+
+                <p style="color: #6c757d; text-align: center; max-width: 600px; margin: 0 auto;">
+                    This application displays user-submitted reports of experiences with ICE to raise awareness about the lived experiences of immigrants in the US during Donald Trump's 2nd presidential administration.
+                </p>
+            </div>
+
             <!-- Blog Page -->
             <div id="blog" class="page">
                 <h1>PoliMetrics Blog</h1>
                 
                 <div class="blog-feed">
-                    <h2>📊 Latest Insights in Public Economics & Policy</h2>
-                    <p style="margin: 1rem 0;">Stay updated with cutting-edge analysis on public finance, policy evaluation, and economic research.</p>
+                    <h2>📊 Latest from PoliMetrics</h2>
+                    <p style="margin: 1rem 0;">Analysis and insights on public economics, fiscal federalism, and policy research.</p>
                     
-                    <div style="background: white; padding: 2rem; border-radius: 10px; margin: 2rem 0; text-align: left;">
-                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">Recent Posts from PoliMetrics</h3>
-                        
-                        <div style="border-left: 4px solid #3498db; padding-left: 1rem; margin: 1rem 0;">
-                            <h4 style="color: #2c3e50;">Unraveling UI Trust Fund Solvency</h4>
-                            <p style="color: #666; margin: 0.5rem 0;">A deep dive into state responses to federal policy changes in unemployment insurance systems.</p>
-                            <a href="https://polimetrics.substack.com/p/unraveling-ui-trust-fund-solvency" target="_blank" style="color: #3498db;">Read more →</a>
-                        </div>
-
-                        <div style="border-left: 4px solid #3498db; padding-left: 1rem; margin: 1rem 0;">
-                            <h4 style="color: #2c3e50;">Policy Analysis & Economic Insights</h4>
-                            <p style="color: #666; margin: 0.5rem 0;">Regular analysis of trending topics in public economics, featuring data-driven insights and policy implications.</p>
-                        </div>
-
-                        <div style="border-left: 4px solid #3498db; padding-left: 1rem; margin: 1rem 0;">
-                            <h4 style="color: #2c3e50;">Research Methodology & Methods</h4>
-                            <p style="color: #666; margin: 0.5rem 0;">Exploring innovative approaches to causal inference and econometric analysis in policy research.</p>
+                    <div id="blog-posts" style="background: white; padding: 2rem; border-radius: 10px; margin: 2rem 0; text-align: left;">
+                        <div id="loading" style="text-align: center; color: #666;">
+                            <p>Loading latest posts...</p>
                         </div>
                     </div>
 
                     <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button" style="font-size: 1.2rem; padding: 1.5rem 3rem;">Subscribe to PoliMetrics</a>
                     
                     <div style="margin: 3rem 0; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
-                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">What You'll Find on PoliMetrics</h3>
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">About PoliMetrics</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; text-align: left;">
                             <div>
                                 <h4 style="color: #3498db;">📈 Data Analysis</h4>
-                                <p>In-depth statistical analysis of policy outcomes and economic trends</p>
+                                <p>Statistical analysis of policy outcomes and economic trends</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">🏛️ Policy Insights</h4>
-                                <p>Evidence-based commentary on current policy debates and proposals</p>
+                                <h4 style="color: #3498db;">🏛️ Policy Research</h4>
+                                <p>Evidence-based commentary on public finance and administration</p>
                             </div>
                             <div>
                                 <h4 style="color: #3498db;">🔬 Research Methods</h4>
-                                <p>Exploration of innovative methodological approaches in public policy research</p>
+                                <p>Econometric approaches in public policy research</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">📊 Interactive Content</h4>
-                                <p>Visualizations and interactive elements that make complex data accessible</p>
+                                <h4 style="color: #3498db;">📊 Fiscal Federalism</h4>
+                                <p>Analysis of intergovernmental finance and policy</p>
                             </div>
                         </div>
                     </div>
@@ -561,8 +601,8 @@
         </main>
 
         <footer>
-            <p>&copy; 2025 Dallin Overstreet. PhD Candidate in Public Administration & Policy, Arizona State University.</p>
-            <p>Advancing evidence-based policy through rigorous research and data analysis.</p>
+            <p>&copy; 2025 Dallin Overstreet. PhD, Public Administration & Policy, Arizona State University.</p>
+            <p>Senior Analyst, Arizona Department of Economic Security | State & Local Public Finance Research</p>
         </footer>
     </div>
 
@@ -582,30 +622,62 @@
             // Add active class to clicked nav link
             event.target.classList.add('active');
             
+            // Load blog posts when blog page is shown
+            if (pageId === 'blog') {
+                loadBlogPosts();
+            }
+            
             // Scroll to top
             window.scrollTo(0, 0);
         }
 
+        async function loadBlogPosts() {
+            const blogContainer = document.getElementById('blog-posts');
+            const loadingDiv = document.getElementById('loading');
+            
+            try {
+                // Use a CORS proxy to fetch the RSS feed
+                const response = await fetch('https://api.rss2json.com/v1/api.json?rss_url=https://polimetrics.substack.com/feed');
+                const data = await response.json();
+                
+                if (data.status === 'ok' && data.items) {
+                    loadingDiv.style.display = 'none';
+                    
+                    let postsHTML = '<h3 style="color: #2c3e50; margin-bottom: 1rem;">Recent Posts</h3>';
+                    
+                    // Display the first 5 posts
+                    data.items.slice(0, 5).forEach(post => {
+                        const pubDate = new Date(post.pubDate).toLocaleDateString();
+                        const description = post.description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
+                        
+                        postsHTML += `
+                            <div style="padding: 1rem 0; margin: 1rem 0; border-bottom: 1px solid #e9ecef;">
+                                <h4 style="color: #2c3e50; margin-bottom: 0.5rem;">
+                                    <a href="${post.link}" target="_blank" style="color: #2c3e50; text-decoration: none;">${post.title}</a>
+                                </h4>
+                                <p style="color: #6c757d; font-size: 0.9rem; margin: 0.5rem 0;">${pubDate}</p>
+                                <p style="color: #666; margin: 0.5rem 0; line-height: 1.6;">${description}</p>
+                                <a href="${post.link}" target="_blank" style="color: #2c3e50; font-weight: 500;">Read more →</a>
+                            </div>
+                        `;
+                    });
+                    
+                    blogContainer.innerHTML = postsHTML;
+                } else {
+                    throw new Error('Failed to load RSS feed');
+                }
+            } catch (error) {
+                console.error('Error loading blog posts:', error);
+                loadingDiv.innerHTML = `
+                    <p style="color: #666;">Unable to load recent posts. Please visit <a href="https://polimetrics.substack.com/" target="_blank" style="color: #3498db;">PoliMetrics directly</a> for the latest content.</p>
+                `;
+            }
+        }
+
         // Add smooth scrolling and animations
         document.addEventListener('DOMContentLoaded', function() {
-            // Add loading animation
-            document.body.style.opacity = '0';
-            setTimeout(() => {
-                document.body.style.transition = 'opacity 0.5s ease';
-                document.body.style.opacity = '1';
-            }, 100);
-
-            // Add hover effects to cards
-            const cards = document.querySelectorAll('.card, .app-card');
-            cards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-10px) scale(1.02)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                });
-            });
+            // Simple fade in
+            document.body.style.opacity = '1';
         });
     </script>
 </body>
