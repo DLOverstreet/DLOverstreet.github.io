@@ -1,7 +1,613 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dallin Overstreet - Public Policy Researcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 30px rgba(0,0,0,0.1);
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #fff, #ecf0f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        nav a:hover, nav a.active {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            transform: translateY(-2px);
+        }
+
+        .page {
+            display: none;
+            padding: 3rem 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: -3rem -2rem 3rem -2rem;
+            border-radius: 0 0 30px 30px;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            color: #555;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .substack-feature {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+            text-align: center;
+            transform: perspective(1000px) rotateX(5deg);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .substack-feature h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: white;
+            color: #667eea;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .publications {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .publication-item {
+            background: white;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .publication-item h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .publication-item p {
+            color: #666;
+            font-style: italic;
+        }
+
+        .app-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .app-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px) scale(1.02);
+        }
+
+        .app-card h3 {
+            margin-bottom: 1rem;
+            font-size: 1.8rem;
+        }
+
+        .blog-feed {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .blog-feed h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .social-link {
+            display: inline-block;
+            padding: 1rem;
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-link:hover {
+            background: #2980b9;
+            transform: translateY(-3px);
+        }
+
+        .mobile-menu {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .grid, .app-showcase {
+                grid-template-columns: 1fr;
+            }
+
+            .page {
+                padding: 2rem 1rem;
+            }
+        }
+
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+    </style>
+</head>
 <body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">Dallin Overstreet</div>
+                <nav>
+                    <ul>
+                        <li><a href="#" onclick="showPage('home')" class="nav-link active">Home</a></li>
+                        <li><a href="#" onclick="showPage('about')" class="nav-link">About</a></li>
+                        <li><a href="#" onclick="showPage('research')" class="nav-link">Research</a></li>
+                        <li><a href="#" onclick="showPage('applications')" class="nav-link">R Shiny Apps</a></li>
+                        <li><a href="#" onclick="showPage('blog')" class="nav-link">Blog</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <main>
+            <!-- Home Page -->
+            <div id="home" class="page active">
+                <div class="hero">
+                    <h1>Dallin Overstreet</h1>
+                    <p>PhD in Public Administration & Policy | Public Finance Researcher | Data Analytics Expert</p>
+                </div>
+
+                <div class="substack-feature">
+                    <h3>📊 PoliMetrics</h3>
+                    <p>Dive deep into public economics, policy analysis, and data-driven insights on trending topics in public finance and administration.</p>
+                    <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button">Read My Latest Analysis</a>
+                </div>
+
+                <div class="grid">
+                    <div class="card">
+                        <h3>🎓 Education Excellence</h3>
+                        <p><strong>PhD Candidate</strong> - Public Administration & Policy, Arizona State University</p>
+                        <p><strong>M.P.P.</strong> - Arizona State University (2019, Summa Cum Laude, 3.98 GPA)</p>
+                        <p><strong>B.S. Economics</strong> - Arizona State University</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>🔬 Research Focus</h3>
+                        <p>Specializing in Public Finance, Public Economics, and Political Economy with expertise in econometrics and causal inference methods.</p>
+                        <p><strong>Key Areas:</strong> Unemployment Insurance systems, Fiscal Federalism, Policy Diffusion</p>
+                    </div>
+
+                    <div class="card">
+                        <h3>💼 Professional Experience</h3>
+                        <p><strong>Graduate Research Assistant</strong> - Arizona State University</p>
+                        <p><strong>Senior Policy Analyst</strong> - American Freedom Institute</p>
+                        <p><strong>Former Analyst</strong> - Arizona Department of Economic Security</p>
+                    </div>
+                </div>
+
+                <div class="social-links">
+                    <a href="https://www.linkedin.com/in/dallin-overstreet/" target="_blank" class="social-link" title="LinkedIn">💼</a>
+                    <a href="https://scholar.google.com/citations?user=Bdo8s7gAAAAJ&hl=en" target="_blank" class="social-link" title="Google Scholar">📚</a>
+                    <a href="https://polimetrics.substack.com/" target="_blank" class="social-link" title="PoliMetrics">📰</a>
+                </div>
+            </div>
+
+            <!-- About Page -->
+            <div id="about" class="page">
+                <h1>About Dallin Overstreet</h1>
+                
+                <div class="card">
+                    <h3>Professional Background</h3>
+                    <p>I am a PhD candidate at Arizona State University's School of Public Affairs, specializing in Public Administration & Policy. My research focuses on the intersection of public finance, economics, and policy analysis, with a particular emphasis on understanding complex social problems through rigorous econometric and causal inference methods.</p>
+                    
+                    <p>Prior to pursuing my doctoral studies, I gained valuable experience as an analyst at the Arizona Department of Economic Security, where I developed practical insights into how policy decisions impact real-world outcomes. This experience informs my research approach and commitment to evidence-based policy solutions.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Research Philosophy</h3>
+                    <p>I believe in the power of data and rigorous analysis to solve complex social problems. My work combines theoretical foundations with empirical analysis to provide actionable insights for policymakers and public administrators. I'm particularly passionate about understanding how fiscal policies affect different communities and how we can design more effective and equitable public programs.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Academic Achievements</h3>
+                    <ul style="margin-left: 2rem; margin-top: 1rem;">
+                        <li>Summa Cum Laude graduate with M.P.P. from Arizona State University (3.98 GPA)</li>
+                        <li>Published researcher in top-tier journals including Public Finance Review and Economic Affairs</li>
+                        <li>Invited peer reviewer for Cambridge Journal of Public Policy</li>
+                        <li>Frédéric Bastiat Fellowship recipient</li>
+                        <li>Active contributor to policy research and public discourse</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Leadership & Service</h3>
+                    <p>As Founder and President of the American Freedom Institute, I lead research initiatives on critical policy issues and contribute to public understanding of complex economic and political topics. I'm also actively involved in academic service and peer review for scholarly publications.</p>
+                </div>
+            </div>
+
+            <!-- Research Page -->
+            <div id="research" class="page">
+                <h1>Research & Publications</h1>
+                
+                <div class="card">
+                    <h3>Research Interests</h3>
+                    <p>My research focuses on several interconnected areas within public policy and administration:</p>
+                    <ul style="margin-left: 2rem; margin-top: 1rem;">
+                        <li><strong>Public Finance:</strong> Trust fund solvency, fiscal federalism, and intergovernmental finance</li>
+                        <li><strong>Public Economics:</strong> Labor market policies, minimum wage effects, and income inequality</li>
+                        <li><strong>Political Economy:</strong> Regulatory capture, barriers to entry, and policy diffusion</li>
+                        <li><strong>Unemployment Insurance:</strong> System design, trust fund management, and policy effectiveness</li>
+                        <li><strong>Causal Inference:</strong> Econometric methods for policy evaluation</li>
+                    </ul>
+                </div>
+
+                <div class="publications">
+                    <h2>Recent Publications</h2>
+                    
+                    <div class="publication-item">
+                        <h4>Rent Control for Homeowners? Acquisition-Value Assessments and Housing Costs</h4>
+                        <p>James M. Strickland & Dallin Overstreet (2025) - Analysis of Proposition 13's effects on California housing costs</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Can Local Government Mergers Reduce Costs When Capital Expenditures Are Low? Evidence from Court Mergers</h4>
+                        <p>Mughan, S., & Overstreet, D. (2024). Urban Affairs Review, 60(3), 892-922</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>The Impact of Government Form on Resource Allocation in Local Government, Evidence from Municipal Court Closures</h4>
+                        <p>Mughan, S., & Overstreet, D. (2023). Public Budgeting & Finance, 43(2), 3-26</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Is Minimum Wage an Effective Anti-Poverty Tool?</h4>
+                        <p>Overstreet, D. (2021). Journal of Poverty, 25(5), 453-464</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>The Negative Impact of Barriers to Entry on Income Inequality</h4>
+                        <p>Overstreet, D. (2020). Economic Affairs, 40(3), 344-357</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>The Effect of Minimum Wage on Per Capita Income in Arizona: Empirical Analysis</h4>
+                        <p>Overstreet, D. (2019). Journal of Poverty & Public Policy</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Current Research Projects</h3>
+                    <p>I'm currently working on several research projects examining unemployment insurance trust fund solvency, the effects of federal policy changes on state responses, and innovative approaches to measuring policy effectiveness through causal inference methods.</p>
+                </div>
+            </div>
+
+            <!-- R Shiny Applications Page -->
+            <div id="applications" class="page">
+                <h1>R Shiny Applications</h1>
+                
+                <p style="text-align: center; margin-bottom: 3rem; font-size: 1.2rem;">Exploring interactive data analysis and policy research through custom-built applications</p>
+
+                <div class="app-showcase">
+                    <div class="app-card">
+                        <h3>🔍 KonFound-It! Sensitivity Analysis</h3>
+                        <p>An interactive tool for quantifying the robustness of causal inferences in research. This application helps researchers understand how sensitive their findings are to potential confounding variables.</p>
+                        <a href="https://konfound-project.shinyapps.io/konfound-it/" target="_blank" class="cta-button">Launch Application</a>
+                    </div>
+
+                    <div class="app-card">
+                        <h3>📊 What Works Clearinghouse Sensitivity Benchmarks</h3>
+                        <p>A specialized tool for conducting sensitivity analysis benchmarks specifically designed for education policy research and evaluation studies.</p>
+                        <a href="https://konfound-project.shinyapps.io/wwc-sensitivity-benchmark/" target="_blank" class="cta-button">Launch Application</a>
+                    </div>
+
+                    <div class="app-card">
+                        <h3>🏛️ Policy Impact Analyzer</h3>
+                        <p>Custom application for analyzing the impact of various policy interventions using econometric methods and interactive visualizations.</p>
+                        <a href="#" class="cta-button" onclick="alert('Contact for access')">Request Access</a>
+                    </div>
+
+                    <div class="app-card">
+                        <h3>💰 Unemployment Insurance Dashboard</h3>
+                        <p>Interactive dashboard for exploring unemployment insurance trust fund data across states, featuring trend analysis and policy comparison tools.</p>
+                        <a href="#" class="cta-button" onclick="alert('Contact for access')">Request Access</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Technical Expertise</h3>
+                    <p>My R Shiny applications leverage advanced statistical methods and data visualization techniques to make complex policy research accessible and interactive. I specialize in:</p>
+                    <ul style="margin-left: 2rem; margin-top: 1rem;">
+                        <li>Causal inference and sensitivity analysis tools</li>
+                        <li>Interactive data visualization and dashboards</li>
+                        <li>Policy simulation and scenario modeling</li>
+                        <li>Real-time data processing and analysis</li>
+                        <li>User-friendly interfaces for complex statistical methods</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Collaboration & Custom Development</h3>
+                    <p>Interested in collaborating on a custom R Shiny application for your research or policy analysis needs? I'm available for consulting and collaborative projects that advance evidence-based policy making.</p>
+                    <p style="margin-top: 1rem;"><strong>Contact me</strong> to discuss how interactive data applications can enhance your research impact.</p>
+                </div>
+            </div>
+
+            <!-- Blog Page -->
+            <div id="blog" class="page">
+                <h1>PoliMetrics Blog</h1>
+                
+                <div class="blog-feed">
+                    <h2>📊 Latest Insights in Public Economics & Policy</h2>
+                    <p style="margin: 1rem 0;">Stay updated with cutting-edge analysis on public finance, policy evaluation, and economic research.</p>
+                    
+                    <div style="background: white; padding: 2rem; border-radius: 10px; margin: 2rem 0; text-align: left;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">Recent Posts from PoliMetrics</h3>
+                        
+                        <div style="border-left: 4px solid #3498db; padding-left: 1rem; margin: 1rem 0;">
+                            <h4 style="color: #2c3e50;">Unraveling UI Trust Fund Solvency</h4>
+                            <p style="color: #666; margin: 0.5rem 0;">A deep dive into state responses to federal policy changes in unemployment insurance systems.</p>
+                            <a href="https://polimetrics.substack.com/p/unraveling-ui-trust-fund-solvency" target="_blank" style="color: #3498db;">Read more →</a>
+                        </div>
+
+                        <div style="border-left: 4px solid #3498db; padding-left: 1rem; margin: 1rem 0;">
+                            <h4 style="color: #2c3e50;">Policy Analysis & Economic Insights</h4>
+                            <p style="color: #666; margin: 0.5rem 0;">Regular analysis of trending topics in public economics, featuring data-driven insights and policy implications.</p>
+                        </div>
+
+                        <div style="border-left: 4px solid #3498db; padding-left: 1rem; margin: 1rem 0;">
+                            <h4 style="color: #2c3e50;">Research Methodology & Methods</h4>
+                            <p style="color: #666; margin: 0.5rem 0;">Exploring innovative approaches to causal inference and econometric analysis in policy research.</p>
+                        </div>
+                    </div>
+
+                    <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button" style="font-size: 1.2rem; padding: 1.5rem 3rem;">Subscribe to PoliMetrics</a>
+                    
+                    <div style="margin: 3rem 0; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
+                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">What You'll Find on PoliMetrics</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; text-align: left;">
+                            <div>
+                                <h4 style="color: #3498db;">📈 Data Analysis</h4>
+                                <p>In-depth statistical analysis of policy outcomes and economic trends</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #3498db;">🏛️ Policy Insights</h4>
+                                <p>Evidence-based commentary on current policy debates and proposals</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #3498db;">🔬 Research Methods</h4>
+                                <p>Exploration of innovative methodological approaches in public policy research</p>
+                            </div>
+                            <div>
+                                <h4 style="color: #3498db;">📊 Interactive Content</h4>
+                                <p>Visualizations and interactive elements that make complex data accessible</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Dallin Overstreet. PhD Candidate in Public Administration & Policy, Arizona State University.</p>
+            <p>Advancing evidence-based policy through rigorous research and data analysis.</p>
+        </footer>
+    </div>
+
+    <script>
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => page.classList.remove('active'));
+            
+            // Remove active class from all nav links
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        // Add smooth scrolling and animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loading animation
+            document.body.style.opacity = '0';
+            setTimeout(() => {
+                document.body.style.transition = 'opacity 0.5s ease';
+                document.body.style.opacity = '1';
+            }, 100);
+
+            // Add hover effects to cards
+            const cards = document.querySelectorAll('.card, .app-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
 </body>
 </html>
