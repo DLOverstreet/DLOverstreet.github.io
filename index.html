@@ -763,17 +763,21 @@
                 height: 600px;
             }
 
+            /* Hot Dog Dashboard Mobile Optimizations */
             #hotdog-dashboard .header-content-dashboard { 
                 flex-direction: column; 
                 gap: 1rem; 
+                padding: 0 1rem;
             }
             
             #hotdog-dashboard .dashboard-grid { 
                 grid-template-columns: 1fr; 
+                gap: 1rem;
             }
             
             #hotdog-dashboard .chart-grid { 
                 grid-template-columns: 1fr; 
+                gap: 1rem;
             }
             
             #hotdog-dashboard .container-dashboard { 
@@ -781,11 +785,193 @@
             }
             
             #hotdog-dashboard .tab-content { 
-                padding: 1.5rem; 
+                padding: 1rem; 
             }
             
             #hotdog-dashboard .header-stats { 
                 display: none; 
+            }
+
+            /* Mobile Chart Optimizations */
+            #hotdog-dashboard .chart-container {
+                height: 300px;
+                padding: 1rem;
+            }
+
+            #hotdog-dashboard .chart-title {
+                font-size: 0.9rem;
+                margin-bottom: 1rem;
+            }
+
+            /* Mobile Stats Grid */
+            #hotdog-dashboard .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            #hotdog-dashboard .stat-card {
+                padding: 1.5rem;
+                text-align: center;
+            }
+
+            #hotdog-dashboard .stat-value {
+                font-size: 1.8rem;
+            }
+
+            #hotdog-dashboard .stat-label {
+                font-size: 0.8rem;
+            }
+
+            /* Mobile Table Optimizations */
+            #hotdog-dashboard .data-table {
+                font-size: 0.8rem;
+                overflow-x: auto;
+                display: block;
+                white-space: nowrap;
+            }
+
+            #hotdog-dashboard .data-table thead,
+            #hotdog-dashboard .data-table tbody,
+            #hotdog-dashboard .data-table th,
+            #hotdog-dashboard .data-table td,
+            #hotdog-dashboard .data-table tr {
+                display: block;
+            }
+
+            #hotdog-dashboard .data-table thead tr {
+                position: absolute;
+                top: -9999px;
+                left: -9999px;
+            }
+
+            #hotdog-dashboard .data-table tr {
+                border: 1px solid #2d3748;
+                margin-bottom: 0.5rem;
+                border-radius: 8px;
+                padding: 0.5rem;
+            }
+
+            #hotdog-dashboard .data-table td {
+                border: none;
+                position: relative;
+                padding: 0.5rem 0.5rem 0.5rem 30%;
+                white-space: normal;
+                text-align: left;
+            }
+
+            #hotdog-dashboard .data-table td:before {
+                content: attr(data-label) ": ";
+                position: absolute;
+                left: 6px;
+                width: 25%;
+                padding-right: 10px;
+                white-space: nowrap;
+                color: #8892b0;
+                font-weight: 600;
+                font-size: 0.7rem;
+                text-transform: uppercase;
+            }
+
+            /* Mobile Leaderboard */
+            #hotdog-dashboard .leaderboard {
+                height: auto;
+                min-height: 300px;
+            }
+
+            #hotdog-dashboard .leaderboard-item {
+                padding: 0.75rem 1rem;
+            }
+
+            #hotdog-dashboard .leaderboard-rank {
+                font-size: 1rem;
+                min-width: 25px;
+            }
+
+            #hotdog-dashboard .leaderboard-name {
+                font-size: 0.9rem;
+            }
+
+            #hotdog-dashboard .leaderboard-score {
+                font-size: 1.2rem;
+            }
+
+            /* Mobile Timeline */
+            #hotdog-dashboard .timeline-item {
+                padding: 1.5rem;
+            }
+
+            #hotdog-dashboard .timeline-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            #hotdog-dashboard .timeline-year {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+
+            #hotdog-dashboard .timeline-title {
+                font-size: 1.1rem;
+            }
+
+            /* Mobile Navigation Tabs */
+            #hotdog-dashboard .tab-header {
+                flex-direction: column;
+            }
+
+            #hotdog-dashboard .tab-button {
+                padding: 1rem;
+                font-size: 0.85rem;
+            }
+
+            /* Mobile Dashboard Header */
+            #hotdog-dashboard .dashboard-header {
+                padding: 1.5rem 0;
+            }
+
+            #hotdog-dashboard .title-section h1 {
+                font-size: 1.5rem;
+            }
+
+            #hotdog-dashboard .title-section .subtitle {
+                font-size: 0.9rem;
+            }
+
+            #hotdog-dashboard .dashboard-logo {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Additional mobile optimizations for very small screens */
+        @media (max-width: 480px) {
+            #hotdog-dashboard .section-title {
+                font-size: 1.4rem;
+                text-align: center;
+            }
+
+            #hotdog-dashboard .chart-container {
+                height: 250px;
+                padding: 0.75rem;
+            }
+
+            #hotdog-dashboard .stat-card {
+                padding: 1rem;
+            }
+
+            #hotdog-dashboard .stat-value {
+                font-size: 1.5rem;
+            }
+
+            #hotdog-dashboard .leaderboard-header {
+                padding: 1rem;
+            }
+
+            #hotdog-dashboard .tab-button {
+                padding: 0.75rem;
+                font-size: 0.8rem;
             }
         }
 
@@ -1547,6 +1733,9 @@
                 }
                 return null;
             }).filter(d => d !== null);
+
+            // Check if mobile
+            const isMobile = window.innerWidth <= 768;
             
             new Chart(ctx, {
                 type: 'line',
@@ -1559,11 +1748,15 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
+                            position: isMobile ? 'top' : 'bottom',
                             labels: {
                                 usePointStyle: true,
-                                padding: 20,
-                                color: '#8892b0'
+                                padding: isMobile ? 10 : 20,
+                                color: '#8892b0',
+                                font: {
+                                    size: isMobile ? 10 : 12
+                                },
+                                boxWidth: isMobile ? 8 : 12
                             }
                         }
                     },
@@ -1572,18 +1765,28 @@
                             beginAtZero: true,
                             max: 10,
                             grid: { color: '#2d3748' },
-                            ticks: { color: '#8892b0' },
+                            ticks: { 
+                                color: '#8892b0',
+                                font: {
+                                    size: isMobile ? 10 : 12
+                                }
+                            },
                             title: {
-                                display: true,
+                                display: !isMobile,
                                 text: 'Score',
                                 color: '#8892b0'
                             }
                         },
                         x: {
                             grid: { color: '#2d3748' },
-                            ticks: { color: '#8892b0' },
+                            ticks: { 
+                                color: '#8892b0',
+                                font: {
+                                    size: isMobile ? 10 : 12
+                                }
+                            },
                             title: {
-                                display: true,
+                                display: !isMobile,
                                 text: 'Season',
                                 color: '#8892b0'
                             }
@@ -1606,6 +1809,8 @@
                     average: scores.reduce((a, b) => a + b, 0) / scores.length
                 };
             }).sort((a, b) => b.average - a.average).slice(0, 8);
+
+            const isMobile = window.innerWidth <= 768;
             
             new Chart(ctx, {
                 type: 'bar',
@@ -1628,11 +1833,22 @@
                         y: {
                             beginAtZero: true,
                             grid: { color: '#2d3748' },
-                            ticks: { color: '#8892b0' }
+                            ticks: { 
+                                color: '#8892b0',
+                                font: {
+                                    size: isMobile ? 10 : 12
+                                }
+                            }
                         },
                         x: {
                             grid: { display: false },
-                            ticks: { color: '#8892b0' }
+                            ticks: { 
+                                color: '#8892b0',
+                                font: {
+                                    size: isMobile ? 9 : 12
+                                },
+                                maxRotation: isMobile ? 45 : 0
+                            }
                         }
                     }
                 }
@@ -1652,6 +1868,8 @@
                     total: scores.reduce((a, b) => a + b, 0)
                 };
             }).sort((a, b) => b.total - a.total).slice(0, 8);
+
+            const isMobile = window.innerWidth <= 768;
             
             new Chart(ctx, {
                 type: 'doughnut',
@@ -1668,11 +1886,15 @@
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            position: 'bottom',
+                            position: isMobile ? 'top' : 'bottom',
                             labels: {
                                 usePointStyle: true,
-                                padding: 15,
-                                color: '#8892b0'
+                                padding: isMobile ? 8 : 15,
+                                color: '#8892b0',
+                                font: {
+                                    size: isMobile ? 9 : 12
+                                },
+                                boxWidth: isMobile ? 8 : 12
                             }
                         }
                     }
@@ -1711,14 +1933,30 @@
             
             stats.forEach(stat => {
                 const row = tbody.insertRow();
-                row.insertCell(0).textContent = stat.contestant;
-                row.insertCell(1).textContent = stat.contests;
-                row.insertCell(2).textContent = stat.best;
-                row.insertCell(3).textContent = stat.average;
-                row.insertCell(4).textContent = stat.total;
+                
+                const competitorCell = row.insertCell(0);
+                competitorCell.textContent = stat.contestant;
+                competitorCell.setAttribute('data-label', 'Competitor');
+                
+                const battlesCell = row.insertCell(1);
+                battlesCell.textContent = stat.contests;
+                battlesCell.setAttribute('data-label', 'Battles');
+                
+                const bestCell = row.insertCell(2);
+                bestCell.textContent = stat.best;
+                bestCell.setAttribute('data-label', 'Personal Ceiling');
+                
+                const avgCell = row.insertCell(3);
+                avgCell.textContent = stat.average;
+                avgCell.setAttribute('data-label', 'Jaw Average');
+                
+                const totalCell = row.insertCell(4);
+                totalCell.textContent = stat.total;
+                totalCell.setAttribute('data-label', 'Career Consumption');
                 
                 const improvementCell = row.insertCell(5);
                 improvementCell.textContent = stat.improvement;
+                improvementCell.setAttribute('data-label', 'Digestive Evolution');
                 if (stat.improvement.includes('+')) {
                     improvementCell.classList.add('improvement-positive');
                 } else if (stat.improvement.includes('-')) {
@@ -1747,10 +1985,43 @@
             
             personalBests.forEach(record => {
                 const row = tbody.insertRow();
-                row.insertCell(0).textContent = record.contestant;
-                row.insertCell(1).textContent = record.best;
-                row.insertCell(2).textContent = record.year;
+                
+                const competitorCell = row.insertCell(0);
+                competitorCell.textContent = record.contestant;
+                competitorCell.setAttribute('data-label', 'Competitor');
+                
+                const bestCell = row.insertCell(1);
+                bestCell.textContent = record.best;
+                bestCell.setAttribute('data-label', 'Personal Best');
+                
+                const yearCell = row.insertCell(2);
+                yearCell.textContent = record.year;
+                yearCell.setAttribute('data-label', 'Season');
             });
+        }
+
+        // Handle window resize for responsive charts
+        function handleResize() {
+            // Debounce resize events
+            clearTimeout(window.resizeTimeout);
+            window.resizeTimeout = setTimeout(() => {
+                // Re-initialize charts if dashboard is active
+                if (document.getElementById('hotdog-dashboard').classList.contains('active')) {
+                    // Destroy existing charts first
+                    Chart.getChart('timeSeriesChart')?.destroy();
+                    Chart.getChart('averageChart')?.destroy();
+                    Chart.getChart('totalChart')?.destroy();
+                    
+                    // Recreate charts with new responsive settings
+                    createTimeSeriesChart();
+                    
+                    // Recreate other charts if their tabs are active
+                    if (document.getElementById('dashboard-performance').classList.contains('active')) {
+                        createAverageChart();
+                        createTotalChart();
+                    }
+                }
+            }, 250);
         }
 
         // Initialize when page loads
@@ -1758,6 +2029,9 @@
             document.body.style.opacity = '1';
             handleHashChange();  // ensure correct page is shown on load
         });
+
+        // Add resize event listener for responsive charts
+        window.addEventListener('resize', handleResize);
     </script>
 </body>
 </html>
