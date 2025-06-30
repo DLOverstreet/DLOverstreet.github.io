@@ -85,6 +85,12 @@
             animation: fadeIn 0.5s ease-in;
         }
 
+        /* Full height for dashboard page */
+        #hotdog-dashboard.page {
+            padding: 0;
+            min-height: 100vh;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -305,6 +311,21 @@
             padding: 0;
             margin: -3rem -2rem 0 -2rem;
             min-height: 100vh;
+        }
+
+        /* Hide header and footer when dashboard is active */
+        body.dashboard-mode header,
+        body.dashboard-mode footer {
+            display: none;
+        }
+
+        body.dashboard-mode .container {
+            box-shadow: none;
+        }
+
+        body.dashboard-mode #hotdog-dashboard {
+            margin: 0;
+            padding: 0;
         }
 
         #hotdog-dashboard .dashboard-header {
@@ -1336,8 +1357,14 @@
             // Show selected page
             document.getElementById(pageId).classList.add('active');
             
-            // Add active class to corresponding nav link
-            document.querySelectorAll(`nav a[href="#${pageId}"]`).forEach(link => link.classList.add('active'));
+            // Add/remove dashboard mode for hotdog dashboard
+            if (pageId === 'hotdog-dashboard') {
+                document.body.classList.add('dashboard-mode');
+            } else {
+                document.body.classList.remove('dashboard-mode');
+                // Add active class to corresponding nav link (only for non-dashboard pages)
+                document.querySelectorAll(`nav a[href="#${pageId}"]`).forEach(link => link.classList.add('active'));
+            }
             
             // Load blog posts when blog page is shown
             if (pageId === 'blog') {
