@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dallin Overstreet - Public Policy Researcher</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -295,6 +298,422 @@
             opacity: 0.9;
         }
 
+        /* Hot Dog Dashboard Styles */
+        #hotdog-dashboard {
+            background: #0f1419;
+            color: #ffffff;
+            padding: 0;
+            margin: -3rem -2rem 0 -2rem;
+            min-height: 100vh;
+        }
+
+        #hotdog-dashboard .dashboard-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+            border-bottom: 2px solid #00d4ff;
+            padding: 2rem 0;
+        }
+
+        #hotdog-dashboard .header-content-dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #hotdog-dashboard .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #hotdog-dashboard .dashboard-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: white;
+        }
+
+        #hotdog-dashboard .title-section h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+
+        #hotdog-dashboard .title-section .subtitle {
+            font-size: 1rem;
+            color: #8892b0;
+            font-weight: 400;
+            margin-top: 0.25rem;
+        }
+
+        #hotdog-dashboard .header-stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        #hotdog-dashboard .header-stat {
+            text-align: center;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #hotdog-dashboard .header-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        #hotdog-dashboard .header-stat-label {
+            font-size: 0.8rem;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #hotdog-dashboard .container-dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        #hotdog-dashboard .tab-container {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2d3748;
+        }
+
+        #hotdog-dashboard .tab-header {
+            display: flex;
+            background: #16213e;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        #hotdog-dashboard .tab-button {
+            flex: 1;
+            padding: 1.25rem 2rem;
+            border: none;
+            background: transparent;
+            color: #8892b0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        #hotdog-dashboard .tab-button.active {
+            background: #1a1a2e;
+            color: #00d4ff;
+        }
+
+        #hotdog-dashboard .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #00d4ff;
+        }
+
+        #hotdog-dashboard .tab-button:hover:not(.active) {
+            background: rgba(255,255,255,0.05);
+            color: #ffffff;
+        }
+
+        #hotdog-dashboard .tab-content {
+            display: none;
+            padding: 2.5rem;
+            min-height: 600px;
+        }
+
+        #hotdog-dashboard .tab-content.active {
+            display: block;
+        }
+
+        #hotdog-dashboard .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 2rem;
+            letter-spacing: -0.5px;
+        }
+
+        #hotdog-dashboard .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        #hotdog-dashboard .chart-container {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 2rem;
+            border: 1px solid #2d3748;
+            height: 400px;
+        }
+
+        #hotdog-dashboard .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #hotdog-dashboard .leaderboard {
+            background: #16213e;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+            overflow: hidden;
+            height: 400px;
+        }
+
+        #hotdog-dashboard .leaderboard-header {
+            background: #0f1419;
+            padding: 1.5rem;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        #hotdog-dashboard .leaderboard-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #hotdog-dashboard .leaderboard-subtitle {
+            color: #8892b0;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
+
+        #hotdog-dashboard .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease;
+        }
+
+        #hotdog-dashboard .leaderboard-item:hover {
+            background: rgba(0,212,255,0.05);
+        }
+
+        #hotdog-dashboard .leaderboard-rank {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-right: 1rem;
+            min-width: 30px;
+            color: #8892b0;
+        }
+
+        #hotdog-dashboard .leaderboard-rank.rank-1 { color: #ffd700; }
+        #hotdog-dashboard .leaderboard-rank.rank-2 { color: #c0c0c0; }
+        #hotdog-dashboard .leaderboard-rank.rank-3 { color: #cd7f32; }
+
+        #hotdog-dashboard .leaderboard-info {
+            flex: 1;
+        }
+
+        #hotdog-dashboard .leaderboard-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 0.2rem;
+        }
+
+        #hotdog-dashboard .leaderboard-details {
+            color: #8892b0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        #hotdog-dashboard .leaderboard-score {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        #hotdog-dashboard .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        #hotdog-dashboard .stat-card {
+            background: #16213e;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.2s ease;
+        }
+
+        #hotdog-dashboard .stat-card:hover {
+            border-color: #00d4ff;
+            transform: translateY(-2px);
+        }
+
+        #hotdog-dashboard .stat-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        #hotdog-dashboard .stat-value {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #00d4ff;
+            margin-bottom: 0.5rem;
+        }
+
+        #hotdog-dashboard .stat-label {
+            font-size: 0.9rem;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        #hotdog-dashboard .stat-trend {
+            font-size: 0.8rem;
+            color: #4ade80;
+            font-weight: 600;
+        }
+
+        #hotdog-dashboard .data-table {
+            width: 100%;
+            background: #16213e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2d3748;
+        }
+
+        #hotdog-dashboard .data-table th {
+            background: #0f1419;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #8892b0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #2d3748;
+        }
+
+        #hotdog-dashboard .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #ffffff;
+        }
+
+        #hotdog-dashboard .data-table tr:hover {
+            background: rgba(0,212,255,0.05);
+        }
+
+        #hotdog-dashboard .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        #hotdog-dashboard .timeline-item {
+            background: #16213e;
+            border: 1px solid #2d3748;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s ease;
+        }
+
+        #hotdog-dashboard .timeline-item:hover {
+            border-color: #00d4ff;
+        }
+
+        #hotdog-dashboard .timeline-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        #hotdog-dashboard .timeline-year {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-right: 1.5rem;
+        }
+
+        #hotdog-dashboard .timeline-type {
+            background: rgba(255,255,255,0.1);
+            color: #8892b0;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #hotdog-dashboard .timeline-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+
+        #hotdog-dashboard .timeline-description {
+            color: #8892b0;
+            line-height: 1.6;
+        }
+
+        #hotdog-dashboard .champion-highlight {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        #hotdog-dashboard .performance-badge {
+            display: inline-block;
+            background: rgba(0,212,255,0.1);
+            color: #00d4ff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        #hotdog-dashboard .improvement-positive {
+            color: #4ade80;
+        }
+
+        #hotdog-dashboard .improvement-negative {
+            color: #f87171;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -321,6 +740,31 @@
 
             .iframe-container iframe {
                 height: 600px;
+            }
+
+            #hotdog-dashboard .header-content-dashboard { 
+                flex-direction: column; 
+                gap: 1rem; 
+            }
+            
+            #hotdog-dashboard .dashboard-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            #hotdog-dashboard .chart-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            #hotdog-dashboard .container-dashboard { 
+                padding: 1rem; 
+            }
+            
+            #hotdog-dashboard .tab-content { 
+                padding: 1.5rem; 
+            }
+            
+            #hotdog-dashboard .header-stats { 
+                display: none; 
             }
         }
 
@@ -593,6 +1037,284 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Hot Dog Dashboard Page (Hidden from menu, accessible via direct link) -->
+            <div id="hotdog-dashboard" class="page">
+                <div class="dashboard-header">
+                    <div class="header-content-dashboard">
+                        <div class="logo-section">
+                            <div class="dashboard-logo">O</div>
+                            <div class="title-section">
+                                <h1>Overstreet Competition Analytics</h1>
+                                <div class="subtitle">Annual Hot Dog Domination Championship • Est. 2023</div>
+                            </div>
+                        </div>
+                        <div class="header-stats">
+                            <div class="header-stat">
+                                <div class="header-stat-value">3</div>
+                                <div class="header-stat-label">Seasons</div>
+                            </div>
+                            <div class="header-stat">
+                                <div class="header-stat-value">26</div>
+                                <div class="header-stat-label">Total Entries</div>
+                            </div>
+                            <div class="header-stat">
+                                <div class="header-stat-value">9.0</div>
+                                <div class="header-stat-label">Mustard Belt Record</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="container-dashboard">
+                    <div class="tab-container">
+                        <div class="tab-header">
+                            <button class="tab-button active" onclick="showDashboardTab('dashboard-overview')">Dashboard</button>
+                            <button class="tab-button" onclick="showDashboardTab('dashboard-performance')">Performance</button>
+                            <button class="tab-button" onclick="showDashboardTab('dashboard-records')">Records</button>
+                            <button class="tab-button" onclick="showDashboardTab('dashboard-timeline')">History</button>
+                        </div>
+
+                        <!-- Dashboard Tab -->
+                        <div id="dashboard-overview" class="tab-content active">
+                            <h2 class="section-title">Competition Dashboard</h2>
+                            
+                            <div class="dashboard-grid">
+                                <div class="chart-container">
+                                    <h3 class="chart-title">Gurgitation Trends</h3>
+                                    <canvas id="timeSeriesChart"></canvas>
+                                </div>
+                                
+                                <div class="leaderboard">
+                                    <div class="leaderboard-header">
+                                        <div class="leaderboard-title">2025 Final Standings</div>
+                                        <div class="leaderboard-subtitle">Current Season Results</div>
+                                    </div>
+                                    <div class="leaderboard-item">
+                                        <div class="leaderboard-rank rank-1">1</div>
+                                        <div class="leaderboard-info">
+                                            <div class="leaderboard-name">Jordan C</div>
+                                            <div class="leaderboard-details">Jaw Champion</div>
+                                        </div>
+                                        <div class="leaderboard-score">9.0</div>
+                                    </div>
+                                    <div class="leaderboard-item">
+                                        <div class="leaderboard-rank rank-1">1</div>
+                                        <div class="leaderboard-info">
+                                            <div class="leaderboard-name">Jordan O</div>
+                                            <div class="leaderboard-details">Esophageal Elite</div>
+                                        </div>
+                                        <div class="leaderboard-score">9.0</div>
+                                    </div>
+                                    <div class="leaderboard-item">
+                                        <div class="leaderboard-rank rank-3">3</div>
+                                        <div class="leaderboard-info">
+                                            <div class="leaderboard-name">Jaxon</div>
+                                            <div class="leaderboard-details">The Wall Breaker</div>
+                                        </div>
+                                        <div class="leaderboard-score">7.0</div>
+                                    </div>
+                                    <div class="leaderboard-item">
+                                        <div class="leaderboard-rank">4</div>
+                                        <div class="leaderboard-info">
+                                            <div class="leaderboard-name">Boston</div>
+                                            <div class="leaderboard-details">Steady Capacity</div>
+                                        </div>
+                                        <div class="leaderboard-score">5.5</div>
+                                    </div>
+                                    <div class="leaderboard-item">
+                                        <div class="leaderboard-rank">4</div>
+                                        <div class="leaderboard-info">
+                                            <div class="leaderboard-name">Jason</div>
+                                            <div class="leaderboard-details">No Reversal Zone</div>
+                                        </div>
+                                        <div class="leaderboard-score">5.5</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value">Jordan C</div>
+                                    <div class="stat-label">Mustard Belt Holder</div>
+                                    <div class="stat-trend">3 Championships</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">+1.5</div>
+                                    <div class="stat-label">Jaw Evolution</div>
+                                    <div class="stat-trend">Jordan O (2024-2025)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">100%</div>
+                                    <div class="stat-label">Podium Domination</div>
+                                    <div class="stat-trend">Jaxon (Top 3 All Years)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">2.0</div>
+                                    <div class="stat-label">Biggest Throat Expansion</div>
+                                    <div class="stat-trend">Jaxon (2023-2024)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Tab -->
+                        <div id="dashboard-performance" class="tab-content">
+                            <h2 class="section-title">Performance Analytics</h2>
+                            
+                            <div class="chart-grid">
+                                <div class="chart-container">
+                                    <h3 class="chart-title">Jaw Capacity Analysis</h3>
+                                    <canvas id="averageChart"></canvas>
+                                </div>
+                                <div class="chart-container">
+                                    <h3 class="chart-title">Total Digestive Output</h3>
+                                    <canvas id="totalChart"></canvas>
+                                </div>
+                            </div>
+
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Competitor</th>
+                                        <th>Battles</th>
+                                        <th>Personal Ceiling</th>
+                                        <th>Jaw Average</th>
+                                        <th>Career Consumption</th>
+                                        <th>Digestive Evolution</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="performanceTableBody">
+                                    <!-- Data populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Records Tab -->
+                        <div id="dashboard-records" class="tab-content">
+                            <h2 class="section-title">Records & Achievements</h2>
+                            
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value">9.0</div>
+                                    <div class="stat-label">Gurgitator Record</div>
+                                    <div class="stat-trend">Jordan C & Jordan O (2025)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">3</div>
+                                    <div class="stat-label">Mustard Belt Defenses</div>
+                                    <div class="stat-trend">Jordan C (2023, 2024, 2025)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">6.9</div>
+                                    <div class="stat-label">Peak Jaw Efficiency</div>
+                                    <div class="stat-trend">Jordan C (Career)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value">0</div>
+                                    <div class="stat-label">Reversal Incidents</div>
+                                    <div class="stat-trend">Clean Competition Record</div>
+                                </div>
+                            </div>
+
+                            <div class="chart-grid">
+                                <div>
+                                    <h3 style="color: #ffffff; margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Championship History</h3>
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Season</th>
+                                                <th>Champion</th>
+                                                <th>Score</th>
+                                                <th>Competition</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>2025</td>
+                                                <td><span class="performance-badge">Co-Champions</span> Jordan C & Jordan O</td>
+                                                <td>9.0</td>
+                                                <td>Hot Dog</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2024</td>
+                                                <td>Jordan C</td>
+                                                <td>8.5</td>
+                                                <td>Bun</td>
+                                            </tr>
+                                            <tr>
+                                                <td>2023</td>
+                                                <td>Jordan C</td>
+                                                <td>7.5</td>
+                                                <td>Bun</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <h3 style="color: #ffffff; margin-bottom: 1.5rem; font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Personal Records</h3>
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Competitor</th>
+                                                <th>Personal Best</th>
+                                                <th>Season</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="personalBestsTable">
+                                            <!-- Data populated by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline Tab -->
+                        <div id="dashboard-timeline" class="tab-content">
+                            <h2 class="section-title">Competition History</h2>
+                            
+                            <div class="timeline-item">
+                                <div class="timeline-header">
+                                    <div class="timeline-year">2023</div>
+                                    <div class="timeline-type">Inaugural Season</div>
+                                </div>
+                                <h3 class="timeline-title">The Birth of a Gurgitator Dynasty</h3>
+                                <p class="timeline-description">
+                                    The inaugural competition on July 16th established the foundation for the annual championship. 
+                                    <span class="champion-highlight">Jordan C</span> took the first Mustard Belt with 7.5 buns, demonstrating superior jaw mechanics and esophageal control. 
+                                    Nine family members participated in what would become a legendary tradition of digestive dominance.
+                                </p>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-header">
+                                    <div class="timeline-year">2024</div>
+                                    <div class="timeline-type">Season 2</div>
+                                </div>
+                                <h3 class="timeline-title">The Solomon Method Emerges</h3>
+                                <p class="timeline-description">
+                                    July 14th brought heightened competition as jaw capacity standards rose across the board. 
+                                    <span class="champion-highlight">Jordan C</span> successfully defended his Mustard Belt with 8.5 buns, but Jordan O emerged as a serious threat with 8.0, 
+                                    showing remarkable improvement in both technique and gastric expansion. The competitive eating landscape was evolving.
+                                </p>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-header">
+                                    <div class="timeline-year">2025</div>
+                                    <div class="timeline-type">Current Season</div>
+                                </div>
+                                <h3 class="timeline-title">The Great Tie: A Gurgitator's Dream</h3>
+                                <p class="timeline-description">
+                                    June 29th delivered the most competitive championship to date. In an unprecedented finish worthy of Coney Island, 
+                                    <span class="champion-highlight">Jordan C and Jordan O both achieved 9.0 hot dogs</span>, resulting in the first co-Mustard Belt holders in competition history. 
+                                    Zero reversals were recorded, making this the cleanest and most professional competition yet. The addition of rookie competitors Dean and Sammy expanded the field to championship-level depth.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
 
         <footer>
@@ -620,6 +1342,13 @@
             // Load blog posts when blog page is shown
             if (pageId === 'blog') {
                 loadBlogPosts();
+            }
+
+            // Initialize hot dog dashboard when shown
+            if (pageId === 'hotdog-dashboard') {
+                setTimeout(() => {
+                    initializeHotDogDashboard();
+                }, 100);
             }
             
             // Scroll to top
@@ -681,7 +1410,323 @@
             }
         }
 
-        // Initialize page based on hash or default to home
+        // Hot Dog Dashboard Functions
+        const contestData = [
+            // 2023 Hot dog bun competition 7/16/23
+            {year: 2023, contestant: "Jordan C", score: 7.5},
+            {year: 2023, contestant: "Jordan O", score: 6.5},
+            {year: 2023, contestant: "Jaxon", score: 5.5},
+            {year: 2023, contestant: "Dallin", score: 4},
+            {year: 2023, contestant: "Jason", score: 4},
+            {year: 2023, contestant: "Boston", score: 2},
+            {year: 2023, contestant: "Colt", score: 2},
+            {year: 2023, contestant: "Lincoln", score: 2},
+            {year: 2023, contestant: "Brandon", score: 2},
+            
+            // 2024 Hot dog bun competition 7/14/24
+            {year: 2024, contestant: "Jordan C", score: 8.5},
+            {year: 2024, contestant: "Jordan O", score: 8},
+            {year: 2024, contestant: "Jaxon", score: 7.5},
+            {year: 2024, contestant: "Jason", score: 4},
+            {year: 2024, contestant: "Dallin", score: 3},
+            {year: 2024, contestant: "Boston", score: 3},
+            {year: 2024, contestant: "Lincoln", score: 1.75},
+            
+            // 2025 Hot dog eating competition 6/29/25
+            {year: 2025, contestant: "Jordan C", score: 9},
+            {year: 2025, contestant: "Jordan O", score: 9},
+            {year: 2025, contestant: "Jaxon", score: 7},
+            {year: 2025, contestant: "Boston", score: 5.5},
+            {year: 2025, contestant: "Jason", score: 5.5},
+            {year: 2025, contestant: "Dallin", score: 4},
+            {year: 2025, contestant: "Colt", score: 3.5},
+            {year: 2025, contestant: "Lincoln", score: 2.5},
+            {year: 2025, contestant: "Dean", score: 2.5},
+            {year: 2025, contestant: "Sammy", score: 4}
+        ];
+
+        // Professional color scheme
+        const competitorColors = {
+            "Jordan C": "#00d4ff",
+            "Jordan O": "#4ade80", 
+            "Jaxon": "#f59e0b",
+            "Boston": "#8b5cf6",
+            "Jason": "#ef4444",
+            "Dallin": "#06b6d4",
+            "Colt": "#10b981",
+            "Lincoln": "#f97316",
+            "Brandon": "#6366f1",
+            "Dean": "#84cc16",
+            "Sammy": "#ec4899"
+        };
+
+        function showDashboardTab(tabName) {
+            document.querySelectorAll('#hotdog-dashboard .tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('#hotdog-dashboard .tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'dashboard-performance') {
+                setTimeout(() => {
+                    createAverageChart();
+                    createTotalChart();
+                    populatePerformanceTable();
+                }, 100);
+            }
+
+            if (tabName === 'dashboard-records') {
+                setTimeout(() => {
+                    populatePersonalBests();
+                }, 100);
+            }
+        }
+
+        function initializeHotDogDashboard() {
+            createTimeSeriesChart();
+        }
+
+        // Time Series Chart
+        function createTimeSeriesChart() {
+            const ctx = document.getElementById('timeSeriesChart');
+            if (!ctx) return;
+            
+            const years = [2023, 2024, 2025];
+            const contestants = [...new Set(contestData.map(d => d.contestant))];
+            
+            const datasets = contestants.map(contestant => {
+                const data = years.map(year => {
+                    const entry = contestData.find(d => d.year === year && d.contestant === contestant);
+                    return entry ? entry.score : null;
+                });
+                
+                if (data.filter(d => d !== null).length > 1) {
+                    return {
+                        label: contestant,
+                        data: data,
+                        borderColor: competitorColors[contestant] || '#8892b0',
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        pointRadius: 6,
+                        pointBackgroundColor: competitorColors[contestant] || '#8892b0',
+                        pointBorderWidth: 0,
+                        pointHoverRadius: 8,
+                        tension: 0.1
+                    };
+                }
+                return null;
+            }).filter(d => d !== null);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                color: '#8892b0'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 10,
+                            grid: { color: '#2d3748' },
+                            ticks: { color: '#8892b0' },
+                            title: {
+                                display: true,
+                                text: 'Score',
+                                color: '#8892b0'
+                            }
+                        },
+                        x: {
+                            grid: { color: '#2d3748' },
+                            ticks: { color: '#8892b0' },
+                            title: {
+                                display: true,
+                                text: 'Season',
+                                color: '#8892b0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Average Performance Chart
+        function createAverageChart() {
+            const ctx = document.getElementById('averageChart');
+            if (!ctx) return;
+            
+            const contestants = [...new Set(contestData.map(d => d.contestant))];
+            const averages = contestants.map(contestant => {
+                const scores = contestData.filter(d => d.contestant === contestant).map(d => d.score);
+                return {
+                    contestant,
+                    average: scores.reduce((a, b) => a + b, 0) / scores.length
+                };
+            }).sort((a, b) => b.average - a.average).slice(0, 8);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: averages.map(a => a.contestant),
+                    datasets: [{
+                        data: averages.map(a => a.average),
+                        backgroundColor: averages.map(a => competitorColors[a.contestant] || '#8892b0'),
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#2d3748' },
+                            ticks: { color: '#8892b0' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#8892b0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Total Consumption Chart
+        function createTotalChart() {
+            const ctx = document.getElementById('totalChart');
+            if (!ctx) return;
+            
+            const contestants = [...new Set(contestData.map(d => d.contestant))];
+            const totals = contestants.map(contestant => {
+                const scores = contestData.filter(d => d.contestant === contestant).map(d => d.score);
+                return {
+                    contestant,
+                    total: scores.reduce((a, b) => a + b, 0)
+                };
+            }).sort((a, b) => b.total - a.total).slice(0, 8);
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: totals.map(t => t.contestant),
+                    datasets: [{
+                        data: totals.map(t => t.total),
+                        backgroundColor: totals.map(t => competitorColors[t.contestant] || '#8892b0'),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15,
+                                color: '#8892b0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate Performance Table
+        function populatePerformanceTable() {
+            const tbody = document.getElementById('performanceTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            const contestants = [...new Set(contestData.map(d => d.contestant))];
+            const stats = contestants.map(contestant => {
+                const scores = contestData.filter(d => d.contestant === contestant).map(d => d.score);
+                
+                let improvement = 'N/A';
+                if (scores.length > 1) {
+                    const latestScore = scores[scores.length - 1];
+                    const firstScore = scores[0];
+                    const change = latestScore - firstScore;
+                    improvement = change > 0 ? `+${change.toFixed(1)}` : change.toFixed(1);
+                }
+                
+                return {
+                    contestant,
+                    contests: scores.length,
+                    best: Math.max(...scores),
+                    average: (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1),
+                    total: scores.reduce((a, b) => a + b, 0).toFixed(1),
+                    improvement
+                };
+            }).sort((a, b) => b.best - a.best);
+            
+            stats.forEach(stat => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = stat.contestant;
+                row.insertCell(1).textContent = stat.contests;
+                row.insertCell(2).textContent = stat.best;
+                row.insertCell(3).textContent = stat.average;
+                row.insertCell(4).textContent = stat.total;
+                
+                const improvementCell = row.insertCell(5);
+                improvementCell.textContent = stat.improvement;
+                if (stat.improvement.includes('+')) {
+                    improvementCell.classList.add('improvement-positive');
+                } else if (stat.improvement.includes('-')) {
+                    improvementCell.classList.add('improvement-negative');
+                }
+            });
+        }
+
+        // Populate Personal Bests
+        function populatePersonalBests() {
+            const tbody = document.getElementById('personalBestsTable');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            const contestants = [...new Set(contestData.map(d => d.contestant))];
+            const personalBests = contestants.map(contestant => {
+                const entries = contestData.filter(d => d.contestant === contestant);
+                const best = entries.reduce((max, e) => e.score > max.score ? e : max);
+                return {
+                    contestant,
+                    best: best.score,
+                    year: best.year
+                };
+            }).sort((a, b) => b.best - a.best);
+            
+            personalBests.forEach(record => {
+                const row = tbody.insertRow();
+                row.insertCell(0).textContent = record.contestant;
+                row.insertCell(1).textContent = record.best;
+                row.insertCell(2).textContent = record.year;
+            });
+        }
+
+        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             document.body.style.opacity = '1';
             handleHashChange();  // ensure correct page is shown on load
