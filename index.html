@@ -308,23 +308,25 @@
         /* Graph of the Day Styles */
         #graph-of-day {
             margin: -3rem -2rem 0 -2rem;
-            min-height: 100vh;
             background: white;
+            min-height: 100vh;
         }
 
         .graph-container {
             background: white;
             margin: 0;
-            min-height: calc(100vh - 80px);
+            padding: 0;
             border-radius: 0;
-            overflow: hidden;
+            width: 100%;
         }
 
         .graph-iframe {
             width: 100%;
-            height: calc(100vh - 80px);
+            height: 2000px;
             border: none;
             background: white;
+            display: block;
+            overflow: hidden;
         }
 
         .graph-fallback {
@@ -802,7 +804,7 @@
 
             /* Graph of the Day Mobile */
             .graph-iframe {
-                height: calc(100vh - 80px);
+                height: 1500px;
             }
 
             /* Hot Dog Dashboard Mobile Optimizations */
@@ -1255,6 +1257,8 @@
                         src="graph-of-the-day.html" 
                         class="graph-iframe"
                         title="Graph of the Day - Interactive Data Visualization"
+                        scrolling="no"
+                        frameborder="0"
                         onload="this.style.opacity='1'"
                         onerror="this.style.display='none'; document.querySelector('.graph-fallback').style.display='block'">
                     </iframe>
