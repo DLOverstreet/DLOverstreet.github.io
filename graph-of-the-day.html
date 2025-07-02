@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arizona Medicaid Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat .number {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #3498db;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-stat .label {
+            font-size: 1em;
+            opacity: 0.8;
+            margin-top: 8px;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 25px 40px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .controls label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .controls select {
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 180px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls select:focus {
+            outline: none;
+            border-color: #3498db;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .tab-container {
+            background: white;
+        }
+
+        .tab-navigation {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            padding: 20px 30px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .tab-btn:hover {
+            background: #e9ecef;
+            color: #2c3e50;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* County Chart Styles */
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .chart-title {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .chart-toggle {
+            display: flex;
+            background: #f1f2f6;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .toggle-btn.active {
+            background: #3498db;
+            color: white;
+            box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+        }
+
+        .chart-grid {
+            display: grid;
+            gap: 2px;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 150px 1fr 120px;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.3s;
+        }
+
+        .chart-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .county-name {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 15px;
+        }
+
+        .bar-container {
+            position: relative;
+            height: 28px;
+            background: #f1f2f6;
+            border-radius: 14px;
+            overflow: hidden;
+            margin: 0 15px;
+        }
+
+        .bar {
+            height: 100%;
+            border-radius: 14px;
+            transition: all 0.8s ease-out;
+            background: linear-gradient(90deg, #3498db, #2980b9);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .percentage-bar {
+            background: linear-gradient(90deg, #e74c3c, #c0392b) !important;
+        }
+
+        .value-label {
+            font-weight: 600;
+            font-size: 15px;
+            text-align: right;
+            color: #2c3e50;
+        }
+
+        /* Demographics Tab Styles */
+        .demographics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .demo-chart {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .demo-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        .pie-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 180px;
+            margin-bottom: 20px;
+        }
+
+        .pie-chart {
+            width: 150px;
+            height: 150px;
+        }
+
+        .pie-legend {
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+
+        .coverage-chart {
+            margin-top: 20px;
+        }
+
+        .coverage-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .coverage-label {
+            font-weight: 500;
+            width: 120px;
+            text-align: left;
+        }
+
+        .coverage-bar-bg {
+            flex: 1;
+            height: 20px;
+            background: #f1f2f6;
+            border-radius: 10px;
+            margin: 0 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .coverage-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            border-radius: 10px;
+            transition: width 0.8s ease-out;
+        }
+
+        .coverage-percent {
+            font-weight: 600;
+            color: #2c3e50;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        /* Economics Tab */
+        .economics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .econ-chart {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .spending-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .spending-bar {
+            width: 80px;
+            height: 16px;
+            background: #f1f2f6;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0 12px;
+        }
+
+        .spending-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #9b59b6, #8e44ad);
+            border-radius: 8px;
+            transition: width 0.8s ease-out;
+        }
+
+        /* Quick Facts */
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .fact-card {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #3498db;
+        }
+
+        .fact-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .fact-content {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .fact-highlight {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 40px;
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .header-stats {
+                gap: 25px;
+            }
+            
+            .tab-content {
+                padding: 25px;
+            }
+            
+            .chart-row {
+                grid-template-columns: 120px 1fr 100px;
+                font-size: 13px;
+            }
+            
+            .demographics-grid,
+            .economics-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+            
+            .tab-btn {
+                padding: 15px 20px;
+                font-size: 14px;
+                min-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Arizona Medicaid Dashboard</h1>
+            <p>Comprehensive analysis of AHCCCS enrollment and demographics</p>
+            <div class="header-stats">
+                <div class="header-stat">
+                    <div class="number" id="total-enrolled">1.97M</div>
+                    <div class="label">Total Enrolled</div>
+                </div>
+                <div class="header-stat">
+                    <div class="number">25.8%</div>
+                    <div class="label">Statewide Rate</div>
+                </div>
+                <div class="header-stat">
+                    <div class="number">$22.2B</div>
+                    <div class="label">Annual Spending</div>
+                </div>
+                <div class="header-stat">
+                    <div class="number">81%</div>
+                    <div class="label">Federal Funding</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <label for="month-select">Select Month:</label>
+            <select id="month-select">
+                <option value="jun24">June 2024</option>
+                <option value="jul24">July 2024</option>
+                <option value="aug24">August 2024</option>
+                <option value="sep24">September 2024</option>
+                <option value="oct24">October 2024</option>
+                <option value="nov24">November 2024</option>
+                <option value="dec24">December 2024</option>
+                <option value="jan25">January 2025</option>
+                <option value="feb25">February 2025</option>
+                <option value="mar25">March 2025</option>
+                <option value="apr25">April 2025</option>
+                <option value="may25">May 2025</option>
+                <option value="jun25" selected>June 2025</option>
+            </select>
+        </div>
+
+        <div class="tab-container">
+            <div class="tab-navigation">
+                <button class="tab-btn active" data-tab="county">County Enrollment</button>
+                <button class="tab-btn" data-tab="demographics">Demographics</button>
+                <button class="tab-btn" data-tab="economics">Economics & Spending</button>
+                <button class="tab-btn" data-tab="facts">Quick Facts</button>
+            </div>
+
+            <!-- County Enrollment Tab -->
+            <div id="county-tab" class="tab-content active">
+                <div class="chart-header">
+                    <div class="chart-title" id="main-chart-title">County Enrollment Analysis</div>
+                    <div class="chart-toggle">
+                        <button class="toggle-btn active" data-view="enrollment">Raw Numbers</button>
+                        <button class="toggle-btn" data-view="percentage">Enrollment Rate</button>
+                    </div>
+                </div>
+                <div class="chart-grid" id="chart-grid">
+                    <!-- Chart rows will be populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Demographics Tab -->
+            <div id="demographics-tab" class="tab-content">
+                <div class="demographics-grid">
+                    <div class="demo-chart">
+                        <div class="demo-title">Age Distribution</div>
+                        <div class="pie-container">
+                            <svg class="pie-chart" viewBox="0 0 150 150">
+                                <!-- Children: 36% -->
+                                <circle cx="75" cy="75" r="60" fill="none" stroke="#3498db" stroke-width="25" 
+                                        stroke-dasharray="135 377" stroke-dashoffset="0" transform="rotate(-90 75 75)"/>
+                                <!-- Adults: 64% -->
+                                <circle cx="75" cy="75" r="60" fill="none" stroke="#2ecc71" stroke-width="25" 
+                                        stroke-dasharray="242 377" stroke-dashoffset="-135" transform="rotate(-90 75 75)"/>
+                            </svg>
+                        </div>
+                        <div class="pie-legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #3498db;"></div>
+                                <span>Children (36%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #2ecc71;"></div>
+                                <span>Adults (64%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="demo-chart">
+                        <div class="demo-title">Coverage Rates by Population</div>
+                        <div class="coverage-chart">
+                            <div class="coverage-bar">
+                                <div class="coverage-label">Nursing Homes</div>
+                                <div class="coverage-bar-bg">
+                                    <div class="coverage-bar-fill" style="width: 53%;"></div>
+                                </div>
+                                <div class="coverage-percent">53%</div>
+                            </div>
+                            <div class="coverage-bar">
+                                <div class="coverage-label">Births</div>
+                                <div class="coverage-bar-bg">
+                                    <div class="coverage-bar-fill" style="width: 46%;"></div>
+                                </div>
+                                <div class="coverage-percent">46%</div>
+                            </div>
+                            <div class="coverage-bar">
+                                <div class="coverage-label">w/ Disabilities</div>
+                                <div class="coverage-bar-bg">
+                                    <div class="coverage-bar-fill" style="width: 40%;"></div>
+                                </div>
+                                <div class="coverage-percent">40%</div>
+                            </div>
+                            <div class="coverage-bar">
+                                <div class="coverage-label">Children</div>
+                                <div class="coverage-bar-bg">
+                                    <div class="coverage-bar-fill" style="width: 36%;"></div>
+                                </div>
+                                <div class="coverage-percent">36%</div>
+                            </div>
+                            <div class="coverage-bar">
+                                <div class="coverage-label">Adults 19-64</div>
+                                <div class="coverage-bar-bg">
+                                    <div class="coverage-bar-fill" style="width: 17%;"></div>
+                                </div>
+                                <div class="coverage-percent">17%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">14%</div>
+                        <div class="stat-label">Live in Rural Areas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">17%</div>
+                        <div class="stat-label">Have 3+ Chronic Conditions</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">632K</div>
+                        <div class="stat-label">Expansion Adults</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">29%</div>
+                        <div class="stat-label">Expansion Adults Share</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Economics & Spending Tab -->
+            <div id="economics-tab" class="tab-content">
+                <div class="economics-grid">
+                    <div class="econ-chart">
+                        <div class="demo-title">Adult Employment Status</div>
+                        <div class="pie-container">
+                            <svg class="pie-chart" viewBox="0 0 150 150">
+                                <!-- Full-time: 43% -->
+                                <circle cx="75" cy="75" r="60" fill="none" stroke="#2980b9" stroke-width="25" 
+                                        stroke-dasharray="162 377" stroke-dashoffset="0" transform="rotate(-90 75 75)"/>
+                                <!-- Part-time: 23% -->
+                                <circle cx="75" cy="75" r="60" fill="none" stroke="#3498db" stroke-width="25" 
+                                        stroke-dasharray="87 377" stroke-dashoffset="-162" transform="rotate(-90 75 75)"/>
+                                <!-- Not working: 34% -->
+                                <circle cx="75" cy="75" r="60" fill="none" stroke="#95a5a6" stroke-width="25" 
+                                        stroke-dasharray="128 377" stroke-dashoffset="-249" transform="rotate(-90 75 75)"/>
+                            </svg>
+                        </div>
+                        <div class="pie-legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #2980b9;"></div>
+                                <span>Full-time (43%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #3498db;"></div>
+                                <span>Part-time (23%)</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: #95a5a6;"></div>
+                                <span>Not working (34%)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="econ-chart">
+                        <div class="demo-title">Spending Breakdown</div>
+                        <div style="margin-top: 30px;">
+                            <div class="spending-item">
+                                <span>Managed Care</span>
+                                <div class="spending-bar">
+                                    <div class="spending-fill" style="width: 78%;"></div>
+                                </div>
+                                <span>78%</span>
+                            </div>
+                            <div class="spending-item">
+                                <span>Acute Care</span>
+                                <div class="spending-bar">
+                                    <div class="spending-fill" style="width: 19%;"></div>
+                                </div>
+                                <span>19%</span>
+                            </div>
+                            <div class="spending-item">
+                                <span>Medicare Payments</span>
+                                <div class="spending-bar">
+                                    <div class="spending-fill" style="width: 2%;"></div>
+                                </div>
+                                <span>2%</span>
+                            </div>
+                            <div class="spending-item">
+                                <span>Other</span>
+                                <div class="spending-bar">
+                                    <div class="spending-fill" style="width: 1%;"></div>
+                                </div>
+                                <span>1%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">17%</div>
+                        <div class="stat-label">of Enrollees Age 65+</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">39%</div>
+                        <div class="stat-label">Spending by 65+ & Disabled</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">$47.6K</div>
+                        <div class="stat-label">Home Care Cost/Person</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">$38.8K</div>
+                        <div class="stat-label">Institutional Care Cost</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Facts Tab -->
+            <div id="facts-tab" class="tab-content">
+                <div class="facts-grid">
+                    <div class="fact-card">
+                        <div class="fact-title">Working Adults</div>
+                        <div class="fact-content">
+                            A majority (<span class="fact-highlight">66%</span>) of Medicaid adults are working in Arizona, with <span class="fact-highlight">43%</span> working full-time and <span class="fact-highlight">23%</span> working part-time.
+                        </div>
+                    </div>
+
+                    <div class="fact-card">
+                        <div class="fact-title">Congressional Coverage</div>
+                        <div class="fact-content">
+                            Medicaid covers from <span class="fact-highlight">15% to 50%</span> of people across Arizona's congressional districts, showing significant geographic variation in need.
+                        </div>
+                    </div>
+
+                    <div class="fact-card">
+                        <div class="fact-title">Medicaid Expansion</div>
+                        <div class="fact-content">
+                            Arizona adopted Medicaid expansion, covering adults up to <span class="fact-highlight">138% of Federal Poverty Level</span>. This includes <span class="fact-highlight">632,000</span> expansion adults.
+                        </div>
+                    </div>
+
+                    <div class="fact-card">
+                        <div class="fact-title">Public Opinion</div>
+                        <div class="fact-content">
+                            <span class="fact-highlight">77%</span> of Americans hold favorable views of Medicaid, with <span class="fact-highlight">87%</span> of Democrats and <span class="fact-highlight">63%</span> of Republicans supporting the program.
+                        </div>
+                    </div>
+
+                    <div class="fact-card">
+                        <div class="fact-title">Access to Care</div>
+                        <div class="fact-content">
+                            Nationally, access to care is similar for adults with Medicaid and private insurance, with <span class="fact-highlight">85%</span> having a doctor visit in the past year for both groups.
+                        </div>
+                    </div>
+
+                    <div class="fact-card">
+                        <div class="fact-title">Long-term Care</div>
+                        <div class="fact-content">
+                            Home care costs <span class="fact-highlight">$47,630</span> per enrollee vs <span class="fact-highlight">$38,796</span> for institutional care, serving <span class="fact-highlight">36,900</span> vs <span class="fact-highlight">19,000</span> enrollees respectively.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Sources: Arizona Health Care Cost Containment System (AHCCCS), U.S. Census Bureau, Kaiser Family Foundation (KFF) • Updated June 2025
+        </div>
+    </div>
+
+    <script>
+        // County data with Medicaid enrollment and population estimates
+        const countyData = {
+            'Maricopa': {
+                population: 4645947,
+                jun24: 1301488, jul24: 1291392, aug24: 1282338, sep24: 1272313, oct24: 1262211, nov24: 1240335,
+                dec24: 1216363, jan25: 1194133, feb25: 1184824, mar25: 1179059, apr25: 1167162, may25: 1161253, jun25: 1144877
+            },
+            'Pima': {
+                population: 1074534,
+                jun24: 322434, jul24: 320147, aug24: 318102, sep24: 316177, oct24: 313436, nov24: 308550,
+                dec24: 303483, jan25: 298886, feb25: 297005, mar25: 296040, apr25: 293526, may25: 291978, jun25: 288102
+            },
+            'Pinal': {
+                population: 522643,
+                jun24: 105870, jul24: 107240, aug24: 109336, sep24: 111222, oct24: 111644, nov24: 112164,
+                dec24: 112770, jan25: 111685, feb25: 112038, mar25: 112302, apr25: 111889, may25: 111794, jun25: 110340
+            },
+            'Yavapai': {
+                population: 254783,
+                jun24: 59109, jul24: 58582, aug24: 58238, sep24: 57891, oct24: 57473, nov24: 56524,
+                dec24: 55506, jan25: 54542, feb25: 54437, mar25: 54311, apr25: 53861, may25: 53474, jun25: 52700
+            },
+            'Mohave': {
+                population: 229236,
+                jun24: 76652, jul24: 76358, aug24: 76024, sep24: 75612, oct24: 74997, nov24: 73978,
+                dec24: 72609, jan25: 71628, feb25: 71295, mar25: 71047, apr25: 69422, may25: 69310, jun25: 68586
+            },
+            'Yuma': {
+                population: 195751,
+                jun24: 98068, jul24: 97794, aug24: 97561, sep24: 97444, oct24: 96989, nov24: 95759,
+                dec24: 94686, jan25: 93117, feb25: 92423, mar25: 91980, apr25: 90946, may25: 90907, jun25: 90419
+            },
+            'Coconino': {
+                population: 148366,
+                jun24: 39086, jul24: 38704, aug24: 38525, sep24: 38160, oct24: 37755, nov24: 36897,
+                dec24: 36163, jan25: 35516, feb25: 35413, mar25: 35362, apr25: 34995, may25: 34780, jun25: 34238
+            },
+            'Navajo': {
+                population: 106717,
+                jun24: 54934, jul24: 54878, aug24: 54567, sep24: 54183, oct24: 53845, nov24: 53059,
+                dec24: 52382, jan25: 51721, feb25: 51416, mar25: 51223, apr25: 51019, may25: 50695, jun25: 49988
+            },
+            'Apache': {
+                population: 64042,
+                jun24: 36674, jul24: 36542, aug24: 36363, sep24: 36187, oct24: 35940, nov24: 35362,
+                dec24: 34952, jan25: 34513, feb25: 34296, mar25: 34086, apr25: 33891, may25: 33729, jun25: 33178
+            },
+            'Cochise': {
+                population: 125447,
+                jun24: 44303, jul24: 44007, aug24: 43823, sep24: 43626, oct24: 43324, nov24: 42862,
+                dec24: 42266, jan25: 41803, feb25: 41613, mar25: 41411, apr25: 41075, may25: 40951, jun25: 40466
+            },
+            'Santa Cruz': {
+                population: 47669,
+                jun24: 23611, jul24: 23462, aug24: 23341, sep24: 23203, oct24: 23104, nov24: 22780,
+                dec24: 22566, jan25: 22240, feb25: 22030, mar25: 21949, apr25: 21828, may25: 21751, jun25: 21472
+            },
+            'Graham': {
+                population: 38533,
+                jun24: 18743, jul24: 18648, aug24: 18611, sep24: 18493, oct24: 18395, nov24: 18172,
+                dec24: 17907, jan25: 17734, feb25: 17578, mar25: 17449, apr25: 17290, may25: 17145, jun25: 16770
+            },
+            'La Paz': {
+                population: 17060,
+                jun24: 7071, jul24: 7039, aug24: 7024, sep24: 6956, oct24: 6911, nov24: 6838,
+                dec24: 6720, jan25: 6609, feb25: 6605, mar25: 6558, apr25: 6436, may25: 6406, jun25: 6323
+            },
+            'Gila': {
+                population: 53272,
+                jun24: 14325, jul24: 14218, aug24: 14151, sep24: 13974, oct24: 13855, nov24: 13623,
+                dec24: 13381, jan25: 13066, feb25: 12959, mar25: 12920, apr25: 12785, may25: 12682, jun25: 12531
+            },
+            'Greenlee': {
+                population: 9453,
+                jun24: 1913, jul24: 1906, aug24: 1869, sep24: 1842, oct24: 1845, nov24: 1801,
+                dec24: 1783, jan25: 1779, feb25: 1761, mar25: 1727, apr25: 1716, may25: 1706, jun25: 1684
+            }
+        };
+
+        // Period labels mapping
+        const periodLabels = {
+            jun24: 'June 2024', jul24: 'July 2024', aug24: 'August 2024', sep24: 'September 2024',
+            oct24: 'October 2024', nov24: 'November 2024', dec24: 'December 2024', jan25: 'January 2025',
+            feb25: 'February 2025', mar25: 'March 2025', apr25: 'April 2025', may25: 'May 2025', jun25: 'June 2025'
+        };
+
+        let currentPeriod = 'jun25';
+        let currentView = 'enrollment';
+
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                e.target.classList.add('active');
+                
+                // Show corresponding content
+                const tabId = e.target.dataset.tab + '-tab';
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // Update total enrolled in header
+        function updateHeaderStats() {
+            const totalEnrolled = Object.values(countyData).reduce((sum, county) => sum + county[currentPeriod], 0);
+            document.getElementById('total-enrolled').textContent = (totalEnrolled / 1000000).toFixed(2) + 'M';
+        }
+
+        // Generate main chart
+        function updateMainChart() {
+            const chartGrid = document.getElementById('chart-grid');
+            const chartTitle = document.getElementById('main-chart-title');
+            
+            // Create array with data
+            const chartData = Object.entries(countyData).map(([county, data]) => {
+                const enrollment = data[currentPeriod];
+                const population = data.population;
+                const rate = (enrollment / population) * 100;
+                
+                return { county, enrollment, population, rate };
+            });
+
+            // Sort by current view
+            if (currentView === 'enrollment') {
+                chartData.sort((a, b) => b.enrollment - a.enrollment);
+                chartTitle.textContent = `County Enrollment - ${periodLabels[currentPeriod]}`;
+            } else {
+                chartData.sort((a, b) => b.rate - a.rate);
+                chartTitle.textContent = `County Enrollment Rate - ${periodLabels[currentPeriod]}`;
+            }
+
+            // Calculate max values for scaling
+            const maxEnrollment = Math.max(...chartData.map(d => d.enrollment));
+            const maxRate = Math.max(...chartData.map(d => d.rate));
+
+            // Generate chart rows
+            chartGrid.innerHTML = chartData.map(data => {
+                const barWidth = currentView === 'enrollment' 
+                    ? (data.enrollment / maxEnrollment) * 100 
+                    : (data.rate / maxRate) * 100;
+                
+                const displayValue = currentView === 'enrollment' 
+                    ? data.enrollment.toLocaleString()
+                    : `${data.rate.toFixed(1)}%`;
+                
+                const barClass = currentView === 'enrollment' ? '' : 'percentage-bar';
+                
+                const barLabel = currentView === 'enrollment' && barWidth > 25 && data.enrollment > 50000
+                    ? (data.enrollment / 1000).toFixed(0) + 'K' : '';
+
+                return `
+                    <div class="chart-row">
+                        <div class="county-name">${data.county}</div>
+                        <div class="bar-container">
+                            <div class="bar ${barClass}" style="width: ${barWidth}%">${barLabel}</div>
+                        </div>
+                        <div class="value-label">${displayValue}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle view handler
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentView = e.target.dataset.view;
+                updateMainChart();
+            });
+        });
+
+        // Month selector handler
+        document.getElementById('month-select').addEventListener('change', (e) => {
+            currentPeriod = e.target.value;
+            updateHeaderStats();
+            updateMainChart();
+        });
+
+        // Initialize dashboard
+        updateHeaderStats();
+        updateMainChart();
+    </script>
+</body>
+</html>

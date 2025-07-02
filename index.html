@@ -85,8 +85,9 @@
             animation: fadeIn 0.5s ease-in;
         }
 
-        /* Full height for dashboard page */
-        #hotdog-dashboard.page {
+        /* Full height for dashboard page and graph page */
+        #hotdog-dashboard.page,
+        #graph-of-day.page {
             padding: 0;
             min-height: 100vh;
         }
@@ -304,6 +305,60 @@
             opacity: 0.9;
         }
 
+        /* Graph of the Day Styles */
+        #graph-of-day {
+            background: #f8f9fa;
+            margin: -3rem -2rem 0 -2rem;
+            min-height: 100vh;
+        }
+
+        .graph-header {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .graph-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .graph-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .graph-container {
+            background: white;
+            margin: 0;
+            min-height: calc(100vh - 120px);
+            border-radius: 0;
+            overflow: hidden;
+        }
+
+        .graph-iframe {
+            width: 100%;
+            height: calc(100vh - 120px);
+            border: none;
+            background: white;
+        }
+
+        .graph-fallback {
+            padding: 3rem;
+            text-align: center;
+            color: #666;
+            background: white;
+            margin: 2rem;
+            border-radius: 10px;
+        }
+
+        .graph-fallback h2 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
         /* Hot Dog Dashboard Styles */
         #hotdog-dashboard {
             background: #0f1419;
@@ -313,17 +368,21 @@
             min-height: 100vh;
         }
 
-        /* Hide header and footer when dashboard is active */
+        /* Hide header and footer when dashboard or graph is active */
         body.dashboard-mode header,
-        body.dashboard-mode footer {
+        body.dashboard-mode footer,
+        body.graph-mode header,
+        body.graph-mode footer {
             display: none;
         }
 
-        body.dashboard-mode .container {
+        body.dashboard-mode .container,
+        body.graph-mode .container {
             box-shadow: none;
         }
 
-        body.dashboard-mode #hotdog-dashboard {
+        body.dashboard-mode #hotdog-dashboard,
+        body.graph-mode #graph-of-day {
             margin: 0;
             padding: 0;
         }
@@ -763,6 +822,19 @@
                 height: 600px;
             }
 
+            /* Graph of the Day Mobile */
+            .graph-header h1 {
+                font-size: 2rem;
+            }
+
+            .graph-header p {
+                font-size: 1rem;
+            }
+
+            .graph-iframe {
+                height: calc(100vh - 100px);
+            }
+
             /* Hot Dog Dashboard Mobile Optimizations */
             #hotdog-dashboard .header-content-dashboard { 
                 flex-direction: column; 
@@ -995,6 +1067,7 @@
                         <li><a href="#immigration" class="nav-link">Immigration Stories</a></li>
                         <li><a href="#research" class="nav-link">Research</a></li>
                         <li><a href="#applications" class="nav-link">R Shiny Apps</a></li>
+                        <li><a href="#graph-of-day" class="nav-link">Graph of the Day</a></li>
                         <li><a href="#blog" class="nav-link">Blog</a></li>
                         <li><a href="#about" class="nav-link">About</a></li>
                     </ul>
@@ -1203,6 +1276,30 @@
                 <p style="color: #6c757d; text-align: center; max-width: 600px; margin: 0 auto;">
                     This application displays user-submitted reports of experiences with ICE to raise awareness about the lived experiences of immigrants in the US during Donald Trump's 2nd presidential administration.
                 </p>
+            </div>
+
+            <!-- Graph of the Day Page -->
+            <div id="graph-of-day" class="page">
+                <div class="graph-header">
+                    <h1>📊 Graph of the Day</h1>
+                    <p>Daily data visualization and policy insights</p>
+                </div>
+
+                <div class="graph-container">
+                    <iframe 
+                        src="graph-of-the-day.html" 
+                        class="graph-iframe"
+                        title="Graph of the Day - Interactive Data Visualization"
+                        onload="this.style.opacity='1'"
+                        onerror="this.style.display='none'; document.querySelector('.graph-fallback').style.display='block'">
+                    </iframe>
+                    
+                    <div class="graph-fallback" style="display: none;">
+                        <h2>Graph of the Day</h2>
+                        <p>The daily graph is currently being updated. Please check back soon for the latest data visualization and policy insights.</p>
+                        <p style="margin-top: 1rem; color: #888;">To set up your Graph of the Day, create a file named <code>graph-of-the-day.html</code> in the same directory as your main website.</p>
+                    </div>
+                </div>
             </div>
 
             <!-- Blog Page -->
@@ -1543,12 +1640,16 @@
             // Show selected page
             document.getElementById(pageId).classList.add('active');
             
-            // Add/remove dashboard mode for hotdog dashboard
+            // Add/remove special modes for full-screen pages
             if (pageId === 'hotdog-dashboard') {
                 document.body.classList.add('dashboard-mode');
-            } else {
+                document.body.classList.remove('graph-mode');
+            } else if (pageId === 'graph-of-day') {
+                document.body.classList.add('graph-mode');
                 document.body.classList.remove('dashboard-mode');
-                // Add active class to corresponding nav link (only for non-dashboard pages)
+            } else {
+                document.body.classList.remove('dashboard-mode', 'graph-mode');
+                // Add active class to corresponding nav link (only for non-special pages)
                 document.querySelectorAll(`nav a[href="#${pageId}"]`).forEach(link => link.classList.add('active'));
             }
             
