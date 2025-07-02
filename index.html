@@ -307,40 +307,22 @@
 
         /* Graph of the Day Styles */
         #graph-of-day {
-            background: #f8f9fa;
             margin: -3rem -2rem 0 -2rem;
             min-height: 100vh;
-        }
-
-        .graph-header {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .graph-header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-            font-weight: 700;
-        }
-
-        .graph-header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+            background: white;
         }
 
         .graph-container {
             background: white;
             margin: 0;
-            min-height: calc(100vh - 120px);
+            min-height: calc(100vh - 80px);
             border-radius: 0;
             overflow: hidden;
         }
 
         .graph-iframe {
             width: 100%;
-            height: calc(100vh - 120px);
+            height: calc(100vh - 80px);
             border: none;
             background: white;
         }
@@ -368,21 +350,17 @@
             min-height: 100vh;
         }
 
-        /* Hide header and footer when dashboard or graph is active */
+        /* Hide header and footer when dashboard is active */
         body.dashboard-mode header,
-        body.dashboard-mode footer,
-        body.graph-mode header,
-        body.graph-mode footer {
+        body.dashboard-mode footer {
             display: none;
         }
 
-        body.dashboard-mode .container,
-        body.graph-mode .container {
+        body.dashboard-mode .container {
             box-shadow: none;
         }
 
-        body.dashboard-mode #hotdog-dashboard,
-        body.graph-mode #graph-of-day {
+        body.dashboard-mode #hotdog-dashboard {
             margin: 0;
             padding: 0;
         }
@@ -823,16 +801,8 @@
             }
 
             /* Graph of the Day Mobile */
-            .graph-header h1 {
-                font-size: 2rem;
-            }
-
-            .graph-header p {
-                font-size: 1rem;
-            }
-
             .graph-iframe {
-                height: calc(100vh - 100px);
+                height: calc(100vh - 80px);
             }
 
             /* Hot Dog Dashboard Mobile Optimizations */
@@ -1280,11 +1250,6 @@
 
             <!-- Graph of the Day Page -->
             <div id="graph-of-day" class="page">
-                <div class="graph-header">
-                    <h1>📊 Graph of the Day</h1>
-                    <p>Daily data visualization and policy insights</p>
-                </div>
-
                 <div class="graph-container">
                     <iframe 
                         src="graph-of-the-day.html" 
@@ -1643,13 +1608,9 @@
             // Add/remove special modes for full-screen pages
             if (pageId === 'hotdog-dashboard') {
                 document.body.classList.add('dashboard-mode');
-                document.body.classList.remove('graph-mode');
-            } else if (pageId === 'graph-of-day') {
-                document.body.classList.add('graph-mode');
-                document.body.classList.remove('dashboard-mode');
             } else {
-                document.body.classList.remove('dashboard-mode', 'graph-mode');
-                // Add active class to corresponding nav link (only for non-special pages)
+                document.body.classList.remove('dashboard-mode');
+                // Add active class to corresponding nav link (only for non-dashboard pages)
                 document.querySelectorAll(`nav a[href="#${pageId}"]`).forEach(link => link.classList.add('active'));
             }
             
