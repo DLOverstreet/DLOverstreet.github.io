@@ -1270,6 +1270,27 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Business Pulse Page -->
+            <div id="business-pulse" class="page">
+                <div class="graph-container">
+                    <iframe 
+                        src="business-pulse.html" 
+                        class="graph-iframe"
+                        title="Business Pulse - Interactive Data Visualization"
+                        scrolling="no"
+                        frameborder="0"
+                        onload="this.style.opacity='1'"
+                        onerror="this.style.display='none'; document.querySelector('.graph-fallback').style.display='block'">
+                    </iframe>
+                    
+                    <div class="graph-fallback" style="display: none;">
+                        <h2>Business Pulse</h2>
+                        <p>The data is currently being updated. Please check back soon for the latest data visualization and policy insights.</p>
+                        <p style="margin-top: 1rem; color: #888;">To set up your business pulse, create a file named <code>business-pulse.html</code> in the same directory as your main website.</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Blog Page -->
             <div id="blog" class="page">

@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Business Pulse - July 2025 Economic Intelligence Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.98);
+            min-height: 100vh;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2b6cb8 0%, #1e40af 100%);
+            color: white;
+            padding: 25px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><radialGradient id="a"><stop offset="0" stop-color="%23ffffff" stop-opacity="0.08"/><stop offset="1" stop-color="%23ffffff" stop-opacity="0"/></radialGradient></defs><circle cx="10" cy="10" r="8" fill="url(%23a)"/><circle cx="30" cy="15" r="6" fill="url(%23a)"/><circle cx="50" cy="5" r="4" fill="url(%23a)"/><circle cx="70" cy="12" r="7" fill="url(%23a)"/><circle cx="90" cy="8" r="5" fill="url(%23a)"/></svg>') repeat;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .header-stat {
+            text-align: center;
+        }
+
+        .header-stat .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .header-stat .label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .last-updated {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .tab-container {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 40px;
+            overflow-x: auto;
+        }
+
+        .tab-nav {
+            display: flex;
+            gap: 0;
+            min-width: max-content;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 18px 25px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: #2563eb;
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .tab-button.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+            background: white;
+        }
+
+        .tab-content {
+            padding: 40px;
+            min-height: calc(100vh - 200px);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(135deg, #2b6cb8 0%, #1e40af 100%);
+            border-radius: 2px;
+        }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+
+        .metric-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #2b6cb8 0%, #1e40af 100%);
+        }
+
+        .metric-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 15px;
+        }
+
+        .metric-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .metric-change {
+            font-size: 0.9rem;
+            padding: 4px 10px;
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .metric-change.positive {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+
+        .metric-change.negative {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .metric-change.neutral {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .breakdown-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border-left: 4px solid #2b6cb8;
+        }
+
+        .breakdown-item h4 {
+            font-size: 0.85rem;
+            color: #6b7280;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .breakdown-item .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #374151;
+        }
+
+        .economic-summary {
+            background: linear-gradient(135deg, #2b6cb8 0%, #1e40af 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .economic-summary h3 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+        }
+
+        .economic-summary p {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .highlight-stat {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .future-outlook {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 25px;
+        }
+
+        .alert-box {
+            background: #fef3cd;
+            border: 1px solid #f6cc6d;
+            color: #92400e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 5px solid #f59e0b;
+        }
+
+        .alert-box h4 {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .tab-content { padding: 20px; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .header-content { flex-direction: column; text-align: center; }
+            .header-stats { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 8px;">
+                        <h1 style="margin: 0;">The Business Pulse</h1>
+                        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">ECONOMETRIC ANALYSIS</span>
+                    </div>
+                    <p class="subtitle">Bi-weekly Deep Dive: Census Bureau BTOS Economic Intelligence</p>
+                    <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 8px; max-width: 600px; line-height: 1.4;">
+                        Translating complex business sentiment data into clear insights about where the American economy is heading—no partisan spin, just empirical analysis.
+                    </p>
+                    <div class="last-updated">Data Period: July 2025 (Collection: Jun 16-29, 2025) | Bi-weekly Survey</div>
+                </div>
+                <div class="header-stats">
+                    <div class="header-stat">
+                        <span class="value">52.2</span>
+                        <span class="label">Performance Index</span>
+                    </div>
+                    <div class="header-stat">
+                        <span class="value">41.7</span>
+                        <span class="label">Revenue Index</span>
+                    </div>
+                    <div class="header-stat">
+                        <span class="value">67.7</span>
+                        <span class="label">Input Price Index</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #1a365d; color: white; padding: 30px 40px; text-align: center;">
+            <div style="max-width: 1400px; margin: 0 auto;">
+                <h3 style="margin-bottom: 15px; color: #60a5fa;">The Business Pulse</h3>
+                <p style="font-size: 0.95rem; opacity: 0.9; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                    Bi-weekly econometric analysis of the Census Bureau's Business Trends and Outlook Survey. 
+                    Rigorous analysis, accessible insights, zero partisan spin.
+                </p>
+                <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; font-size: 0.85rem; opacity: 0.8;">
+                    <span>📊 Source: U.S. Census Bureau BTOS</span>
+                    <span>🔬 Analysis: The Business Pulse</span>
+                    <span>📅 Published: Bi-weekly</span>
+                    <span>📈 Coverage: National Economic Intelligence</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tab-container">
+            <div class="tab-nav">
+                <button class="tab-button active" onclick="showTab('overview')">Economic Overview</button>
+                <button class="tab-button" onclick="showTab('performance')">Business Performance</button>
+                <button class="tab-button" onclick="showTab('operations')">Operations & Labor</button>
+                <button class="tab-button" onclick="showTab('supply-chain')">Supply Chain & Inventory</button>
+                <button class="tab-button" onclick="showTab('pricing')">Pricing & Costs</button>
+                <button class="tab-button" onclick="showTab('outlook')">Future Outlook</button>
+                <button class="tab-button" onclick="showTab('external')">External Factors</button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Economic Overview Tab -->
+            <div id="overview" class="tab-panel active">
+                <div class="economic-summary">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                        <h3 style="margin: 0;">📈 Business Pulse Intelligence Brief</h3>
+                        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">JULY 2025 EDITION</span>
+                    </div>
+                    <p><strong>Key Finding:</strong> The latest BTOS data shows continued economic headwinds with persistent margin compression. Input costs remain elevated (<span class="highlight-stat">67.7 index vs 55.1 output price index</span>) while revenue sentiment stays weak with <span class="highlight-stat">30.1% reporting decreased revenue vs 13.6% increased</span>. Employment remains stable but with concerning trends in hours worked. The gap between input and output prices has narrowed slightly but still indicates significant business pressure heading into late 2025.</p>
+                </div>
+
+                <div class="alert-box">
+                    <h4>📊 About The Business Pulse Analysis</h4>
+                    <p><strong>BTOS Index Methodology:</strong> Values above 50 indicate net positive sentiment (more increases than decreases), while values below 50 indicate net negative sentiment. The indices are calculated from business owner responses about changes in their operations over the past two weeks compared to the prior two-week period. Our analysis synthesizes ~1.2M business responses into actionable economic intelligence.</p>
+                </div>
+
+                <h2 class="section-title">Key Economic Indicators</h2>
+                <div class="grid-4">
+                    <div class="metric-card">
+                        <div class="metric-title">Business Performance Index</div>
+                        <div class="metric-value">52.2</div>
+                        <div class="metric-change negative">-0.1 vs prev period</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Revenue Sentiment Index</div>
+                        <div class="metric-value">41.7</div>
+                        <div class="metric-change negative">-0.4 vs prev period</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Employment Index</div>
+                        <div class="metric-value">48.4</div>
+                        <div class="metric-change neutral">+0.0 vs prev period</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Demand Index</div>
+                        <div class="metric-value">43.7</div>
+                        <div class="metric-change negative">Below neutral (50)</div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Economic Sentiment Trends</h3>
+                        <canvas id="overviewChart" width="400" height="250"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3 class="chart-title">Price Pressure Analysis</h3>
+                        <canvas id="pricePressureChart" width="400" height="250"></canvas>
+                    </div>
+                </div>
+
+                <div class="alert-box">
+                    <h4>⚠️ Margin Compression Continues</h4>
+                    <p>Input prices continue rising faster than output prices (67.7 vs 55.1 index), indicating ongoing margin pressure across the economy. While the gap has narrowed from the previous period, businesses remain under significant cost pressure.</p>
+                </div>
+            </div>
+
+            <!-- Business Performance Tab -->
+            <div id="performance" class="tab-panel">
+                <h2 class="section-title">Business Performance Analysis</h2>
+                
+                <div class="alert-box">
+                    <h4>📊 What This Measures</h4>
+                    <p><strong>Survey Question:</strong> "Overall, how would you describe this business's current performance?" Business owners rate their company on a 5-point scale from Excellent to Poor. Additionally, they report how their operating revenues/sales/receipts and demand changed in the last two weeks compared to the previous two-week period.</p>
+                </div>
+                
+                <div class="grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Current Performance Distribution</h3>
+                        <canvas id="performanceBreakdown" width="400" height="300"></canvas>
+                        <p style="font-size: 0.9rem; color: #6b7280; text-align: center; margin-top: 15px;">
+                            Performance Index: 52.2 (Above 50 = More positive than negative sentiment)
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Performance Summary</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Excellent</h4>
+                                <div class="value">9.6%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Above Average</h4>
+                                <div class="value">18.1%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Average</h4>
+                                <div class="value">49.6%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Below Average</h4>
+                                <div class="value">17.0%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Poor</h4>
+                                <div class="value">5.7%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 15px;">
+                            27.7% rate performance as above average or excellent vs 22.7% below average or poor
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-title">Revenue Changes (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Increased</h4>
+                                <div class="value">13.6%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Decreased</h4>
+                                <div class="value">30.1%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">56.2%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            <strong>Survey asks:</strong> "How did this business's operating revenues/sales/receipts change in the last two weeks?"
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Demand Changes (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Increased</h4>
+                                <div class="value">12.5%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Decreased</h4>
+                                <div class="value">25.1%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">62.4%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            <strong>Survey asks:</strong> "How did demand for this business's goods or services change in the last two weeks?"
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Net Performance Impact</div>
+                        <div class="metric-value">-16.5%</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Net revenue change (13.6% increased - 30.1% decreased). Negative indicates more businesses experiencing revenue declines than increases.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operations & Labor Tab -->
+            <div id="operations" class="tab-panel">
+                <h2 class="section-title">Employment & Labor Market</h2>
+                
+                <div class="alert-box">
+                    <h4>👥 What This Measures</h4>
+                    <p><strong>Survey Questions:</strong> Business owners report changes in their number of paid employees and total hours worked in the last two weeks. They also indicate whether any employees worked from home for at least one workday (6+ hours). These metrics provide real-time labor market conditions.</p>
+                </div>
+                
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-title">Employment Changes (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Increased</h4>
+                                <div class="value">6.2%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Decreased</h4>
+                                <div class="value">9.4%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">84.3%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Employment Index: 48.4 (Below 50 indicates net job losses)
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Hours Worked Changes (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Increased</h4>
+                                <div class="value">8.6%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Decreased</h4>
+                                <div class="value">15.5%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">75.9%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Hours Index: 46.5 (Well below 50 indicates reduced work hours)
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Work From Home Adoption</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Yes</h4>
+                                <div class="value">42.5%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No</h4>
+                                <div class="value">57.5%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            <strong>Survey asks:</strong> "Did this business have any paid employees who worked from home for at least one workday?"
+                        </p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">Labor Market Indicators</h3>
+                    <canvas id="laborChart" width="800" height="300"></canvas>
+                </div>
+
+                <div class="alert-box">
+                    <h4>📊 Labor Market Insight</h4>
+                    <p>Employment remains relatively stable with 84.3% of businesses reporting no change. However, <strong>net employment continues declining</strong> (9.4% decreased vs 6.2% increased). Hours worked show concerning trends with 15.5% reducing hours vs only 8.6% increasing them, suggesting businesses are managing costs through reduced hours rather than layoffs.</p>
+                </div>
+            </div>
+
+            <!-- Supply Chain & Inventory Tab -->
+            <div id="supply-chain" class="tab-panel">
+                <h2 class="section-title">Supply Chain & Inventory Management</h2>
+                
+                <div class="alert-box">
+                    <h4>🚚 What This Measures</h4>
+                    <p><strong>Survey Questions:</strong> "How did the time it takes for this business to receive deliveries from suppliers change in the last two weeks?" and "How would you describe this business's current inventories?" These track supply chain efficiency and inventory management decisions in real-time.</p>
+                </div>
+                
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-title">Delivery Time Changes (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Increased</h4>
+                                <div class="value">9.1%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Decreased</h4>
+                                <div class="value">4.2%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">56.0%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Not Applicable</h4>
+                                <div class="value">30.7%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Net change: +4.9% (more delays than improvements)
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Current Inventory Levels</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Too High</h4>
+                                <div class="value">8.4%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>About Right</h4>
+                                <div class="value">68.2%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Too Low</h4>
+                                <div class="value">23.4%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            <strong>Options:</strong> Too high, About right, Too low, Not applicable
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Supply Chain Index</div>
+                        <div class="metric-value">53.3</div>
+                        <div class="metric-change negative">Slightly longer times</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Values above 50 indicate longer delivery times on average. Index measures net change in delivery speed.</p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">Supply Chain Performance Trends</h3>
+                    <canvas id="supplyChainChart" width="800" height="300"></canvas>
+                    <p style="font-size: 0.9rem; color: #6b7280; text-align: center; margin-top: 15px;">
+                        Values above 50 indicate net lengthening of delivery times
+                    </p>
+                </div>
+
+                <div class="alert-box">
+                    <h4>📦 Supply Chain Analysis</h4>
+                    <p>Supply chains show modest stress with <strong>9.1% reporting longer delivery times vs 4.2% shorter</strong>, resulting in a delivery time index of 53.3. Inventory management appears relatively balanced, though <strong>23.4% report inventories as "too low"</strong> compared to 8.4% "too high," suggesting some businesses may be understocked.</p>
+                </div>
+            </div>
+
+            <!-- Pricing & Costs Tab -->
+            <div id="pricing" class="tab-panel">
+                <h2 class="section-title">Pricing Dynamics & Cost Pressures</h2>
+                
+                <div class="alert-box">
+                    <h4>💰 What This Measures</h4>
+                    <p><strong>Survey Questions:</strong> "How did the prices this business pays for goods or services change in the last two weeks?" (input costs) and "How did the prices this business charges for its own goods or services change in the last two weeks?" (output prices). These track inflation pressures from both cost and revenue perspectives.</p>
+                </div>
+                
+                <div class="alert-box">
+                    <h4>📉 Cost Pressure Update</h4>
+                    <p>Input cost pressures have eased slightly but remain elevated. The gap between input and output price increases has narrowed but still indicates margin pressure.</p>
+                </div>
+
+                <div class="grid-2">
+                    <div class="metric-card">
+                        <div class="metric-title">Input Price Changes - What Businesses Pay (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Increased</h4>
+                                <div class="value">38.5%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Decreased</h4>
+                                <div class="value">3.1%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">58.4%</div>
+                            </div>
+                        </div>
+                        <div class="metric-change negative">Index: 67.7 (High but easing pressure)</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Net cost increase: +35.4% (38.5% - 3.1%)
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Output Price Changes - What Businesses Charge (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Increased</h4>
+                                <div class="value">15.7%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>Decreased</h4>
+                                <div class="value">5.5%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">78.8%</div>
+                            </div>
+                        </div>
+                        <div class="metric-change neutral">Index: 55.1 (Moderate increase)</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Net price increase: +10.2% (15.7% - 5.5%)
+                        </p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">Price Pressure Comparison</h3>
+                    <canvas id="priceComparisonChart" width="800" height="300"></canvas>
+                    <p style="font-size: 0.9rem; color: #6b7280; text-align: center; margin-top: 15px;">
+                        Narrowing gap indicates some easing of margin pressure on businesses
+                    </p>
+                </div>
+
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-title">Price Pressure Gap</div>
+                        <div class="metric-value">+22.8%</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Difference between businesses raising input vs output prices (38.5% - 15.7%). Large gaps indicate margin compression.</p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Net Output Price Impact</div>
+                        <div class="metric-value">+10.2%</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Net output price change (15.7% increased - 5.5% decreased). Shows businesses' ability to pass through costs.</p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Margin Pressure Score</div>
+                        <div class="metric-value">⚠️ HIGH</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Based on input/output price differential. Still elevated but showing improvement from previous period.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Future Outlook Tab -->
+            <div id="outlook" class="tab-panel">
+                <h2 class="section-title">6-Month Economic Outlook</h2>
+                
+                <div class="alert-box">
+                    <h4>🔮 What This Measures</h4>
+                    <p><strong>Survey Questions:</strong> Business owners are asked about their expectations six months from now (around January 2026) across multiple areas: performance ("How do you think you will describe this business's performance?"), employment levels, hours worked, delivery times, inventory levels, demand, and pricing. These forward-looking indicators help predict economic trends.</p>
+                </div>
+                
+                <div class="future-outlook">
+                    <h3>💡 Forward-Looking Economic Indicators</h3>
+                    <p>Business expectations for the next six months (through January 2026) show cautious stability. The future performance index (52.5) suggests businesses expect conditions to remain steady, while employment expectations (50.3) indicate modest hiring plans. However, input price expectations (72.7) suggest businesses expect cost pressures to continue intensifying.</p>
+                </div>
+
+                <div class="grid-4">
+                    <div class="metric-card">
+                        <div class="metric-title">Future Performance Index</div>
+                        <div class="metric-value">52.5</div>
+                        <div class="metric-change positive">+0.3 vs 52.2 current</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Businesses expect modest performance improvement
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Future Employment Index</div>
+                        <div class="metric-value">50.3</div>
+                        <div class="metric-change positive">+1.9 vs current 48.4</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Modest improvement expected in hiring
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Future Demand Index</div>
+                        <div class="metric-value">50.1</div>
+                        <div class="metric-change positive">+6.4 vs current 43.7</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Significant demand recovery expected
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Future Input Prices Index</div>
+                        <div class="metric-value">72.7</div>
+                        <div class="metric-change negative">+5.0 vs current 67.7</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Businesses expect cost pressures to worsen
+                        </p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">Current vs Future Expectations</h3>
+                    <canvas id="outlookChart" width="800" height="400"></canvas>
+                    <p style="font-size: 0.9rem; color: #6b7280; text-align: center; margin-top: 15px;">
+                        Radar chart comparing current conditions (blue) with 6-month expectations (pink). Values above 50 indicate positive sentiment.
+                    </p>
+                </div>
+
+                <div class="alert-box">
+                    <h4>📈 Key Outlook Insights</h4>
+                    <p><strong>Cautious optimism for early 2026:</strong> While businesses expect demand to recover (+6.4 points) and modest employment growth (+1.9 points) by January 2026, they also anticipate worsening cost pressures (+5.0 points on input prices). This suggests continued challenging conditions where businesses will need to balance growth investments against margin pressure through the remainder of 2025.</p>
+                </div>
+            </div>
+
+            <!-- External Factors Tab -->
+            <div id="external" class="tab-panel">
+                <h2 class="section-title">External Economic Factors</h2>
+                
+                <div class="alert-box">
+                    <h4>🌍 What This Measures</h4>
+                    <p><strong>Survey Questions:</strong> Businesses report on external factors affecting their operations including: "In what ways did changes to interest rates negatively impact this business?" (January 2025 - July 2025 period), "Did this business experience monetary losses due to extreme weather events?" (January 2025 - July 2025 period), and "Did this business change its mix of goods or services in the last two weeks?"</p>
+                </div>
+                
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-title">Interest Rate Impact (Jan 2025 - Jul 2025)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Negative Impact</h4>
+                                <div class="value">29.2%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Impact</h4>
+                                <div class="value">70.8%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            <strong>Categories include:</strong> Reduced investment, higher borrowing costs, delayed expansion plans, reduced cash flow (Jan 2025 - Jul 2025)
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Extreme Weather Losses (Jan 2025 - Jul 2025)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Experienced Losses</h4>
+                                <div class="value">8.7%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Losses</h4>
+                                <div class="value">91.3%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            <strong>Weather types:</strong> Hurricane, flood, drought, heat wave, wildfire, winter storm, tornado, other (Jan 2025 - Jul 2025)
+                        </p>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Business Mix Changes (Last 2 Weeks)</div>
+                        <div class="breakdown-grid">
+                            <div class="breakdown-item">
+                                <h4>Changed Mix</h4>
+                                <div class="value">24.1%</div>
+                            </div>
+                            <div class="breakdown-item">
+                                <h4>No Change</h4>
+                                <div class="value">75.9%</div>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
+                            Includes changing product/service offerings, market focus, or business model adaptations
+                        </p>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">External Factor Impact Analysis</h3>
+                    <canvas id="externalChart" width="800" height="300"></canvas>
+                    <p style="font-size: 0.9rem; color: #6b7280; text-align: center; margin-top: 15px;">
+                        Percentage of businesses affected by each external factor
+                    </p>
+                </div>
+
+                <div class="alert-box">
+                    <h4>🏦 External Pressure Analysis</h4>
+                    <p><strong>Interest rates remain the primary external pressure</strong> with 29.2% of businesses reporting negative impacts from January through July 2025. This likely includes reduced investment, higher borrowing costs, and delayed expansion plans. Weather events affected 8.7% of businesses during this same period, while 24.1% made strategic pivots in their business mix in the most recent two-week period, suggesting continued adaptive responses to economic pressures.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        function showTab(tabName) {
+            // Hide all tab panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected tab panel
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        // Chart configurations
+        const chartOptions = {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 20, usePointStyle: true }
+                }
+            },
+            scales: {
+                y: { 
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    beginAtZero: false
+                },
+                x: { grid: { color: 'rgba(0, 0, 0, 0.05)' } }
+            }
+        };
+
+        // Sample time periods for charts - updated to show latest period
+        const periods = ['May 2025', 'Jun 2025', 'Jul 2025'];
+
+        // Overview Chart - Updated with latest data
+        new Chart(document.getElementById('overviewChart'), {
+            type: 'line',
+            data: {
+                labels: periods,
+                datasets: [
+                    {
+                        label: 'Performance Index',
+                        data: [52.0, 52.3, 52.2],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Revenue Index',
+                        data: [42.4, 42.1, 41.7],
+                        borderColor: '#f093fb',
+                        backgroundColor: 'rgba(240, 147, 251, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: chartOptions
+        });
+
+        // Price Pressure Chart - Updated with latest data
+        new Chart(document.getElementById('pricePressureChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Input Prices', 'Output Prices'],
+                datasets: [{
+                    label: 'Index Value',
+                    data: [67.7, 55.1],
+                    backgroundColor: ['#ef4444', '#10b981'],
+                    borderColor: ['#dc2626', '#059669'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    y: { beginAtZero: true, max: 80 }
+                }
+            }
+        });
+
+        // Performance Breakdown - Updated with latest data
+        new Chart(document.getElementById('performanceBreakdown'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Excellent', 'Above Average', 'Average', 'Below Average', 'Poor'],
+                datasets: [{
+                    data: [9.6, 18.1, 49.6, 17.0, 5.7],
+                    backgroundColor: ['#10B981', '#34D399', '#FCD34D', '#F97316', '#EF4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } }
+                },
+                cutout: '60%'
+            }
+        });
+
+        // Labor Chart - Updated with latest data
+        new Chart(document.getElementById('laborChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Employment Index', 'Hours Index', 'WFH Adoption %'],
+                datasets: [{
+                    label: 'Current Values',
+                    data: [48.4, 46.5, 42.5],
+                    backgroundColor: ['#667eea', '#764ba2', '#f093fb']
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Supply Chain Chart - Updated with latest data
+        new Chart(document.getElementById('supplyChainChart'), {
+            type: 'line',
+            data: {
+                labels: periods,
+                datasets: [{
+                    label: 'Delivery Time Index',
+                    data: [53.8, 53.5, 53.3],
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Price Comparison Chart - Updated with latest data
+        new Chart(document.getElementById('priceComparisonChart'), {
+            type: 'line',
+            data: {
+                labels: periods,
+                datasets: [
+                    {
+                        label: 'Input Price Index',
+                        data: [69.1, 69.8, 67.7],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Output Price Index',
+                        data: [56.2, 56.4, 55.1],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    y: { beginAtZero: false, min: 50, max: 75 }
+                }
+            }
+        });
+
+        // Outlook Chart - Updated with latest data
+        new Chart(document.getElementById('outlookChart'), {
+            type: 'radar',
+            data: {
+                labels: ['Performance', 'Employment', 'Hours', 'Demand', 'Supply Chain', 'Input Prices'],
+                datasets: [
+                    {
+                        label: 'Current',
+                        data: [52.2, 48.4, 46.5, 43.7, 53.3, 67.7],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Future Outlook',
+                        data: [52.5, 50.3, 49.3, 50.1, 54.0, 72.7],
+                        borderColor: '#f093fb',
+                        backgroundColor: 'rgba(240, 147, 251, 0.2)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: false,
+                        min: 35,
+                        max: 80
+                    }
+                }
+            }
+        });
+
+        // External Factors Chart - Updated with latest data
+        new Chart(document.getElementById('externalChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Interest Rate Impact', 'Weather Losses', 'Business Mix Changes'],
+                datasets: [{
+                    label: 'Affected Businesses (%)',
+                    data: [29.2, 8.7, 24.1],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15, usePointStyle: true } }
+                },
+                cutout: '50%'
+            }
+        });
+
+        console.log('The Business Pulse Dashboard updated with July 2025 data');
+    </script>
+</body>
+</html>
