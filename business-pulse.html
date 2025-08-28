@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Business Pulse - July 2025 Economic Intelligence Dashboard</title>
+    <title>The Business Pulse - September 2025 Economic Intelligence Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -330,6 +330,16 @@
             margin-bottom: 8px;
         }
 
+        .improvement-box {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 5px solid #10b981;
+        }
+
         @media (max-width: 768px) {
             .tab-content { padding: 20px; }
             .grid-2 { grid-template-columns: 1fr; }
@@ -352,19 +362,19 @@
                     <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 8px; max-width: 600px; line-height: 1.4;">
                         Translating complex business sentiment data into clear insights about where the American economy is heading—no partisan spin, just empirical analysis.
                     </p>
-                    <div class="last-updated">Data Period: July 2025 (Collection: Jul 21-Aug 3, 2025) | Bi-weekly Survey</div>
+                    <div class="last-updated">Data Period: Early August 2025 (Collection: Aug 11-24, 2025) | Reference: Jul 28-Aug 10, 2025</div>
                 </div>
                 <div class="header-stats">
                     <div class="header-stat">
-                        <span class="value">56.9</span>
+                        <span class="value">56.8</span>
                         <span class="label">Performance Index</span>
                     </div>
                     <div class="header-stat">
-                        <span class="value">41.8</span>
+                        <span class="value">42.5</span>
                         <span class="label">Revenue Index</span>
                     </div>
                     <div class="header-stat">
-                        <span class="value">69.9</span>
+                        <span class="value">70.3</span>
                         <span class="label">Input Price Index</span>
                     </div>
                 </div>
@@ -391,9 +401,14 @@
                 <div class="economic-summary">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                         <h3 style="margin: 0;">📈 Business Pulse Intelligence Brief</h3>
-                        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">JULY 2025 EDITION</span>
+                        <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">SEPTEMBER 2025 EDITION</span>
                     </div>
-                    <p><strong>Key Finding:</strong> The latest BTOS data shows significant improvement in business performance sentiment with the performance index rising to <span class="highlight-stat">56.9 from 52.3</span>. However, revenue pressures persist with <span class="highlight-stat">32.0% reporting decreased revenue vs 15.6% increased</span>. Input cost pressures have intensified to <span class="highlight-stat">69.9 index vs 56.2 output price index</span>, creating margin challenges heading into late 2025. Employment conditions show modest net growth with 12.8% increasing vs 10.5% decreasing employees.</p>
+                    <p><strong>Key Finding:</strong> The latest BTOS data shows business performance holding steady at <span class="highlight-stat">56.8 (down 0.1)</span> with revenue conditions weakening modestly to <span class="highlight-stat">42.5 from 42.7</span>. Cost pressures remain severely elevated with input prices at <span class="highlight-stat">70.3 (up 1.6 points)</span>—well above the neutral 50 level—indicating businesses continue facing substantial cost headwinds. Importantly, output prices rose to <span class="highlight-stat">56.6 (up 1.1 points)</span>, signaling that businesses are increasingly passing these cost pressures through to consumers, contributing to consumer-side inflationary pressures.</p>
+                </div>
+
+                <div class="alert-box">
+                    <h4>⚠️ Persistent Severe Cost Pressures</h4>
+                    <p><strong>Critical Insight:</strong> Input price pressures remain severely elevated at 70.3, far above the neutral 50 level, indicating that businesses continue to face substantial cost headwinds with little relief. The concerning development is that output prices have risen to 56.6 (up 1.1 points), suggesting businesses are increasingly successful at passing cost increases through to consumers. This output price acceleration indicates growing consumer-facing inflationary pressures, while the 13.7-point gap between input and output prices still represents significant margin compression challenges.</p>
                 </div>
 
                 <div class="alert-box">
@@ -405,23 +420,23 @@
                 <div class="grid-4">
                     <div class="metric-card">
                         <div class="metric-title">Business Performance Index</div>
-                        <div class="metric-value">56.9</div>
-                        <div class="metric-change positive">+4.6 vs prev period</div>
+                        <div class="metric-value">56.8</div>
+                        <div class="metric-change negative">-0.1 vs prev period</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Revenue Sentiment Index</div>
-                        <div class="metric-value">41.8</div>
-                        <div class="metric-change negative">-0.6 vs prev period</div>
+                        <div class="metric-value">42.5</div>
+                        <div class="metric-change negative">-0.2 vs prev period</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Employment Index</div>
-                        <div class="metric-value">48.2</div>
-                        <div class="metric-change positive">+0.1 vs prev period</div>
+                        <div class="metric-value">47.9</div>
+                        <div class="metric-change negative">-0.2 vs prev period</div>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Demand Index</div>
-                        <div class="metric-value">43.6</div>
-                        <div class="metric-change negative">-0.6 vs prev period</div>
+                        <div class="metric-value">43.8</div>
+                        <div class="metric-change negative">-0.3 vs prev period</div>
                     </div>
                 </div>
 
@@ -434,11 +449,6 @@
                         <h3 class="chart-title">Price Pressure Analysis</h3>
                         <canvas id="pricePressureChart" width="400" height="250"></canvas>
                     </div>
-                </div>
-
-                <div class="alert-box">
-                    <h4>⚠️ Margin Pressure Intensifying</h4>
-                    <p>Input prices have surged to 69.9 from 67.3 while output prices rose modestly to 56.2 from 54.8, widening the gap to 13.7 points from 12.5 points. This represents the highest input cost pressure in recent periods, indicating businesses are struggling to pass through cost increases to customers.</p>
                 </div>
             </div>
 
@@ -456,7 +466,7 @@
                         <h3 class="chart-title">Current Performance Distribution</h3>
                         <canvas id="performanceBreakdown" width="400" height="300"></canvas>
                         <p style="font-size: 0.9rem; color: #6b7280; text-align: center; margin-top: 15px;">
-                            Performance Index: 56.9 (Well above 50 = Strong positive sentiment)
+                            Performance Index: 56.8 (Well above 50 = Strong positive sentiment)
                         </p>
                     </div>
                     <div class="metric-card">
@@ -464,27 +474,27 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Excellent</h4>
-                                <div class="value">14.4%</div>
+                                <div class="value">14.8%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Above Average</h4>
-                                <div class="value">21.4%</div>
+                                <div class="value">20.7%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Average</h4>
-                                <div class="value">45.4%</div>
+                                <div class="value">45.5%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Below Average</h4>
-                                <div class="value">15.0%</div>
+                                <div class="value">14.9%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Poor</h4>
-                                <div class="value">3.7%</div>
+                                <div class="value">4.2%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 15px;">
-                            35.8% rate performance as above average or excellent vs 18.7% below average or poor
+                            35.5% rate performance as above average or excellent vs 19.1% below average or poor
                         </p>
                     </div>
                 </div>
@@ -495,15 +505,15 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Increased</h4>
-                                <div class="value">15.6%</div>
+                                <div class="value">15.3%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Decreased</h4>
-                                <div class="value">32.0%</div>
+                                <div class="value">30.4%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Change</h4>
-                                <div class="value">52.4%</div>
+                                <div class="value">54.3%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
@@ -515,15 +525,15 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Increased</h4>
-                                <div class="value">22.7%</div>
+                                <div class="value">11.9%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Decreased</h4>
-                                <div class="value">18.7%</div>
+                                <div class="value">24.4%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Change</h4>
-                                <div class="value">58.6%</div>
+                                <div class="value">63.6%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
@@ -532,8 +542,8 @@
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Net Performance Impact</div>
-                        <div class="metric-value">-16.4%</div>
-                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Net revenue change (15.6% increased - 32.0% decreased). Significant negative indicates widespread revenue pressures despite improved performance sentiment.</p>
+                        <div class="metric-value">-15.1%</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Net revenue change (15.3% increased - 30.4% decreased). Revenue conditions remain challenging with twice as many businesses reporting decreases versus increases.</p>
                     </div>
                 </div>
             </div>
@@ -553,19 +563,19 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Increased</h4>
-                                <div class="value">12.8%</div>
+                                <div class="value">5.4%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Decreased</h4>
-                                <div class="value">10.5%</div>
+                                <div class="value">9.6%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Change</h4>
-                                <div class="value">76.7%</div>
+                                <div class="value">84.9%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Employment Index: 48.2 (Slight net hiring trend)
+                            Employment Index: 47.9 (Below 50 indicates net job losses)
                         </p>
                     </div>
                     <div class="metric-card">
@@ -573,19 +583,19 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Increased</h4>
-                                <div class="value">10.2%</div>
+                                <div class="value">7.9%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Decreased</h4>
-                                <div class="value">17.6%</div>
+                                <div class="value">15.2%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Change</h4>
-                                <div class="value">72.2%</div>
+                                <div class="value">76.9%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Hours Index: 46.0 (Below 50 indicates reduced work hours)
+                            Hours Index: 46.4 (Decline from 46.8, remaining below 50)
                         </p>
                     </div>
                     <div class="metric-card">
@@ -613,7 +623,7 @@
 
                 <div class="alert-box">
                     <h4>📊 Labor Market Insight</h4>
-                    <p>Employment shows modest net growth with <strong>12.8% of businesses increasing employees vs 10.5% decreasing</strong>, a net positive of 2.3%. However, hours worked continue declining with 17.6% reducing hours vs only 10.2% increasing them, suggesting businesses are optimizing costs through reduced hours rather than layoffs. Work from home adoption remains steady at 28.5%.</p>
+                    <p>Employment conditions continue to show net contraction with <strong>5.4% of businesses increasing employees vs 9.6% decreasing</strong>, a net negative of 4.2 percentage points. Hours worked deteriorated with the index declining to 46.4 from 46.8, indicating businesses are further reducing work hours. Nearly twice as many businesses decreased hours (15.2%) compared to those that increased hours (7.9%). Work from home adoption remains stable at roughly 28.5%. Overall, labor market indicators suggest persistent softening in employment conditions.</p>
                 </div>
             </div>
 
@@ -632,7 +642,7 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Increased</h4>
-                                <div class="value">9.9%</div>
+                                <div class="value">8.2%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Decreased</h4>
@@ -640,15 +650,15 @@
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Change</h4>
-                                <div class="value">50.9%</div>
+                                <div class="value">60.1%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Not Applicable</h4>
-                                <div class="value">34.8%</div>
+                                <div class="value">27.3%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Net change: +5.5% (more delays than improvements)
+                            Net change: +3.8% (slight increase in delays)
                         </p>
                     </div>
                     <div class="metric-card">
@@ -656,7 +666,7 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Too High</h4>
-                                <div class="value">3.3%</div>
+                                <div class="value">3.2%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>About Right</h4>
@@ -664,11 +674,11 @@
                             </div>
                             <div class="breakdown-item">
                                 <h4>Too Low</h4>
-                                <div class="value">12.8%</div>
+                                <div class="value">12.7%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Not Applicable</h4>
-                                <div class="value">53.0%</div>
+                                <div class="value">53.2%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
@@ -677,9 +687,9 @@
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Supply Chain Index</div>
-                        <div class="metric-value">52.9</div>
-                        <div class="metric-change negative">Slightly longer times</div>
-                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Values above 50 indicate longer delivery times on average. Index measures net change in delivery speed.</p>
+                        <div class="metric-value">53.0</div>
+                        <div class="metric-change positive">Up from 52.6</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Values above 50 indicate longer delivery times on average. Uptick suggests modest deterioration in supply chain conditions.</p>
                     </div>
                 </div>
 
@@ -692,8 +702,8 @@
                 </div>
 
                 <div class="alert-box">
-                    <h4>📦 Supply Chain Analysis</h4>
-                    <p>Supply chains show modest deterioration with <strong>9.9% reporting longer delivery times vs 4.4% shorter</strong>, resulting in a delivery time index of 52.9. Inventory management shows continued imbalances, with <strong>12.8% reporting inventories as "too low"</strong> compared to 3.3% "too high," while 30.9% report optimal levels.</p>
+                    <h4>📦 Supply Chain Conditions</h4>
+                    <p>Supply chains show slight deterioration with delivery time index rising to 53.0 from 52.6. This modest increase indicates continued challenges with delivery times trending longer rather than shorter. Inventory management shows persistent imbalances, with <strong>12.7% reporting inventories as "too low"</strong> compared to 3.2% "too high," while 30.9% report optimal levels. The four-to-one ratio of too-low vs too-high inventories suggests ongoing supply chain stress.</p>
                 </div>
             </div>
 
@@ -707,8 +717,8 @@
                 </div>
                 
                 <div class="alert-box">
-                    <h4>🚨 Cost Pressure Surge</h4>
-                    <p>Input cost pressures have intensified dramatically with both input and output prices rising, but input costs accelerating much faster. The gap between input and output price increases has widened significantly, indicating severe margin pressure.</p>
+                    <h4>🔥 Sustained High Cost Pressures & Consumer Inflation</h4>
+                    <p>Cost pressures remain severely elevated with the input price index at 70.3—far above the neutral 50 level, with <strong>42.0% of businesses reporting increased input costs</strong> versus only 1.5% reporting decreases. The key development is output prices rising to 56.6 (up 1.1 points), indicating businesses are increasingly passing cost increases through to consumers, contributing to consumer-side inflation. The gap between input and output price pressures remains substantial at 13.7 points, indicating ongoing margin compression challenges despite improved pass-through capabilities.</p>
                 </div>
 
                 <div class="grid-2">
@@ -717,20 +727,20 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Increased</h4>
-                                <div class="value">54.4%</div>
+                                <div class="value">42.0%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Decreased</h4>
-                                <div class="value">2.3%</div>
+                                <div class="value">1.5%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Change</h4>
-                                <div class="value">43.3%</div>
+                                <div class="value">56.5%</div>
                             </div>
                         </div>
-                        <div class="metric-change negative">Index: 69.9 (Up from 67.3)</div>
+                        <div class="metric-change positive">Index: 70.3 (Up from 68.7)</div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Net cost increase: +52.1% (54.4% - 2.3%)
+                            Net cost increase: +40.5% (42.0% - 1.5%)
                         </p>
                     </div>
                     <div class="metric-card">
@@ -738,20 +748,20 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Increased</h4>
-                                <div class="value">34.1%</div>
+                                <div class="value">17.0%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Decreased</h4>
-                                <div class="value">4.3%</div>
+                                <div class="value">3.8%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Change</h4>
-                                <div class="value">61.7%</div>
+                                <div class="value">79.2%</div>
                             </div>
                         </div>
-                        <div class="metric-change positive">Index: 56.2 (Up from 54.8)</div>
+                        <div class="metric-change positive">Index: 56.6 (Up from 55.5)</div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Net price increase: +29.8% (34.1% - 4.3%)
+                            Net price increase: +13.2% (17.0% - 3.8%)
                         </p>
                     </div>
                 </div>
@@ -760,25 +770,25 @@
                     <h3 class="chart-title">Price Pressure Comparison</h3>
                     <canvas id="priceComparisonChart" width="800" height="300"></canvas>
                     <p style="font-size: 0.9rem; color: #6b7280; text-align: center; margin-top: 15px;">
-                        Gap has widened dramatically, indicating severe margin pressure for businesses
+                        Input costs remain severely elevated while output prices rose, indicating businesses passing costs to consumers
                     </p>
                 </div>
 
                 <div class="grid-3">
                     <div class="metric-card">
                         <div class="metric-title">Price Pressure Gap</div>
-                        <div class="metric-value">+20.3%</div>
-                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Difference between businesses raising input vs output prices (54.4% - 34.1%). Significant widening from previous period's gap.</p>
+                        <div class="metric-value">+25.0%</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Difference between businesses raising input vs output prices (42.0% - 17.0%). While the gap remains substantial, businesses show improved ability to pass costs to consumers.</p>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Net Output Price Impact</div>
-                        <div class="metric-value">+29.8%</div>
-                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Net output price change (34.1% increased - 4.3% decreased). Shows businesses' struggle to pass through all cost increases.</p>
+                        <div class="metric-value">+13.2%</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Net output price change (17.0% increased - 3.8% decreased). Businesses are raising prices but struggling to keep pace with input cost inflation.</p>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Margin Pressure Score</div>
-                        <div class="metric-value">🚨 SEVERE</div>
-                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Based on input/output price differential. Significant deterioration with the highest input cost pressures in recent periods.</p>
+                        <div class="metric-value">🔴 SEVERE</div>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">Input costs at 70.3 remain far above neutral levels, creating persistent margin pressure despite businesses' improved ability to pass costs through to consumers via higher output prices.</p>
                     </div>
                 </div>
             </div>
@@ -789,43 +799,43 @@
                 
                 <div class="alert-box">
                     <h4>🔮 What This Measures</h4>
-                    <p><strong>Survey Questions:</strong> Business owners are asked about their expectations six months from now (around January 2026) across multiple areas: performance ("How do you think you will describe this business's performance?"), employment levels, hours worked, delivery times, inventory levels, demand, and pricing. These forward-looking indicators help predict economic trends.</p>
+                    <p><strong>Survey Questions:</strong> Business owners are asked about their expectations six months from now (around February 2026) across multiple areas: performance, employment levels, hours worked, delivery times, inventory levels, demand, and pricing. These forward-looking indicators help predict economic trends.</p>
                 </div>
                 
                 <div class="future-outlook">
                     <h3>💡 Forward-Looking Economic Indicators</h3>
-                    <p>Business expectations for the next six months (through January 2026) show cautious optimism tempered by cost concerns. The future performance index (55.6) remains strong, while employment expectations (51.2) indicate continued modest hiring plans. However, businesses expect cost pressures to moderate slightly with future input prices at 72.9 compared to current 69.9, though still elevated.</p>
+                    <p>Business expectations for the next six months (through February 2026) remain cautiously optimistic despite near-term challenges. Businesses expect modest improvement in performance (55.6) but this still lags current conditions (56.8). Employment expectations (50.8) show slight optimism above neutral. However, businesses anticipate continued severe cost pressures, suggesting they view current input price increases as persistent rather than transitory. Future demand expectations (51.6) indicate modest recovery hopes.</p>
                 </div>
 
                 <div class="grid-4">
                     <div class="metric-card">
                         <div class="metric-title">Future Performance Index</div>
                         <div class="metric-value">55.6</div>
-                        <div class="metric-change negative">-1.3 vs current 56.9</div>
+                        <div class="metric-change negative">-1.2 vs current 56.8</div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Businesses expect slight moderation in performance
+                            Businesses expect modest deterioration in performance
                         </p>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Future Employment Index</div>
-                        <div class="metric-value">51.2</div>
-                        <div class="metric-change positive">+3.0 vs current 48.2</div>
+                        <div class="metric-value">50.8</div>
+                        <div class="metric-change positive">+2.9 vs current 47.9</div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Continued improvement expected in hiring
+                            Modest employment recovery expected
                         </p>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Future Demand Index</div>
-                        <div class="metric-value">52.0</div>
-                        <div class="metric-change positive">+8.4 vs current 43.6</div>
+                        <div class="metric-value">51.6</div>
+                        <div class="metric-change positive">+7.8 vs current 43.8</div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            Significant demand recovery expected
+                            Significant demand recovery anticipated
                         </p>
                     </div>
                     <div class="metric-card">
                         <div class="metric-title">Future Input Prices Index</div>
-                        <div class="metric-value">72.9</div>
-                        <div class="metric-change positive">+3.0 vs current 69.9</div>
+                        <div class="metric-value">75.9</div>
+                        <div class="metric-change positive">+5.6 vs current 70.3</div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
                             Businesses expect cost pressures to intensify further
                         </p>
@@ -842,7 +852,7 @@
 
                 <div class="alert-box">
                     <h4>📈 Key Outlook Insights</h4>
-                    <p><strong>Mixed expectations for early 2026:</strong> While businesses expect significant demand recovery (+8.4 points) and continued employment growth (+3.0 points) by January 2026, they also anticipate further intensification of cost pressures (+3.0 points on input prices to 72.9). This suggests a challenging environment where businesses must balance growth opportunities against unprecedented margin pressure through the remainder of 2025.</p>
+                    <p><strong>Mixed expectations with cost concern dominance:</strong> While businesses anticipate modest demand recovery (+7.8 points to 51.6) and employment improvements (+2.9 points to 50.8), they expect performance to deteriorate slightly (-1.2 points to 55.6). Most concerning is the expectation of even more severe cost pressures, with future input prices expected to reach 75.9 (+5.6 points), suggesting businesses view the current cost inflation as the beginning of a sustained trend rather than a temporary spike.</p>
                 </div>
             </div>
 
@@ -861,15 +871,15 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Negative Impact</h4>
-                                <div class="value">26.1%</div>
+                                <div class="value">25.8%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Impact</h4>
-                                <div class="value">73.9%</div>
+                                <div class="value">74.2%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
-                            <strong>Specific impacts include:</strong> Decreased profitability (26.1%), inability to invest (9.4%), refinancing issues (4.6%)
+                            <strong>Specific impacts include:</strong> Decreased profitability (25.8%), inability to invest (9.6%), refinancing issues (4.8%)
                         </p>
                     </div>
                     <div class="metric-card">
@@ -877,11 +887,11 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Experienced Losses</h4>
-                                <div class="value">5.8%</div>
+                                <div class="value">7.2%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>No Losses</h4>
-                                <div class="value">94.2%</div>
+                                <div class="value">92.8%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
@@ -893,15 +903,15 @@
                         <div class="breakdown-grid">
                             <div class="breakdown-item">
                                 <h4>Using AI</h4>
-                                <div class="value">13.5%</div>
+                                <div class="value">9.7%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Not Using AI</h4>
-                                <div class="value">63.4%</div>
+                                <div class="value">83.8%</div>
                             </div>
                             <div class="breakdown-item">
                                 <h4>Don't Know</h4>
-                                <div class="value">23.1%</div>
+                                <div class="value">6.5%</div>
                             </div>
                         </div>
                         <p style="font-size: 0.9rem; color: #6b7280; margin-top: 10px;">
@@ -920,7 +930,7 @@
 
                 <div class="alert-box">
                     <h4>🏦 External Pressure Analysis</h4>
-                    <p><strong>Interest rates remain the primary external pressure</strong> with 26.1% of businesses reporting negative impacts over the last 6 months, primarily through decreased profitability. Weather events affected 5.8% of businesses during the same period. AI adoption has increased to 13.5% from previous periods, though significant untapped potential remains for productivity improvements across the economy.</p>
+                    <p><strong>Interest rates and weather remain key external pressures</strong> with 25.8% of businesses reporting negative interest rate impacts over the last 6 months, primarily through decreased profitability. Weather events affected 7.2% of businesses, up from previous periods, with severe storms/hail (24.3%), floods (20.4%), and high winds (16.7%) being the most common causes. AI adoption remains modest at 9.7%, suggesting significant untapped productivity potential across the economy.</p>
                 </div>
             </div>
         </div>
@@ -982,7 +992,7 @@
         };
 
         // Sample time periods for charts - updated with latest periods
-        const periods = ['Early Jul 2025', 'Late Jul 2025', 'Early Aug 2025'];
+        const periods = ['Late Jul 2025', 'Early Aug 2025', 'Mid Aug 2025'];
 
         // Overview Chart - Updated with latest data
         new Chart(document.getElementById('overviewChart'), {
@@ -992,7 +1002,7 @@
                 datasets: [
                     {
                         label: 'Performance Index',
-                        data: [52.2, 52.3, 56.9],
+                        data: [56.9, 56.9, 56.8],
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
                         borderWidth: 3,
@@ -1001,7 +1011,7 @@
                     },
                     {
                         label: 'Revenue Index',
-                        data: [41.7, 42.4, 41.8],
+                        data: [41.8, 42.7, 42.5],
                         borderColor: '#f093fb',
                         backgroundColor: 'rgba(240, 147, 251, 0.1)',
                         borderWidth: 3,
@@ -1013,14 +1023,14 @@
             options: chartOptions
         });
 
-        // Price Pressure Chart - Updated with latest data
+        // Price Pressure Chart - Updated with latest data showing significant increase
         new Chart(document.getElementById('pricePressureChart'), {
             type: 'bar',
             data: {
                 labels: ['Input Prices', 'Output Prices'],
                 datasets: [{
                     label: 'Index Value',
-                    data: [69.9, 56.2],
+                    data: [70.3, 56.6],
                     backgroundColor: ['#ef4444', '#10b981'],
                     borderColor: ['#dc2626', '#059669'],
                     borderWidth: 2
@@ -1040,7 +1050,7 @@
             data: {
                 labels: ['Excellent', 'Above Average', 'Average', 'Below Average', 'Poor'],
                 datasets: [{
-                    data: [14.4, 21.4, 45.4, 15.0, 3.7],
+                    data: [14.8, 20.7, 45.5, 14.9, 4.2],
                     backgroundColor: ['#10B981', '#34D399', '#FCD34D', '#F97316', '#EF4444'],
                     borderWidth: 0
                 }]
@@ -1061,7 +1071,7 @@
                 labels: ['Employment Index', 'Hours Index', 'WFH Adoption %'],
                 datasets: [{
                     label: 'Current Values',
-                    data: [48.2, 46.0, 28.5],
+                    data: [47.9, 46.4, 28.5],
                     backgroundColor: ['#667eea', '#764ba2', '#f093fb']
                 }]
             },
@@ -1075,7 +1085,7 @@
                 labels: periods,
                 datasets: [{
                     label: 'Delivery Time Index',
-                    data: [53.3, 52.8, 52.9],
+                    data: [52.9, 52.6, 53.0],
                     borderColor: '#f59e0b',
                     backgroundColor: 'rgba(245, 158, 11, 0.1)',
                     borderWidth: 3,
@@ -1086,7 +1096,7 @@
             options: chartOptions
         });
 
-        // Price Comparison Chart - Updated with latest data
+        // Price Comparison Chart - Updated with latest data showing dramatic increase in input prices
         new Chart(document.getElementById('priceComparisonChart'), {
             type: 'line',
             data: {
@@ -1094,7 +1104,7 @@
                 datasets: [
                     {
                         label: 'Input Price Index',
-                        data: [67.7, 67.3, 69.9],
+                        data: [69.9, 68.7, 70.3],
                         borderColor: '#ef4444',
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         borderWidth: 3,
@@ -1103,7 +1113,7 @@
                     },
                     {
                         label: 'Output Price Index',
-                        data: [55.1, 54.8, 56.2],
+                        data: [56.2, 55.5, 56.6],
                         borderColor: '#10b981',
                         backgroundColor: 'rgba(16, 185, 129, 0.1)',
                         borderWidth: 3,
@@ -1128,14 +1138,14 @@
                 datasets: [
                     {
                         label: 'Current',
-                        data: [56.9, 48.2, 46.0, 43.6, 52.9, 69.9],
+                        data: [56.8, 47.9, 46.4, 43.8, 53.0, 70.3],
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.2)',
                         borderWidth: 2
                     },
                     {
                         label: 'Future Outlook',
-                        data: [55.6, 51.2, 50.1, 52.0, 54.2, 72.9],
+                        data: [55.6, 50.8, 49.8, 51.6, 54.2, 75.9],
                         borderColor: '#f093fb',
                         backgroundColor: 'rgba(240, 147, 251, 0.2)',
                         borderWidth: 2
@@ -1164,7 +1174,7 @@
                 labels: ['Interest Rate Impact', 'Weather Losses', 'AI Adoption'],
                 datasets: [{
                     label: 'Affected Businesses (%)',
-                    data: [26.1, 5.8, 13.5],
+                    data: [25.8, 7.2, 9.7],
                     backgroundColor: ['#ef4444', '#f59e0b', '#8b5cf6'],
                     borderWidth: 0
                 }]
@@ -1178,7 +1188,7 @@
             }
         });
 
-        console.log('The Business Pulse Dashboard updated with latest August 2025 data (period 202515)');
+        console.log('The Business Pulse Dashboard updated with latest September 2025 data (period 202517)');
     </script>
 </body>
 </html>
