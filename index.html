@@ -1541,6 +1541,11 @@
             window.scrollTo(0, 0);
         }
 
+        function showPaperViewer() {
+    document.getElementById('paper-viewer').style.display = 'block';
+    document.getElementById('paper-viewer').scrollIntoView({ behavior: 'smooth' });
+        }
+
         function handleHashChange() {
             const hash = window.location.hash.substring(1);
             const validPage = document.getElementById(hash);
