@@ -85,9 +85,8 @@
             animation: fadeIn 0.5s ease-in;
         }
 
-        /* Full height for dashboard page and graph page */
-        #hotdog-dashboard.page,
-        #graph-of-day.page {
+        /* Full height for dashboard page */
+        #hotdog-dashboard.page {
             padding: 0;
             min-height: 100vh;
         }
@@ -272,86 +271,6 @@
             display: none;
         }
 
-        .iframe-container {
-            position: relative;
-            width: 100%;
-            min-height: 800px;
-            background: #f8f9fa;
-            border-radius: 0 0 15px 15px;
-        }
-
-        .iframe-container iframe {
-            width: 100%;
-            height: 800px;
-            border: none;
-            background: white;
-        }
-
-        .app-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 1.5rem;
-            text-align: center;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .app-header h3 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
-        .app-header p {
-            margin: 0.5rem 0 0 0;
-            opacity: 0.9;
-        }
-
-        /* Graph of the Day Styles */
-        #graph-of-day {
-            margin: -3rem -2rem 0 -2rem;
-            background: white;
-            min-height: 100vh;
-        }
-
-        .graph-container {
-            background: white;
-            margin: 0;
-            padding: 0;
-            border-radius: 0;
-            width: 100%;
-        }
-
-        .graph-iframe {
-            width: 100%;
-            height: 2000px;
-            border: none;
-            background: white;
-            display: block;
-            overflow: hidden;
-        }
-
-        .graph-fallback {
-            padding: 3rem;
-            text-align: center;
-            color: #666;
-            background: white;
-            margin: 2rem;
-            border-radius: 10px;
-        }
-
-        .graph-fallback h2 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-        }
-
-        /* Hot Dog Dashboard Styles */
-        #hotdog-dashboard {
-            background: #0f1419;
-            color: #ffffff;
-            padding: 0;
-            margin: -3rem -2rem 0 -2rem;
-            min-height: 100vh;
-        }
-
         /* Hide header and footer when dashboard is active */
         body.dashboard-mode header,
         body.dashboard-mode footer {
@@ -365,6 +284,14 @@
         body.dashboard-mode #hotdog-dashboard {
             margin: 0;
             padding: 0;
+        }
+
+        #hotdog-dashboard {
+            background: #0f1419;
+            color: #ffffff;
+            padding: 0;
+            margin: -3rem -2rem 0 -2rem;
+            min-height: 100vh;
         }
 
         #hotdog-dashboard .dashboard-header {
@@ -798,15 +725,6 @@
                 padding: 2rem 1rem;
             }
 
-            .iframe-container iframe {
-                height: 600px;
-            }
-
-            /* Graph of the Day Mobile */
-            .graph-iframe {
-                height: 1500px;
-            }
-
             /* Hot Dog Dashboard Mobile Optimizations */
             #hotdog-dashboard .header-content-dashboard { 
                 flex-direction: column; 
@@ -1038,10 +956,8 @@
                         <li><a href="#home" class="nav-link active">Home</a></li>
                         <li><a href="#research" class="nav-link">Research</a></li>
                         <li><a href="#applications" class="nav-link">R Shiny Apps</a></li>
-                        <li><a href="#graph-of-day" class="nav-link">Graph of the Day</a></li>
                         <li><a href="#blog" class="nav-link">Blog</a></li>
                         <li><a href="#about" class="nav-link">About</a></li>
-                        <li><a href="#immigration" class="nav-link">Immigration Policy</a></li>
                     </ul>
                 </nav>
             </div>
@@ -1056,26 +972,26 @@
                 </div>
 
                 <div class="substack-feature">
-                    <h3>📊 PoliMetrics</h3>
+                    <h3>PoliMetrics</h3>
                     <p>Data-driven policy analysis.</p>
                     <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button">Read Latest Analysis</a>
                 </div>
 
                 <div class="grid">
                     <div class="card">
-                        <h3>🎓 Education</h3>
+                        <h3>Education</h3>
                         <p><strong>PhD, Public Policy & Administration</strong> - Arizona State University (May 2025)</p>
                         <p><strong>M.P.P.</strong> - Arizona State University (December 2019, Summa Cum Laude, 3.98 GPA)</p>
                         <p><strong>B.A. Economics</strong> - Arizona State University (December 2017, Summa Cum Laude, 3.85 GPA)</p>
                     </div>
 
                     <div class="card">
-                        <h3>🔬 Research Focus</h3>
+                        <h3>Research Focus</h3>
                         <p>State & Local Public Finance and Fiscal Federalism, with emphasis on unemployment insurance financial governance systems and program solvency.</p>
                     </div>
 
                     <div class="card">
-                        <h3>💼 Professional Experience</h3>
+                        <h3>Professional Experience</h3>
                         <p><strong>Senior Analyst</strong> - Arizona Department of Economic Security (July 2019 - Present)</p>
                         <p><strong>Graduate Research Assistant/Course Instructor</strong> - Arizona State University (August 2021 - May 2025)</p>
                     </div>
@@ -1190,25 +1106,25 @@
 
                 <div class="app-showcase">
                     <div class="app-card">
-                        <h3>🔍 KonFound-It! Sensitivity Analysis</h3>
+                        <h3>KonFound-It! Sensitivity Analysis</h3>
                         <p>An interactive tool for quantifying the robustness of causal inferences in research. This application helps researchers understand how sensitive their findings are to potential confounding variables.</p>
                         <a href="https://konfound-project.shinyapps.io/konfound-it/" target="_blank" class="cta-button">Launch Application</a>
                     </div>
 
                     <div class="app-card">
-                        <h3>📊 What Works Clearinghouse Sensitivity Benchmarks</h3>
+                        <h3>What Works Clearinghouse Sensitivity Benchmarks</h3>
                         <p>A specialized tool for conducting sensitivity analysis benchmarks specifically designed for education policy research and evaluation studies.</p>
                         <a href="https://konfound-project.shinyapps.io/wwc-sensitivity-benchmark/" target="_blank" class="cta-button">Launch Application</a>
                     </div>
 
                     <div class="app-card">
-                        <h3>🏛️ Census Data Explorer</h3>
+                        <h3>Census Data Explorer</h3>
                         <p>An application that lets you search through Census data on economic indicators and demographics across states, counties, and cities.</p>
                         <a href="https://alt30.shinyapps.io/Census_Portal/" target="_blank" class="cta-button">Launch Application</a>
                     </div>
 
                     <div class="app-card">
-                        <h3>💰 Supplemental Nutrition Assistance Program (SNAP) Dashboard</h3>
+                        <h3>Supplemental Nutrition Assistance Program (SNAP) Dashboard</h3>
                         <p>Interactive dashboard for exploring SNAP program data across states and counties, with trend analysis and policy comparison tools.</p>
                         <a href="https://dallin-overstreet.shinyapps.io/SNAP/" target="_blank" class="cta-button">Launch Application</a>
                     </div>
@@ -1233,71 +1149,12 @@
                 </div>
             </div>
 
-            <!-- Immigration Policy App Page -->
-            <div id="immigration" class="page">
-                <h1>ICE Reports</h1>
-                
-                <div style="background: white; border: 1px solid #e9ecef; border-radius: 5px; overflow: hidden; margin: 2rem 0;">
-                    <iframe 
-                        src="https://ice-community-alert.shinyapps.io/ICE_Community_Alert/" 
-                        style="width: 100%; height: 700px; border: none; background: white;"
-                        title="ICE Community Alert R Shiny Application">
-                    </iframe>
-                </div>
-
-                <p style="color: #6c757d; text-align: center; max-width: 600px; margin: 0 auto;">
-                    This application displays user-submitted reports of experiences with ICE to raise awareness about the lived experiences of immigrants in the US during Donald Trump's 2nd presidential administration.
-                </p>
-            </div>
-
-            <!-- Graph of the Day Page -->
-            <div id="graph-of-day" class="page">
-                <div class="graph-container">
-                    <iframe 
-                        src="graph-of-the-day.html" 
-                        class="graph-iframe"
-                        title="Graph of the Day - Interactive Data Visualization"
-                        scrolling="no"
-                        frameborder="0"
-                        onload="this.style.opacity='1'"
-                        onerror="this.style.display='none'; document.querySelector('.graph-fallback').style.display='block'">
-                    </iframe>
-                    
-                    <div class="graph-fallback" style="display: none;">
-                        <h2>Graph of the Day</h2>
-                        <p>The daily graph is currently being updated. Please check back soon for the latest data visualization and policy insights.</p>
-                        <p style="margin-top: 1rem; color: #888;">To set up your Graph of the Day, create a file named <code>graph-of-the-day.html</code> in the same directory as your main website.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Business Pulse Page -->
-            <div id="business-pulse" class="page">
-                <div class="graph-container">
-                    <iframe 
-                        src="business-pulse.html" 
-                        class="graph-iframe"
-                        title="Business Pulse - Interactive Data Visualization"
-                        scrolling="no"
-                        frameborder="0"
-                        onload="this.style.opacity='1'"
-                        onerror="this.style.display='none'; document.querySelector('.graph-fallback').style.display='block'">
-                    </iframe>
-                    
-                    <div class="graph-fallback" style="display: none;">
-                        <h2>Business Pulse</h2>
-                        <p>The data is currently being updated. Please check back soon for the latest data visualization and policy insights.</p>
-                        <p style="margin-top: 1rem; color: #888;">To set up your business pulse, create a file named <code>business-pulse.html</code> in the same directory as your main website.</p>
-                    </div>
-                </div>
-            </div>
-
             <!-- Blog Page -->
             <div id="blog" class="page">
                 <h1>PoliMetrics Blog</h1>
                 
                 <div class="blog-feed">
-                    <h2>📊 Latest from PoliMetrics</h2>
+                    <h2>Latest from PoliMetrics</h2>
                     <p style="margin: 1rem 0;">Analysis and insights on public economics, fiscal federalism, and policy research.</p>
                     
                     <div id="blog-posts" style="background: white; padding: 2rem; border-radius: 10px; margin: 2rem 0; text-align: left;">
@@ -1312,19 +1169,19 @@
                         <h3 style="color: #2c3e50; margin-bottom: 1rem;">About PoliMetrics</h3>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; text-align: left;">
                             <div>
-                                <h4 style="color: #3498db;">📈 Data Analysis</h4>
+                                <h4 style="color: #3498db;">Data Analysis</h4>
                                 <p>Statistical analysis of policy outcomes and economic trends</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">🏛️ Policy Research</h4>
+                                <h4 style="color: #3498db;">Policy Research</h4>
                                 <p>Evidence-based commentary on public finance and administration</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">🔬 Research Methods</h4>
+                                <h4 style="color: #3498db;">Research Methods</h4>
                                 <p>Econometric approaches in public policy research</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">📊 Fiscal Federalism</h4>
+                                <h4 style="color: #3498db;">Fiscal Federalism</h4>
                                 <p>Analysis of intergovernmental finance and policy</p>
                             </div>
                         </div>
