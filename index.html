@@ -701,6 +701,23 @@
             color: #f87171;
         }
 
+        /* Datawrapper chart container styles */
+        .chart-embed-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin: 1.5rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
+        }
+
+        .chart-embed-container h4 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -1067,6 +1084,26 @@
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
                 <a href="papers/Overstreet_2025_Mormon_Tithing.pdf" target="_blank" class="cta-button" style="background: white; color: #667eea;">📥 Download PDF</a>
                 <a href="#paper-viewer" class="cta-button" style="background: rgba(255,255,255,0.2); color: white;" onclick="showPaperViewer(); return false;">👁️ View Online</a>
+            </div>
+        </div>
+
+        <!-- Embedded Datawrapper Charts -->
+        <div style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 5px; margin-top: 1.5rem;">
+            <h4 style="color: white; margin-bottom: 1.5rem; font-size: 1.1rem; text-align: center;">Interactive Data Visualizations</h4>
+            
+            <div class="chart-embed-container">
+                <h4>Fear - Love Rhetorical Dimension</h4>
+                <iframe title="Fear - Love Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-EtNtL" src="https://datawrapper.dwcdn.net/EtNtL/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1"></iframe>
+            </div>
+
+            <div class="chart-embed-container">
+                <h4>Commandment - Opportunity Rhetorical Dimension</h4>
+                <iframe title="Commandment - Opportunity Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-CjmMy" src="https://datawrapper.dwcdn.net/CjmMy/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1"></iframe>
+            </div>
+
+            <div class="chart-embed-container">
+                <h4>Material - Spiritual Rhetorical Dimension</h4>
+                <iframe title="Material - Spiritual Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-Ajj04" src="https://datawrapper.dwcdn.net/Ajj04/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1"></iframe>
             </div>
         </div>
     </div>
@@ -2010,6 +2047,23 @@
 
         // Add resize event listener for responsive charts
         window.addEventListener('resize', handleResize);
+    </script>
+    
+    <!-- Datawrapper responsive script -->
+    <script type="text/javascript">
+        window.addEventListener("message", function(a) {
+            if (void 0 !== a.data["datawrapper-height"]) {
+                var e = document.querySelectorAll("iframe");
+                for (var t in a.data["datawrapper-height"]) {
+                    for (var r, i = 0; r = e[i]; i++) {
+                        if (r.contentWindow === a.source) {
+                            var d = a.data["datawrapper-height"][t] + "px";
+                            r.style.height = d;
+                        }
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>
