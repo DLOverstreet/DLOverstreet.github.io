@@ -500,6 +500,15 @@
 
         .app-card .cta-button { margin-top: 1.25rem; align-self: flex-start; }
 
+        /* data vintage note, so dated snapshots don't read as live */
+        .app-card p.vintage {
+            flex: 0 0 auto;
+            font-size: 0.8125rem;
+            margin-top: 1rem;
+            padding-top: 0.875rem;
+            border-top: 1px solid var(--line);
+        }
+
         /* ============================================================
            Blog
            ============================================================ */
@@ -1600,12 +1609,14 @@
                     <div class="app-card">
                         <h3>Arizona Medicaid Dashboard</h3>
                         <p>Enrollment, eligibility, and expansion figures for Arizona's Medicaid program, assembled into a single annotated view.</p>
+                        <p class="vintage">Snapshot &middot; data through June 2025</p>
                         <a href="graph-of-the-day.html" class="cta-button">Open dashboard</a>
                     </div>
 
                     <div class="app-card">
                         <h3>The Business Pulse</h3>
                         <p>A read on small business conditions built from the Census Business Trends and Outlook Survey, covering performance, supply chains, hiring, and AI adoption.</p>
+                        <p class="vintage">Snapshot &middot; data through September 2025</p>
                         <a href="business-pulse.html" class="cta-button">Open dashboard</a>
                     </div>
                 </div>
