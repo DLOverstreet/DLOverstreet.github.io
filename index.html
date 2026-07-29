@@ -3,86 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dallin Overstreet - Public Policy Researcher</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <title>Dallin Overstreet — Public Finance Researcher</title>
+    <meta name="description" content="Dallin Overstreet, PhD — research on state and local public finance, fiscal federalism, and unemployment insurance trust fund solvency. Publications, interactive policy tools, and the PoliMetrics newsletter.">
+    <meta name="author" content="Dallin Overstreet">
+    <link rel="canonical" href="https://dloverstreet.github.io/">
+
+    <!-- Social sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Dallin Overstreet">
+    <meta property="og:title" content="Dallin Overstreet — Public Finance Researcher">
+    <meta property="og:description" content="Research on state and local public finance, fiscal federalism, and unemployment insurance trust fund solvency.">
+    <meta property="og:url" content="https://dloverstreet.github.io/">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Dallin Overstreet — Public Finance Researcher">
+    <meta name="twitter:description" content="Research on state and local public finance, fiscal federalism, and unemployment insurance trust fund solvency.">
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2316293f'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3EDO%3C/text%3E%3C/svg%3E">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ============================================================
+           Design tokens
+           ============================================================ */
+        :root {
+            --ink:       #16293f;
+            --ink-soft:  #3d5a7a;
+            --body:      #3a4757;
+            --muted:     #6b7685;
+            --accent:    #1f5f9e;
+            --accent-dk: #17497a;
+            --line:      #e3e7ed;
+            --bg:        #f6f7f9;
+            --surface:   #ffffff;
+            --r:         8px;
+            --r-sm:      6px;
+            --shadow-1:  0 1px 2px rgba(22,41,63,.05), 0 1px 3px rgba(22,41,63,.04);
+            --shadow-2:  0 6px 20px rgba(22,41,63,.09);
+            --maxw:      1120px;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f8f9fa;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--body);
+            background: var(--bg);
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            font-feature-settings: "kern" 1, "liga" 1;
         }
+
+        h1, h2, h3, h4 {
+            color: var(--ink);
+            line-height: 1.25;
+            letter-spacing: -0.011em;
+            font-weight: 600;
+        }
+
+        p + p { margin-top: 1rem; }
+
+        a { color: var(--accent); }
+
+        a:focus-visible, button:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            border-radius: 3px;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            z-index: 200;
+            background: var(--surface);
+            color: var(--accent);
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            border-radius: 0 0 var(--r-sm) 0;
+        }
+
+        .skip-link:focus { left: 0; }
 
         .container {
-            max-width: 1200px;
+            max-width: var(--maxw);
             margin: 0 auto;
-            background: white;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            background: var(--surface);
+            box-shadow: 0 0 0 1px rgba(22,41,63,.05), 0 0 40px rgba(22,41,63,.04);
             min-height: 100vh;
         }
 
+        /* ============================================================
+           Header / navigation
+           ============================================================ */
         header {
-            background: #2c3e50;
-            color: white;
-            padding: 1rem 0;
+            background: var(--ink);
+            color: #fff;
+            padding: 0.875rem 0;
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 0 rgba(255,255,255,.06), 0 2px 12px rgba(22,41,63,.18);
         }
 
         .header-content {
-            max-width: 1200px;
+            max-width: var(--maxw);
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1.5rem;
             padding: 0 2rem;
         }
 
         .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: white;
+            font-size: 1.1875rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.015em;
+            text-decoration: none;
+            white-space: nowrap;
         }
 
         nav ul {
             list-style: none;
             display: flex;
-            gap: 2rem;
+            gap: 0.25rem;
         }
 
         nav a {
-            color: white;
+            display: block;
+            color: rgba(255,255,255,.78);
             text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            transition: all 0.3s ease;
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--r-sm);
+            font-size: 0.9375rem;
             font-weight: 500;
+            transition: background-color .18s ease, color .18s ease;
         }
 
-        nav a:hover, nav a.active {
-            background: rgba(255,255,255,0.15);
-        }
+        nav a:hover { background: rgba(255,255,255,.1); color: #fff; }
 
+        nav a.active { background: rgba(255,255,255,.15); color: #fff; }
+
+        /* ============================================================
+           Page shell
+           ============================================================ */
         .page {
             display: none;
-            padding: 3rem 2rem;
-            min-height: calc(100vh - 80px);
+            padding: 3rem 2rem 4rem;
+            /* keep anchor jumps clear of the sticky header */
+            scroll-margin-top: 90px;
         }
 
         .page.active {
             display: block;
-            animation: fadeIn 0.5s ease-in;
+            animation: fadeIn .35s ease-out;
+        }
+
+        .page > h1 {
+            font-size: clamp(1.75rem, 3.4vw, 2.125rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-intro {
+            color: var(--muted);
+            font-size: 1.0625rem;
+            max-width: 68ch;
+            margin-bottom: 2.5rem;
         }
 
         /* Full height for dashboard page */
@@ -92,184 +187,403 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .page.active { animation: none; }
+            * { transition-duration: .01ms !important; }
+        }
+
+        /* ============================================================
+           Hero
+           ============================================================ */
         .hero {
             text-align: center;
-            padding: 3rem 0;
-            background: #f8f9fa;
-            margin: -3rem -2rem 3rem -2rem;
-            border-bottom: 1px solid #e9ecef;
+            padding: 4rem 2rem 3.25rem;
+            margin: -3rem -2rem 3rem;
+            background: linear-gradient(180deg, #fbfcfd 0%, var(--bg) 100%);
+            border-bottom: 1px solid var(--line);
         }
 
         .hero h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: #2c3e50;
+            font-size: clamp(2.125rem, 5vw, 2.875rem);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.75rem;
         }
 
-        .hero p {
-            font-size: 1.2rem;
-            color: #6c757d;
-            max-width: 600px;
-            margin: 0 auto;
+        .hero .tagline {
+            font-size: 1.0625rem;
+            font-weight: 500;
+            color: var(--ink-soft);
+            letter-spacing: 0.005em;
+        }
+
+        .hero .lede {
+            font-size: 1.0625rem;
+            color: var(--muted);
+            max-width: 62ch;
+            margin: 1.5rem auto 0;
+        }
+
+        /* ============================================================
+           Buttons
+           ============================================================ */
+        .cta-button {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--r-sm);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: background-color .18s ease, transform .18s ease;
+        }
+
+        .cta-button:hover { background: var(--accent-dk); transform: translateY(-1px); }
+
+        /* Inverted variant, for use on dark panels */
+        .panel-dark .cta-button {
+            background: #fff;
+            color: var(--ink);
+        }
+
+        .panel-dark .cta-button:hover { background: #eef1f5; }
+
+        .cta-button.ghost {
+            background: transparent;
+            color: #fff;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
+        }
+
+        .cta-button.ghost:hover { background: rgba(255,255,255,.12); }
+
+        /* ============================================================
+           Cards & grids
+           ============================================================ */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2.5rem 0;
+        }
+
+        .grid .card { margin-bottom: 0; height: 100%; }
+
+        .card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: var(--r);
+            box-shadow: var(--shadow-1);
+            border: 1px solid var(--line);
+            margin-bottom: 1.5rem;
+            transition: box-shadow .2s ease;
+        }
+
+        .card:hover { box-shadow: var(--shadow-2); }
+
+        .card h3 {
+            font-size: 1.0625rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.005em;
+        }
+
+        /* keep running prose to a readable measure in full-width cards */
+        .card > p, .card > ul { max-width: 76ch; }
+
+        .card h3 .marker {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--accent);
+            margin-bottom: 0.75rem;
+        }
+
+        .card ul { margin-left: 1.25rem; }
+
+        .card li { margin-bottom: 0.375rem; }
+
+        .card li:last-child { margin-bottom: 0; }
+
+        .stack-tight p { font-size: 0.9375rem; }
+
+        .stack-tight strong { color: var(--ink); font-weight: 600; }
+
+        .meta {
+            display: block;
+            color: var(--muted);
+            font-size: 0.875rem;
+            font-weight: 400;
+        }
+
+        /* Dark feature panel (Substack, working paper) */
+        .panel-dark {
+            background: linear-gradient(135deg, #1e3a5f 0%, #16293f 100%);
+            color: rgba(255,255,255,.86);
+            border-color: transparent;
+        }
+
+        .panel-dark:hover { box-shadow: var(--shadow-2); }
+
+        .panel-dark h3, .panel-dark h4 { color: #fff; }
+
+        .panel-dark .inset {
+            background: rgba(255,255,255,.07);
+            border: 1px solid rgba(255,255,255,.13);
+            border-radius: var(--r-sm);
+            padding: 1.5rem;
+            margin-top: 1.25rem;
+        }
+
+        .panel-dark .inset > h4 {
+            font-size: 1.125rem;
+            line-height: 1.4;
+            margin-bottom: 0.875rem;
+        }
+
+        .panel-dark .inset p { font-size: 0.9375rem; }
+
+        .panel-dark .inset strong { color: #fff; }
+
+        .panel-dark .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .panel-dark .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: rgba(255,255,255,.6);
         }
 
         .substack-feature {
-            background: #2c3e50;
-            color: white;
+            background: linear-gradient(135deg, #1e3a5f 0%, var(--ink) 100%);
+            color: #fff;
             padding: 2rem;
-            border-radius: 5px;
-            margin: 2rem 0;
+            border-radius: var(--r);
+            margin: 2.5rem 0;
             text-align: center;
         }
 
         .substack-feature h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+            color: #fff;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
         }
 
-        .cta-button {
-            display: inline-block;
-            background: white;
-            color: #2c3e50;
-            padding: 0.8rem 1.5rem;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 500;
-            margin-top: 1rem;
-            transition: all 0.3s ease;
-        }
+        .substack-feature p { color: rgba(255,255,255,.8); font-size: 0.9375rem; }
 
-        .cta-button:hover {
-            background: #f8f9fa;
-        }
+        .substack-feature .cta-button { margin-top: 1.25rem; }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin: 3rem 0;
-        }
-
-        .card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            transition: all 0.3s ease;
-            border: 1px solid #e9ecef;
-            margin-bottom: 1.5rem;
-        }
-
-        .card:hover {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .card h3 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-
+        /* ============================================================
+           Publications
+           ============================================================ */
         .publications {
-            background: #f8f9fa;
+            background: var(--bg);
             padding: 2rem;
-            border-radius: 5px;
-            margin: 2rem 0;
-            border: 1px solid #e9ecef;
+            border-radius: var(--r);
+            margin: 2.5rem 0;
+            border: 1px solid var(--line);
         }
+
+        .publications h2 {
+            font-size: 1.375rem;
+            font-weight: 600;
+            margin-bottom: 0.375rem;
+        }
+
+        .publications > p.page-intro { margin-bottom: 1.75rem; font-size: 0.9375rem; }
+
+        .pub-group {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin: 2rem 0 0.875rem;
+        }
+
+        .pub-group:first-of-type { margin-top: 0; }
 
         .publication-item {
-            background: white;
-            padding: 1.2rem;
-            margin: 1rem 0;
-            border-radius: 5px;
-            border-left: 3px solid #2c3e50;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+            background: var(--surface);
+            padding: 1.125rem 1.25rem;
+            margin: 0.75rem 0;
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--accent);
+            border-radius: var(--r-sm);
+            box-shadow: var(--shadow-1);
         }
 
         .publication-item h4 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
+            font-size: 1.0625rem;
+            font-weight: 600;
+            margin-bottom: 0.375rem;
+            line-height: 1.4;
         }
 
         .publication-item p {
-            color: #6c757d;
-            font-style: italic;
-            font-size: 0.95rem;
+            color: var(--muted);
+            font-size: 0.9375rem;
+            font-style: normal;
         }
 
+        .publication-item em { font-style: italic; }
+
+        .publication-item a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(31,95,158,.3);
+        }
+
+        .publication-item a:hover { border-bottom-color: currentColor; }
+
+        .pub-tag {
+            display: inline-block;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent-dk);
+            background: #e8f0f8;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            margin-left: 0.5rem;
+            vertical-align: 2px;
+        }
+
+        /* ============================================================
+           Project / app cards
+           ============================================================ */
         .app-showcase {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            /* 380px track keeps a 4-card set as a tidy 2x2 rather than 3+1 */
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
             gap: 1.5rem;
-            margin: 2rem 0;
+            margin: 2rem 0 2.5rem;
         }
 
         .app-card {
-            background: #2c3e50;
-            color: white;
+            display: flex;
+            flex-direction: column;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-top: 3px solid var(--accent);
+            border-radius: var(--r);
             padding: 1.5rem;
-            border-radius: 5px;
-            text-align: center;
-            transition: all 0.3s ease;
+            box-shadow: var(--shadow-1);
+            transition: box-shadow .2s ease, transform .2s ease;
         }
 
-        .app-card:hover {
-            background: #34495e;
-        }
+        .app-card:hover { box-shadow: var(--shadow-2); transform: translateY(-2px); }
 
         .app-card h3 {
-            margin-bottom: 1rem;
-            font-size: 1.4rem;
+            font-size: 1.0625rem;
+            font-weight: 600;
+            margin-bottom: 0.625rem;
         }
 
+        .app-card p {
+            font-size: 0.9375rem;
+            color: var(--muted);
+            flex: 1;
+        }
+
+        .app-card .cta-button { margin-top: 1.25rem; align-self: flex-start; }
+
+        /* ============================================================
+           Blog
+           ============================================================ */
         .blog-feed {
-            background: #f8f9fa;
+            background: var(--bg);
             padding: 2rem;
-            border-radius: 5px;
-            text-align: center;
-            border: 1px solid #e9ecef;
+            border-radius: var(--r);
+            border: 1px solid var(--line);
         }
 
         .blog-feed h2 {
-            color: #2c3e50;
-            margin-bottom: 1rem;
+            font-size: 1.375rem;
+            margin-bottom: 0.5rem;
         }
 
+        .post-list { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 1.75rem 2rem; margin: 1.75rem 0; }
+
+        .post-item { padding: 1.25rem 0; border-bottom: 1px solid var(--line); }
+
+        .post-item:first-child { padding-top: 0; }
+
+        .post-item:last-child { border-bottom: 0; padding-bottom: 0; }
+
+        .post-item h4 { font-size: 1.0625rem; margin-bottom: 0.25rem; }
+
+        .post-item h4 a { color: var(--ink); text-decoration: none; }
+
+        .post-item h4 a:hover { color: var(--accent); }
+
+        .post-date { color: var(--muted); font-size: 0.8125rem; margin-bottom: 0.5rem; }
+
+        .post-item p { font-size: 0.9375rem; color: var(--muted); }
+
+        .post-more { font-size: 0.9375rem; font-weight: 500; text-decoration: none; }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .topic-grid h4 {
+            font-size: 0.9375rem;
+            color: var(--accent-dk);
+            margin-bottom: 0.25rem;
+        }
+
+        .topic-grid p { font-size: 0.9375rem; color: var(--muted); }
+
+        /* ============================================================
+           Profile links
+           ============================================================ */
         .social-links {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin: 2.5rem 0 0;
         }
 
         .social-link {
-            display: inline-block;
-            padding: 0.8rem;
-            background: #2c3e50;
-            color: white;
-            border-radius: 5px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            width: 45px;
-            height: 45px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--line);
+            color: var(--ink);
+            border-radius: 999px;
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: border-color .18s ease, color .18s ease, box-shadow .18s ease;
         }
 
         .social-link:hover {
-            background: #34495e;
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: var(--shadow-1);
         }
 
-        .mobile-menu {
-            display: none;
-        }
+        .mobile-menu { display: none; }
 
         /* Hide header and footer when dashboard is active */
         body.dashboard-mode header,
@@ -703,45 +1017,23 @@
 
         /* Datawrapper chart container styles */
         .chart-embed-container {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 5px;
-            margin: 1.5rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border: 1px solid #e9ecef;
+            background: var(--surface);
+            padding: 1.25rem;
+            border-radius: var(--r-sm);
+            margin: 1.25rem 0;
+            box-shadow: var(--shadow-1);
+            border: 1px solid var(--line);
         }
 
         .chart-embed-container h4 {
-            color: #667eea;
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
+            color: var(--ink);
+            margin-bottom: 0.875rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
             text-align: center;
         }
 
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            nav ul {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 1rem;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .grid, .app-showcase {
-                grid-template-columns: 1fr;
-            }
-
-            .page {
-                padding: 2rem 1rem;
-            }
-
             /* Hot Dog Dashboard Mobile Optimizations */
             #hotdog-dashboard .header-content-dashboard { 
                 flex-direction: column; 
@@ -954,323 +1246,431 @@
             }
         }
 
+        /* ============================================================
+           Footer
+           ============================================================ */
         footer {
-            background: #2c3e50;
-            color: white;
+            background: var(--ink);
+            color: rgba(255,255,255,.72);
             text-align: center;
-            padding: 2rem;
-            margin-top: 3rem;
+            padding: 2.5rem 2rem;
+            margin-top: 4rem;
+            font-size: 0.9375rem;
+        }
+
+        footer p + p { margin-top: 0.375rem; }
+
+        footer .footer-name { color: #fff; font-weight: 500; }
+
+        footer a { color: rgba(255,255,255,.85); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.3); }
+
+        footer a:hover { color: #fff; border-bottom-color: #fff; }
+
+        /* ============================================================
+           Responsive (site pages)
+           ============================================================ */
+        @media (max-width: 820px) {
+            .header-content {
+                flex-direction: column;
+                gap: 0.875rem;
+                padding: 0 1.25rem;
+            }
+
+            nav ul { flex-wrap: wrap; justify-content: center; gap: 0.25rem; }
+
+            .page { padding: 2.5rem 1.25rem 3rem; }
+
+            .hero { margin: -2.5rem -1.25rem 2.5rem; padding: 3rem 1.25rem 2.5rem; }
+
+            .grid, .app-showcase { grid-template-columns: 1fr; gap: 1.25rem; }
+
+            .publications, .blog-feed { padding: 1.5rem 1.25rem; }
+
+            .post-list { padding: 1.25rem; }
+        }
+
+        @media (max-width: 420px) {
+            nav a { font-size: 0.875rem; padding: 0.375rem 0.5rem; }
+
+            .social-links { gap: 0.5rem; }
+
+            .social-link { font-size: 0.875rem; padding: 0.4rem 0.8rem; }
+        }
+
+        /* ============================================================
+           Print — optimised for the publication list
+           ============================================================ */
+        @media print {
+            header, footer, .substack-feature, .social-links,
+            .chart-embed-container, #paper-viewer, .cta-button { display: none !important; }
+
+            body { background: #fff; color: #000; font-size: 11pt; }
+
+            .container { box-shadow: none; max-width: none; }
+
+            .page { display: block !important; padding: 0; }
+
+            #hotdog-dashboard { display: none !important; }
+
+            .card, .publication-item, .publications {
+                box-shadow: none;
+                border: 0;
+                background: #fff;
+                padding-left: 0;
+                padding-right: 0;
+            }
+
+            .publication-item { border-left: 0; page-break-inside: avoid; }
+
+            a { color: #000; text-decoration: none; }
         }
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main">Skip to content</a>
     <div class="container">
         <header>
             <div class="header-content">
-                <div class="logo">Dallin Overstreet</div>
-                <nav>
+                <a href="#home" class="logo">Dallin Overstreet</a>
+                <nav aria-label="Primary">
                     <ul>
                         <li><a href="#home" class="nav-link active">Home</a></li>
                         <li><a href="#research" class="nav-link">Research</a></li>
-                        <li><a href="#applications" class="nav-link">R Shiny Apps</a></li>
-                        <li><a href="#blog" class="nav-link">Blog</a></li>
+                        <li><a href="#applications" class="nav-link">Tools</a></li>
+                        <li><a href="#blog" class="nav-link">Writing</a></li>
                         <li><a href="#about" class="nav-link">About</a></li>
                     </ul>
                 </nav>
             </div>
         </header>
 
-        <main>
+        <main id="main">
             <!-- Home Page -->
             <div id="home" class="page active">
                 <div class="hero">
                     <h1>Dallin Overstreet</h1>
-                    <p>PhD, Public Administration & Policy | State & Local Public Finance Researcher</p>
+                    <p class="tagline">PhD &middot; State &amp; Local Public Finance and Fiscal Federalism</p>
+                    <p class="lede">I study how the financial architecture of intergovernmental programs shapes their solvency, with a focus on state unemployment insurance trust funds. My work combines econometric evaluation with interactive tools that make policy data usable.</p>
+                </div>
+
+                <div class="grid">
+                    <div class="card stack-tight">
+                        <h3><span class="marker"></span>Education</h3>
+                        <p><strong>PhD, Public Policy &amp; Administration</strong><span class="meta">Arizona State University, 2025</span></p>
+                        <p><strong>M.P.P.</strong><span class="meta">Arizona State University, 2019 &middot; Summa Cum Laude</span></p>
+                        <p><strong>B.A., Economics</strong><span class="meta">Arizona State University, 2017 &middot; Summa Cum Laude</span></p>
+                    </div>
+
+                    <div class="card stack-tight">
+                        <h3><span class="marker"></span>Research Focus</h3>
+                        <p>State and local public finance and fiscal federalism, with an emphasis on unemployment insurance financial governance and program solvency.</p>
+                        <p>Recent work extends to intergovernmental policy diffusion and computational text analysis.</p>
+                    </div>
+
+                    <div class="card stack-tight">
+                        <h3><span class="marker"></span>Selected Recognition</h3>
+                        <p><strong>Dissertation Fellowship</strong><span class="meta">Mercatus Center, George Mason University, 2023&ndash;2024</span></p>
+                        <p><strong>Frederic Bastiat Fellowship</strong><span class="meta">Political Economy, 2019&ndash;2020 and 2022&ndash;2023</span></p>
+                    </div>
                 </div>
 
                 <div class="substack-feature">
                     <h3>PoliMetrics</h3>
-                    <p>Data-driven policy analysis.</p>
-                    <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button">Read Latest Analysis</a>
-                </div>
-
-                <div class="grid">
-                    <div class="card">
-                        <h3>Education</h3>
-                        <p><strong>PhD, Public Policy & Administration</strong> - Arizona State University (May 2025)</p>
-                        <p><strong>M.P.P.</strong> - Arizona State University (December 2019, Summa Cum Laude, 3.98 GPA)</p>
-                        <p><strong>B.A. Economics</strong> - Arizona State University (December 2017, Summa Cum Laude, 3.85 GPA)</p>
-                    </div>
-
-                    <div class="card">
-                        <h3>Research Focus</h3>
-                        <p>State & Local Public Finance and Fiscal Federalism, with emphasis on unemployment insurance financial governance systems and program solvency.</p>
-                    </div>
-
-                    <div class="card">
-                        <h3>Teaching & Research Experience</h3>
-                        <p><strong>Graduate Research Assistant/Course Instructor</strong> - Arizona State University (August 2021 - May 2025)</p>
-                    </div>
+                    <p>A newsletter on public finance and policy, built from original data analysis.</p>
+                    <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener" class="cta-button">Read the latest</a>
                 </div>
 
                 <div class="social-links">
-                    <a href="https://www.linkedin.com/in/dallin-overstreet/" target="_blank" class="social-link" title="LinkedIn">💼</a>
-                    <a href="https://scholar.google.com/citations?user=Bdo8s7gAAAAJ&hl=en" target="_blank" class="social-link" title="Google Scholar">📚</a>
-                    <a href="https://polimetrics.substack.com/" target="_blank" class="social-link" title="PoliMetrics">📰</a>
+                    <a href="https://scholar.google.com/citations?user=Bdo8s7gAAAAJ&hl=en" target="_blank" rel="noopener" class="social-link">Google Scholar</a>
+                    <a href="https://www.linkedin.com/in/dallin-overstreet/" target="_blank" rel="noopener" class="social-link">LinkedIn</a>
+                    <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener" class="social-link">PoliMetrics</a>
                 </div>
             </div>
 
             <!-- About Page -->
             <div id="about" class="page">
-                <h1>About Dallin Overstreet</h1>
-                
-                <div class="card">
-                    <h3>Professional Background</h3>
-                    <p>I recently completed my PhD in Public Administration & Policy at Arizona State University's School of Public Affairs in May 2025. My research focuses on state and local public finance and fiscal federalism, with particular emphasis on unemployment insurance financial governance systems and program solvency.</p>
-                </div>
+                <h1>About</h1>
+                <p class="page-intro">Public finance researcher working on the fiscal architecture of intergovernmental programs.</p>
 
                 <div class="card">
-                    <h3>Research Interests</h3>
-                    <p>My research explores the incentives present in the U.S. unemployment insurance financial governance system and their effects on program solvency. I utilize econometric methods and statistical modeling to analyze policy impacts and inform evidence-based decision making.</p>
+                    <h3><span class="marker"></span>Biography</h3>
+                    <p>I completed my PhD in Public Administration and Policy at Arizona State University's School of Public Affairs in 2025, following an M.P.P. and a B.A. in economics from the same institution.</p>
+                    <p>My research asks why programs financed jointly by federal and state governments so often drift toward insolvency. Unemployment insurance is the central case: states set their own tax and benefit parameters inside a federal framework, and the resulting incentives determine whether trust funds are ready for the next recession. My dissertation traced how states diverged in rebuilding those funds after the Great Recession, and whether the 2010 federal reform actually improved solvency.</p>
+                    <p>Related strands of my work examine how fiscal and geographic factors drive policy diffusion across local governments, and how institutions use rhetoric to preserve costly commitments over long periods. Alongside the academic work, I build interactive tools that make public policy data tractable for people who are not statisticians, and write <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener">PoliMetrics</a>, a newsletter of original data analysis.</p>
                 </div>
 
-                <div class="card">
-                    <h3>Academic Achievements</h3>
-                    <ul style="margin-left: 2rem; margin-top: 1rem;">
-                        <li>PhD in Public Policy & Administration from Arizona State University (May 2025)</li>
-                        <li>Summa Cum Laude graduate with M.P.P. and B.A. degrees (3.98 and 3.85 GPA respectively)</li>
-                        <li>Published researcher in peer-reviewed journals including Urban Affairs Review, Public Finance Review, Public Administration Quarterly, and Economic Affairs</li>
-                        <li>Dissertation Fellowship recipient - Mercatus Center at George Mason University (2023-2024)</li>
-                        <li>Frederic Bastiat Fellowship in Political Economy recipient (2019-2020, 2022-2023)</li>
-                    </ul>
+                <div class="grid">
+                    <div class="card">
+                        <h3><span class="marker"></span>Methods</h3>
+                        <ul>
+                            <li>Difference-in-differences and event-study designs</li>
+                            <li>Survival analysis and hazard models</li>
+                            <li>Time series analysis and forecasting</li>
+                            <li>Computational text analysis and applied NLP</li>
+                            <li>Interactive application development in R</li>
+                        </ul>
+                    </div>
+
+                    <div class="card stack-tight">
+                        <h3><span class="marker"></span>Teaching &amp; Research Experience</h3>
+                        <p><strong>Graduate Research Assistant and Course Instructor</strong><span class="meta">Arizona State University, 2021&ndash;2025</span></p>
+                    </div>
                 </div>
 
-                <div class="card">
-                    <h3>Methods</h3>
-                    <p>My work applies econometric and statistical methods to questions in public finance, including difference-in-differences and event-study designs, survival analysis, time series forecasting, and computational text analysis.</p>
+                <div class="card stack-tight">
+                    <h3><span class="marker"></span>Fellowships &amp; Honors</h3>
+                    <p><strong>Dissertation Fellowship</strong><span class="meta">Mercatus Center at George Mason University, 2023&ndash;2024</span></p>
+                    <p><strong>Frederic Bastiat Fellowship in Political Economy</strong><span class="meta">2019&ndash;2020 and 2022&ndash;2023</span></p>
+                    <p><strong>Summa Cum Laude</strong><span class="meta">M.P.P. and B.A., Arizona State University</span></p>
                 </div>
             </div>
 
             <!-- Research Page -->
-<div id="research" class="page">
-    <h1>Research & Publications</h1>
-    
-    <div class="card">
-        <h3>Research Interests</h3>
-        <p>My research focuses on several areas within state and local public finance:</p>
-        <ul style="margin-left: 2rem; margin-top: 1rem;">
-            <li><strong>State & Local Public Finance:</strong> Trust fund management and fiscal sustainability</li>
-            <li><strong>Fiscal Federalism:</strong> Intergovernmental finance and policy coordination</li>
-            <li><strong>Unemployment Insurance:</strong> Financial governance systems and program solvency</li>
-            <li><strong>Policy Analysis:</strong> Econometric evaluation of program effectiveness</li>
-            <li><strong>Statistical Modeling:</strong> Time series analysis and forecasting methods</li>
-        </ul>
-    </div>
+            <div id="research" class="page">
+                <h1>Research</h1>
+                <p class="page-intro">Peer-reviewed work on public finance, fiscal federalism, and the institutions that govern intergovernmental programs.</p>
 
-    <!-- Working Papers Section -->
-    <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-top: 2rem;">
-        <h3 style="color: white;">📄 Working Papers</h3>
-        <div style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 5px; margin-top: 1rem;">
-            <h4 style="color: white; margin-bottom: 0.5rem; font-size: 1.2rem;">Preserving Policy Through Narrative Transformation: A Computational Analysis of Mormon Tithing Discourse, 1850-2024</h4>
-            <p style="font-size: 0.95rem; opacity: 0.95; margin: 1rem 0; line-height: 1.6;">
-                This study uses computational text analysis to examine how Mormon leaders adapted tithing rhetoric across 175 years while maintaining the ten percent requirement unchanged. Using large language models and fine-tuned DistilBERT models to analyze 4,002 passages from general conferences (1850-2024), I test Armand Mauss's optimum tension theory through systematic measurement of three rhetorical dimensions: commandment versus opportunity framing, fear versus love appeals, and material versus spiritual emphasis.
-            </p>
-            <p style="font-size: 0.9rem; opacity: 0.9; margin: 0.5rem 0;">
-                <strong>Key Findings:</strong> The analysis reveals cyclical patterns of authoritarian retrenchment alternating with assimilationist appeals, corresponding temporally with financial crises, federal persecution, and economic downturns. The findings demonstrate how religious institutions can preserve demanding practices through coordinated narrative evolution rather than policy modification.
-            </p>
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-                <a href="papers/Overstreet_2025_Mormon_Tithing.pdf" target="_blank" class="cta-button" style="background: white; color: #667eea;">📥 Download PDF</a>
-                <a href="#paper-viewer" class="cta-button" style="background: rgba(255,255,255,0.2); color: white;" onclick="showPaperViewer(); return false;">👁️ View Online</a>
+                <div class="card">
+                    <h3><span class="marker"></span>Research Interests</h3>
+                    <ul>
+                        <li><strong>State and local public finance</strong> &mdash; trust fund management and fiscal sustainability</li>
+                        <li><strong>Fiscal federalism</strong> &mdash; intergovernmental finance and policy coordination</li>
+                        <li><strong>Unemployment insurance</strong> &mdash; financial governance and program solvency</li>
+                        <li><strong>Policy diffusion</strong> &mdash; how fiscal capacity and geography shape local adoption</li>
+                        <li><strong>Applied econometrics</strong> &mdash; causal evaluation, forecasting, and computational text analysis</li>
+                    </ul>
+                </div>
+
+                <div class="publications">
+                    <h2>Publications</h2>
+                    <p class="page-intro">Full list also available on <a href="https://scholar.google.com/citations?user=Bdo8s7gAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a>.</p>
+
+                    <p class="pub-group">Journal Articles</p>
+
+                    <div class="publication-item">
+                        <h4>Path-Dependent Fiscal Adjustment: Divergent State Strategies in Post-Recession UI Trust Fund Management<span class="pub-tag">New</span></h4>
+                        <p>Overstreet, D. (2026). <em>Public Finance Review.</em> Advance online publication.</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Geographic Networks, Fiscal Incentives, and Coercive Federalism: Policy Diffusion of 287(g) Immigration Enforcement Agreements<span class="pub-tag">New</span></h4>
+                        <p>Overstreet, D. (2026). <em>Public Administration Quarterly.</em> <a href="https://doi.org/10.1177/07349149261433590" target="_blank" rel="noopener">doi:10.1177/07349149261433590</a></p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Rent Control for Homeowners? Acquisition-Value Assessments and Housing Costs</h4>
+                        <p>Strickland, J. M., &amp; Overstreet, D. (2025). <em>Public Finance Review, 53</em>(3), 267&ndash;295. <a href="https://doi.org/10.1177/10911421231214886" target="_blank" rel="noopener">doi:10.1177/10911421231214886</a></p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>The Elusive Economic Blessings of Tithing: Mormon Temples and County Poverty</h4>
+                        <p>Overstreet, D. (2024). <em>Journal of Economics, Theology and Religion, 4</em>(1), 40&ndash;58.</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Can Local Government Mergers Reduce Costs When Capital Expenditures Are Low? Evidence from Court Mergers</h4>
+                        <p>Mughan, S., &amp; Overstreet, D. (2024). <em>Urban Affairs Review, 60</em>(3), 892&ndash;922. <a href="https://doi.org/10.1177/10780874231209908" target="_blank" rel="noopener">doi:10.1177/10780874231209908</a></p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>The Impact of Government Form on Resource Allocation in Local Government: Evidence from Municipal Court Closures</h4>
+                        <p>Mughan, S., &amp; Overstreet, D. (2023). <em>Public Budgeting &amp; Finance, 43</em>(2), 3&ndash;26.</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>Is Minimum Wage an Effective Anti-Poverty Tool?</h4>
+                        <p>Overstreet, D. (2021). <em>Journal of Poverty, 25</em>(5), 453&ndash;464.</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>The Negative Impact of Barriers to Entry on Income Inequality</h4>
+                        <p>Overstreet, D. (2020). <em>Economic Affairs, 40</em>(3), 344&ndash;357.</p>
+                    </div>
+
+                    <div class="publication-item">
+                        <h4>The Effect of Minimum Wage on Per Capita Income in Arizona: An Empirical Analysis</h4>
+                        <p>Overstreet, D. (2019). <em>Poverty &amp; Public Policy, 11</em>(1&ndash;2), 156&ndash;168.</p>
+                    </div>
+
+                    <p class="pub-group">Book Chapters</p>
+
+                    <div class="publication-item">
+                        <h4>Exploring the Interplay of Taxation and Regulation in Institutional Arrangements</h4>
+                        <p>Overstreet, D. (2023). In <em>Knowledge and Entrepreneurship in Public Policy</em> (Chapter 7). Lexington Books.</p>
+                    </div>
+                </div>
+
+                <!-- Working Paper -->
+                <div class="card panel-dark">
+                    <h3>Working Paper</h3>
+                    <div class="inset">
+                        <h4>Preserving Policy Through Narrative Transformation: A Computational Analysis of Mormon Tithing Discourse, 1850&ndash;2024</h4>
+                        <p>How do institutions keep a costly requirement in place for 175 years without changing it? Using large language models and fine-tuned DistilBERT classifiers on 4,002 general conference passages, I measure three rhetorical dimensions of Mormon tithing discourse &mdash; commandment versus opportunity, fear versus love, and material versus spiritual emphasis &mdash; to test Armand Mauss's optimum tension theory.</p>
+                        <p><strong>Findings.</strong> Rhetoric cycles between authoritarian retrenchment and assimilationist appeal, tracking financial crises, federal persecution, and economic downturns. Institutions can preserve demanding practices through coordinated narrative evolution rather than policy change.</p>
+                        <div class="btn-row">
+                            <a href="papers/Overstreet_2025_Mormon_Tithing.pdf" target="_blank" rel="noopener" class="cta-button">Download PDF</a>
+                            <a href="#paper-viewer" class="cta-button ghost" onclick="showPaperViewer(); return false;">Read in browser</a>
+                        </div>
+                    </div>
+
+                    <!-- Embedded Datawrapper Charts -->
+                    <div class="inset">
+                        <p class="label" style="margin-bottom: 1.25rem; text-align: center;">Interactive figures</p>
+
+                        <div class="chart-embed-container">
+                            <h4>Fear &ndash; Love Rhetorical Dimension</h4>
+                            <iframe title="Fear - Love Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-EtNtL" src="https://datawrapper.dwcdn.net/EtNtL/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1" loading="lazy"></iframe>
+                        </div>
+
+                        <div class="chart-embed-container">
+                            <h4>Commandment &ndash; Opportunity Rhetorical Dimension</h4>
+                            <iframe title="Commandment - Opportunity Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-CjmMy" src="https://datawrapper.dwcdn.net/CjmMy/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1" loading="lazy"></iframe>
+                        </div>
+
+                        <div class="chart-embed-container">
+                            <h4>Material &ndash; Spiritual Rhetorical Dimension</h4>
+                            <iframe title="Material - Spiritual Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-Ajj04" src="https://datawrapper.dwcdn.net/Ajj04/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1" loading="lazy"></iframe>
+                        </div>
+
+                        <div class="chart-embed-container">
+                            <h4>Individual Quotes &mdash; Fear/Commandment Dimension</h4>
+                            <iframe title="Individual Quotes - Fear/Commandment Dim." aria-label="Scatter Plot" id="datawrapper-chart-amPKv" src="https://datawrapper.dwcdn.net/amPKv/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="424" data-external="1" loading="lazy"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3><span class="marker"></span>Work in Progress</h3>
+                    <ul>
+                        <li>Unemployment insurance trust fund solvency under federal policy change</li>
+                        <li>The effect of income disregard changes on state trust funds</li>
+                        <li>Regional patterns in policy diffusion across local governments</li>
+                    </ul>
+                </div>
+
+                <!-- Paper Viewer Section -->
+                <div id="paper-viewer" style="display: none; margin-top: 2rem;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <h3 style="margin-bottom: 0;">Preserving Policy Through Narrative Transformation</h3>
+                            <button onclick="document.getElementById('paper-viewer').style.display='none'" style="background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 0.4rem 0.875rem; border-radius: var(--r-sm); cursor: pointer; font-weight: 500; font-size: 0.875rem; font-family: inherit; white-space: nowrap;">Close</button>
+                        </div>
+                        <iframe src="papers/Overstreet_2025_Mormon_Tithing.pdf" title="Working paper PDF" style="width: 100%; height: 800px; border: 1px solid var(--line); border-radius: var(--r-sm);"></iframe>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Embedded Datawrapper Charts -->
-        <div style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 5px; margin-top: 1.5rem;">
-            <h4 style="color: white; margin-bottom: 1.5rem; font-size: 1.1rem; text-align: center;">Interactive Data Visualizations</h4>
-            
-            <div class="chart-embed-container">
-                <h4>Fear - Love Rhetorical Dimension</h4>
-                <iframe title="Fear - Love Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-EtNtL" src="https://datawrapper.dwcdn.net/EtNtL/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1"></iframe>
-            </div>
 
-            <div class="chart-embed-container">
-                <h4>Commandment - Opportunity Rhetorical Dimension</h4>
-                <iframe title="Commandment - Opportunity Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-CjmMy" src="https://datawrapper.dwcdn.net/CjmMy/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1"></iframe>
-            </div>
-
-            <div class="chart-embed-container">
-                <h4>Material - Spiritual Rhetorical Dimension</h4>
-                <iframe title="Material - Spiritual Rhetorical Dimension" aria-label="Line chart" id="datawrapper-chart-Ajj04" src="https://datawrapper.dwcdn.net/Ajj04/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="456" data-external="1"></iframe>
-            </div>
-
-            <div class="chart-embed-container">
-                <h4>Individual Quotes - Fear/Commandment Dimension</h4>
-                <iframe title="Individual Quotes - Fear/Commandment Dim." aria-label="Scatter Plot" id="datawrapper-chart-amPKv" src="https://datawrapper.dwcdn.net/amPKv/1/" scrolling="no" frameborder="0" style="width: 0; min-width: 100% !important; border: none;" height="424" data-external="1"></iframe>
-            </div>
-        </div>
-    </div>
-
-    <div class="publications">
-        <h2>Recent Publications</h2>
-
-        <div class="publication-item">
-            <h4>Path-Dependent Fiscal Adjustment: Divergent State Strategies in Post-Recession UI Trust Fund Management</h4>
-            <p>Overstreet, D. (2026). Public Finance Review. Advance online publication</p>
-        </div>
-
-        <div class="publication-item">
-            <h4>Geographic Networks, Fiscal Incentives, and Coercive Federalism: Policy Diffusion of 287(g) Immigration Enforcement Agreements</h4>
-            <p>Overstreet, D. (2026). Public Administration Quarterly. <a href="https://doi.org/10.1177/07349149261433590" target="_blank">https://doi.org/10.1177/07349149261433590</a></p>
-        </div>
-
-        <div class="publication-item">
-            <h4>Rent Control for Homeowners? Acquisition-Value Assessments and Housing Costs</h4>
-            <p>Strickland, J. M., & Overstreet, D. (2025). Public Finance Review, 53(3), 267-295. <a href="https://doi.org/10.1177/10911421231214886" target="_blank">https://doi.org/10.1177/10911421231214886</a></p>
-        </div>
-
-        <div class="publication-item">
-            <h4>The Elusive Economic Blessings of Tithing: Mormon Temples and County Poverty</h4>
-            <p>Overstreet, D. (2024). Journal of Economics, Theology and Religion, 4(1), 40-58</p>
-        </div>
-
-        <div class="publication-item">
-            <h4>Can Local Government Mergers Reduce Costs When Capital Expenditures Are Low? Evidence from Court Mergers</h4>
-            <p>Mughan, S., & Overstreet, D. (2024). Urban Affairs Review, 60(3), 892-922. <a href="https://doi.org/10.1177/10780874231209908" target="_blank">https://doi.org/10.1177/10780874231209908</a></p>
-        </div>
-
-        <div class="publication-item">
-            <h4>The Impact of Government Form on Resource Allocation in Local Government, Evidence from Municipal Court Closures</h4>
-            <p>Mughan, S., & Overstreet, D. (2023). Public Budgeting & Finance, 43(2), 3-26</p>
-        </div>
-
-        <div class="publication-item">
-            <h4>Is Minimum Wage an Effective Anti-Poverty Tool?</h4>
-            <p>Overstreet, D. (2021). Journal of Poverty, 25(5), 453-464</p>
-        </div>
-
-        <div class="publication-item">
-            <h4>The Negative Impact of Barriers to Entry on Income Inequality</h4>
-            <p>Overstreet, D. (2020). Economic Affairs, 40(3), 344-357</p>
-        </div>
-
-        <div class="publication-item">
-            <h4>The Effect of Minimum Wage on Per Capita Income in Arizona: Empirical Analysis</h4>
-            <p>Overstreet, D. (2019). Poverty & Public Policy, 11(1-2), 156-168</p>
-        </div>
-
-        <div class="publication-item">
-            <h4>Chapter 7: Exploring the Interplay of Taxation and Regulation in Institutional Arrangements</h4>
-            <p>Overstreet, D. (2023). In Knowledge and Entrepreneurship in Public Policy. Lexington Books</p>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3>Current Research Projects</h3>
-        <p>Current work includes projects on unemployment insurance trust fund solvency under federal policy changes, the impact of income disregard changes on state trust funds, and analysis of regional policy diffusion patterns.</p>
-    </div>
-
-    <!-- Paper Viewer Section -->
-    <div id="paper-viewer" style="display: none; margin-top: 2rem;">
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3>Paper Viewer</h3>
-                <button onclick="document.getElementById('paper-viewer').style.display='none'" style="background: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-weight: 500;">Close Viewer</button>
-            </div>
-            <iframe src="papers/Overstreet_2025_Mormon_Tithing.pdf" style="width: 100%; height: 800px; border: 1px solid #ddd; border-radius: 5px;"></iframe>
-        </div>
-    </div>
-</div>
-
-            <!-- R Shiny Applications Page -->
+            <!-- Tools & Dashboards Page -->
             <div id="applications" class="page">
-                <h1>R Shiny Applications</h1>
-                
-                <p style="text-align: center; margin-bottom: 3rem; font-size: 1.2rem;">Exploring interactive data analysis and policy research through custom-built applications</p>
+                <h1>Tools &amp; Dashboards</h1>
+                <p class="page-intro">Interactive applications that put policy and public finance data in front of the people who need it, without requiring them to write code.</p>
+
+                <p class="pub-group">R Shiny Applications</p>
 
                 <div class="app-showcase">
                     <div class="app-card">
                         <h3>KonFound-It! Sensitivity Analysis</h3>
-                        <p>An interactive tool for quantifying the robustness of causal inferences in research. This application helps researchers understand how sensitive their findings are to potential confounding variables.</p>
-                        <a href="https://konfound-project.shinyapps.io/konfound-it/" target="_blank" class="cta-button">Launch Application</a>
+                        <p>Quantifies how robust a causal inference is to potential confounding, so researchers can see how much unmeasured bias it would take to overturn a finding.</p>
+                        <a href="https://konfound-project.shinyapps.io/konfound-it/" target="_blank" rel="noopener" class="cta-button">Launch</a>
                     </div>
 
                     <div class="app-card">
                         <h3>What Works Clearinghouse Sensitivity Benchmarks</h3>
-                        <p>A specialized tool for conducting sensitivity analysis benchmarks specifically designed for education policy research and evaluation studies.</p>
-                        <a href="https://konfound-project.shinyapps.io/wwc-sensitivity-benchmark/" target="_blank" class="cta-button">Launch Application</a>
+                        <p>Sensitivity analysis benchmarks built for education policy evaluation, calibrated against the What Works Clearinghouse evidence base.</p>
+                        <a href="https://konfound-project.shinyapps.io/wwc-sensitivity-benchmark/" target="_blank" rel="noopener" class="cta-button">Launch</a>
                     </div>
 
                     <div class="app-card">
                         <h3>Census Data Explorer</h3>
-                        <p>An application that lets you search through Census data on economic indicators and demographics across states, counties, and cities.</p>
-                        <a href="https://alt30.shinyapps.io/Census_Portal/" target="_blank" class="cta-button">Launch Application</a>
+                        <p>Search and compare Census economic and demographic indicators across states, counties, and cities.</p>
+                        <a href="https://alt30.shinyapps.io/Census_Portal/" target="_blank" rel="noopener" class="cta-button">Launch</a>
                     </div>
 
                     <div class="app-card">
-                        <h3>Supplemental Nutrition Assistance Program (SNAP) Dashboard</h3>
-                        <p>Interactive dashboard for exploring SNAP program data across states and counties, with trend analysis and policy comparison tools.</p>
-                        <a href="https://dallin-overstreet.shinyapps.io/SNAP/" target="_blank" class="cta-button">Launch Application</a>
+                        <h3>SNAP Program Dashboard</h3>
+                        <p>Explore Supplemental Nutrition Assistance Program participation and spending by state and county, with trend and policy comparison views.</p>
+                        <a href="https://dallin-overstreet.shinyapps.io/SNAP/" target="_blank" rel="noopener" class="cta-button">Launch</a>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h3>Technical Expertise</h3>
-                    <p>My R Shiny applications leverage advanced statistical methods and data visualization techniques to make complex policy research accessible and interactive. I specialize in:</p>
-                    <ul style="margin-left: 2rem; margin-top: 1rem;">
-                        <li>Causal inference and sensitivity analysis tools</li>
-                        <li>Interactive data visualization and dashboards</li>
-                        <li>Policy simulation and scenario modeling</li>
-                        <li>Real-time data processing and analysis</li>
-                        <li>User-friendly interfaces for complex statistical methods</li>
-                    </ul>
+                <p class="pub-group">Data Dashboards</p>
+
+                <div class="app-showcase">
+                    <div class="app-card">
+                        <h3>Arizona Medicaid Dashboard</h3>
+                        <p>Enrollment, eligibility, and expansion figures for Arizona's Medicaid program, assembled into a single annotated view.</p>
+                        <a href="graph-of-the-day.html" class="cta-button">Open dashboard</a>
+                    </div>
+
+                    <div class="app-card">
+                        <h3>The Business Pulse</h3>
+                        <p>A read on small business conditions built from the Census Business Trends and Outlook Survey, covering performance, supply chains, hiring, and AI adoption.</p>
+                        <a href="business-pulse.html" class="cta-button">Open dashboard</a>
+                    </div>
                 </div>
 
-                <div class="card">
-                    <h3>Collaboration & Custom Development</h3>
-                    <p>Interested in collaborating on a custom R Shiny application for your research or policy analysis needs? I'm available for consulting and collaborative projects that advance evidence-based policy making.</p>
-                    <p style="margin-top: 1rem;"><strong>Contact me</strong> to discuss how interactive data applications can enhance your research impact.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h3><span class="marker"></span>What I Build</h3>
+                        <ul>
+                            <li>Causal inference and sensitivity analysis tools</li>
+                            <li>Interactive visualization and reporting dashboards</li>
+                            <li>Policy simulation and scenario modeling</li>
+                            <li>Automated data pipelines against public data sources</li>
+                            <li>Plain-language interfaces for complex statistical methods</li>
+                        </ul>
+                    </div>
+
+                    <div class="card">
+                        <h3><span class="marker"></span>Collaboration</h3>
+                        <p>I take on consulting and collaborative projects that build analytical capacity for research and policy work &mdash; from a single figure to a full application.</p>
+                        <p>The best way to reach me is via <a href="https://www.linkedin.com/in/dallin-overstreet/" target="_blank" rel="noopener">LinkedIn</a>.</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Blog Page -->
+
+            <!-- Writing Page -->
             <div id="blog" class="page">
-                <h1>PoliMetrics Blog</h1>
-                
+                <h1>Writing</h1>
+                <p class="page-intro">PoliMetrics is my newsletter on public finance and policy. Each post starts from original data analysis rather than commentary.</p>
+
                 <div class="blog-feed">
                     <h2>Latest from PoliMetrics</h2>
-                    <p style="margin: 1rem 0;">Analysis and insights on public economics, fiscal federalism, and policy research.</p>
-                    
-                    <div id="blog-posts" style="background: white; padding: 2rem; border-radius: 10px; margin: 2rem 0; text-align: left;">
-                        <div id="loading" style="text-align: center; color: #666;">
-                            <p>Loading latest posts...</p>
+
+                    <div id="blog-posts" class="post-list">
+                        <div id="loading" style="text-align: center; color: var(--muted);">
+                            <p>Loading latest posts&hellip;</p>
                         </div>
                     </div>
 
-                    <a href="https://polimetrics.substack.com/" target="_blank" class="cta-button" style="font-size: 1.2rem; padding: 1.5rem 3rem;">Subscribe to PoliMetrics</a>
-                    
-                    <div style="margin: 3rem 0; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
-                        <h3 style="color: #2c3e50; margin-bottom: 1rem;">About PoliMetrics</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; text-align: left;">
+                    <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener" class="cta-button">Subscribe to PoliMetrics</a>
+
+                    <div style="margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--line); text-align: left;">
+                        <p class="pub-group" style="margin-top: 0;">What it covers</p>
+                        <div class="topic-grid">
                             <div>
-                                <h4 style="color: #3498db;">Data Analysis</h4>
-                                <p>Statistical analysis of policy outcomes and economic trends</p>
+                                <h4>Public Finance</h4>
+                                <p>Trust funds, budgets, and fiscal sustainability</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">Policy Research</h4>
-                                <p>Evidence-based commentary on public finance and administration</p>
+                                <h4>Fiscal Federalism</h4>
+                                <p>How money and authority move between governments</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">Research Methods</h4>
-                                <p>Econometric approaches in public policy research</p>
+                                <h4>Program Data</h4>
+                                <p>What administrative data reveals about policy in practice</p>
                             </div>
                             <div>
-                                <h4 style="color: #3498db;">Fiscal Federalism</h4>
-                                <p>Analysis of intergovernmental finance and policy</p>
+                                <h4>Methods</h4>
+                                <p>Econometric approaches, explained plainly</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
 
             <!-- Hot Dog Dashboard Page (Hidden from menu, accessible via direct link) -->
             <div id="hotdog-dashboard" class="page">
@@ -1279,7 +1679,7 @@
                         <div class="logo-section">
                             <div class="dashboard-logo">O</div>
                             <div class="title-section">
-                                <h1></h1>
+                                <h1>Overstreet Classic</h1>
                                 <div class="subtitle">Annual Hot Dog Domination Championship • Est. 2023</div>
                             </div>
                         </div>
@@ -1552,8 +1952,9 @@
         </main>
 
         <footer>
-            <p>&copy; 2025 Dallin Overstreet. PhD, Public Administration & Policy, Arizona State University.</p>
-            <p>State & Local Public Finance Research</p>
+            <p><span class="footer-name">Dallin Overstreet, PhD</span> &middot; State &amp; Local Public Finance Research</p>
+            <p><a href="https://scholar.google.com/citations?user=Bdo8s7gAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a> &nbsp;&middot;&nbsp; <a href="https://www.linkedin.com/in/dallin-overstreet/" target="_blank" rel="noopener">LinkedIn</a> &nbsp;&middot;&nbsp; <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener">PoliMetrics</a></p>
+            <p style="margin-top: 1rem; font-size: 0.8125rem; opacity: .75;">&copy; <span id="year">2026</span> Dallin Overstreet</p>
         </footer>
     </div>
 
@@ -1591,13 +1992,15 @@
                 }, 100);
             }
             
-            // Scroll to top
-            window.scrollTo(0, 0);
+            // Scroll to top. Deferred so it wins over the browser's own
+            // jump to the :target element on initial load.
+            requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
         }
 
         function showPaperViewer() {
-    document.getElementById('paper-viewer').style.display = 'block';
-    document.getElementById('paper-viewer').scrollIntoView({ behavior: 'smooth' });
+            const viewer = document.getElementById('paper-viewer');
+            viewer.style.display = 'block';
+            viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function handleHashChange() {
@@ -1624,21 +2027,21 @@
                 if (data.status === 'ok' && data.items) {
                     loadingDiv.style.display = 'none';
                     
-                    let postsHTML = '<h3 style="color: #2c3e50; margin-bottom: 1rem;">Recent Posts</h3>';
-                    
+                    let postsHTML = '';
+
                     // Display the first 5 posts
                     data.items.slice(0, 5).forEach(post => {
-                        const pubDate = new Date(post.pubDate).toLocaleDateString();
-                        const description = post.description.replace(/<[^>]*>/g, '').substring(0, 200) + '...';
-                        
+                        const pubDate = new Date(post.pubDate).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'long', day: 'numeric'
+                        });
+                        const description = post.description.replace(/<[^>]*>/g, '').trim().substring(0, 200) + '…';
+
                         postsHTML += `
-                            <div style="padding: 1rem 0; margin: 1rem 0; border-bottom: 1px solid #e9ecef;">
-                                <h4 style="color: #2c3e50; margin-bottom: 0.5rem;">
-                                    <a href="${post.link}" target="_blank" style="color: #2c3e50; text-decoration: none;">${post.title}</a>
-                                </h4>
-                                <p style="color: #6c757d; font-size: 0.9rem; margin: 0.5rem 0;">${pubDate}</p>
-                                <p style="color: #666; margin: 0.5rem 0; line-height: 1.6;">${description}</p>
-                                <a href="${post.link}" target="_blank" style="color: #2c3e50; font-weight: 500;">Read more →</a>
+                            <div class="post-item">
+                                <h4><a href="${post.link}" target="_blank" rel="noopener">${post.title}</a></h4>
+                                <p class="post-date">${pubDate}</p>
+                                <p>${description}</p>
+                                <a href="${post.link}" target="_blank" rel="noopener" class="post-more">Read more &rarr;</a>
                             </div>
                         `;
                     });
@@ -1650,7 +2053,7 @@
             } catch (error) {
                 console.error('Error loading blog posts:', error);
                 loadingDiv.innerHTML = `
-                    <p style="color: #666;">Unable to load recent posts. Please visit <a href="https://polimetrics.substack.com/" target="_blank" style="color: #3498db;">PoliMetrics directly</a> for the latest content.</p>
+                    <p style="color: var(--muted);">Unable to load recent posts right now. Visit <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener">PoliMetrics</a> for the latest.</p>
                 `;
             }
         }
@@ -2060,6 +2463,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.body.style.opacity = '1';
             handleHashChange();  // ensure correct page is shown on load
+            document.getElementById('year').textContent = new Date().getFullYear();
         });
 
         // Add resize event listener for responsive charts
