@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Liahona Food Program — Policy Brief</title>
+    <meta name="description" content="Policy Brief No. 2026-01. A SNAP-modeled, income-tested food benefit program for Latter-day Saint members, funded from Ensign Peak investment returns. By Dallin Overstreet, PhD.">
+    <meta name="author" content="Dallin Overstreet">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="The Liahona Food Program — Policy Brief">
+    <meta property="og:description" content="Designing a globally comprehensive member food security program funded by Ensign Peak investment returns.">
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2316293f'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3EDO%3C/text%3E%3C/svg%3E">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+
+    <style>
+        :root {
+            --ink:       #16293f;
+            --ink-soft:  #3d5a7a;
+            --body:      #3a4757;
+            --muted:     #6b7685;
+            --accent:    #1f5f9e;
+            --accent-dk: #17497a;
+            --line:      #e3e7ed;
+            --bg:        #f6f7f9;
+            --surface:   #ffffff;
+            --r:         8px;
+            --r-sm:      6px;
+            --shadow-1:  0 1px 2px rgba(22,41,63,.05), 0 1px 3px rgba(22,41,63,.04);
+            --maxw:      880px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { -webkit-text-size-adjust: 100%; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.65;
+            color: var(--body);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        h1, h2, h3 { color: var(--ink); line-height: 1.25; letter-spacing: -0.011em; font-weight: 600; }
+
+        a { color: var(--accent); }
+
+        a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+        .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 1.5rem; }
+
+        /* ---------- Masthead ---------- */
+        .masthead {
+            background: linear-gradient(135deg, #1e3a5f 0%, var(--ink) 100%);
+            color: #fff;
+            padding: 3.5rem 0 3rem;
+        }
+
+        .eyebrow {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: rgba(255,255,255,.65);
+            margin-bottom: 1.25rem;
+        }
+
+        .masthead h1 {
+            color: #fff;
+            font-size: clamp(1.875rem, 4.5vw, 2.625rem);
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 0.625rem;
+        }
+
+        .masthead .subtitle {
+            font-size: 1.0625rem;
+            color: rgba(255,255,255,.82);
+            max-width: 58ch;
+        }
+
+        .byline {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,.16);
+            font-size: 0.9375rem;
+            color: rgba(255,255,255,.75);
+        }
+
+        .byline strong { color: #fff; font-weight: 600; }
+
+        .byline a { color: rgba(255,255,255,.9); }
+
+        .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+
+        .btn {
+            display: inline-block;
+            background: #fff;
+            color: var(--ink);
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--r-sm);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            transition: background-color .18s ease, transform .18s ease;
+        }
+
+        .btn:hover { background: #eef1f5; transform: translateY(-1px); }
+
+        .btn.ghost {
+            background: transparent;
+            color: #fff;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
+        }
+
+        .btn.ghost:hover { background: rgba(255,255,255,.12); }
+
+        /* ---------- Body ---------- */
+        main { padding: 3rem 0 4rem; }
+
+        section { margin-bottom: 3rem; }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .summary p { max-width: 72ch; }
+
+        .summary p + p { margin-top: 1rem; }
+
+        /* ---------- Key figures ---------- */
+        .figures {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+            gap: 1rem;
+        }
+
+        .figure {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-top: 3px solid var(--accent);
+            border-radius: var(--r);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-1);
+        }
+
+        .figure .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .figure .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent-dk);
+            margin: 0.5rem 0 0.375rem;
+        }
+
+        .figure .note { font-size: 0.8125rem; color: var(--muted); line-height: 1.5; }
+
+        /* ---------- Contents ---------- */
+        .contents {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            padding: 1.5rem 1.75rem;
+            box-shadow: var(--shadow-1);
+        }
+
+        .contents ol { list-style: none; counter-reset: sec; }
+
+        .contents li {
+            counter-increment: sec;
+            padding: 0.4rem 0 0.4rem 2.5rem;
+            position: relative;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .contents li:last-child { border-bottom: 0; }
+
+        .contents li::before {
+            content: counter(sec, decimal-leading-zero);
+            position: absolute;
+            left: 0;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .contents li.unnumbered { counter-increment: none; color: var(--muted); }
+
+        .contents li.unnumbered::before { content: "·"; color: var(--muted); }
+
+        /* ---------- Assumptions ---------- */
+        .assumptions {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-left: 3px solid var(--accent);
+            border-radius: var(--r-sm);
+            padding: 1.25rem 1.5rem;
+            font-size: 0.9375rem;
+        }
+
+        .assumptions ul { margin: 0.5rem 0 0 1.1rem; }
+
+        .assumptions li { margin-bottom: 0.3rem; }
+
+        /* ---------- PDF viewer ---------- */
+        .viewer {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--r);
+            overflow: hidden;
+            box-shadow: var(--shadow-1);
+        }
+
+        .viewer iframe {
+            display: block;
+            width: 100%;
+            height: 85vh;
+            min-height: 560px;
+            border: 0;
+        }
+
+        .viewer .fallback {
+            padding: 1rem 1.25rem;
+            font-size: 0.875rem;
+            color: var(--muted);
+            border-top: 1px solid var(--line);
+            background: var(--bg);
+        }
+
+        /* ---------- Footer ---------- */
+        footer {
+            background: var(--ink);
+            color: rgba(255,255,255,.72);
+            padding: 2.5rem 0;
+            font-size: 0.9375rem;
+        }
+
+        footer p + p { margin-top: 0.375rem; }
+
+        footer a { color: rgba(255,255,255,.85); }
+
+        .cite {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,.6);
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,.14);
+            max-width: 72ch;
+        }
+
+        @media (max-width: 640px) {
+            .masthead { padding: 2.5rem 0 2.25rem; }
+            .viewer iframe { height: 70vh; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition-duration: .01ms !important; }
+        }
+
+        @media print {
+            .masthead { background: none; color: #000; padding: 0 0 1rem; }
+            .masthead h1, .byline strong { color: #000; }
+            .masthead .subtitle, .byline, .eyebrow { color: #333; }
+            .btn-row, .viewer, footer { display: none !important; }
+            body { background: #fff; }
+            .figure, .contents, .assumptions { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="masthead">
+        <div class="wrap">
+            <p class="eyebrow">Policy Brief · No. 2026-01 · May 2026</p>
+            <h1>From Accumulation to Application</h1>
+            <p class="subtitle">The Liahona Food Program: designing a globally comprehensive member food security program funded by Ensign Peak investment returns.</p>
+
+            <div class="btn-row">
+                <a class="btn" href="Liahona_Food_Program_Policy_Brief.pdf" download>Download PDF</a>
+                <a class="btn ghost" href="Liahona_Food_Program_Policy_Brief.pdf" target="_blank" rel="noopener">Open in new tab</a>
+            </div>
+
+            <p class="byline">
+                <strong>Dallin Overstreet, PhD</strong><br>
+                <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener">PoliMetrics</a>
+                &nbsp;·&nbsp;
+                <a href="https://scholar.google.com/citations?user=Bdo8s7gAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a>
+                &nbsp;·&nbsp;
+                20 pages
+            </p>
+        </div>
+    </header>
+
+    <main>
+        <div class="wrap">
+
+            <section class="summary">
+                <p class="section-label">Summary</p>
+                <p>The Church of Jesus Christ of Latter-day Saints manages one of the largest privately held investment portfolios in the United States through its subsidiary, Ensign Peak Advisors. Independent assessments place total Church investment assets near <strong>$180 billion</strong> at the midpoint, generating roughly <strong>$9.0 billion</strong> a year under a standard 5% endowment spending model. Yet the welfare infrastructure serving members who experience food insecurity remains largely unchanged from its mid-twentieth-century design, relying on Bishop's Storehouses, in-kind transfers, and discretionary local judgment rather than systematic, rights-based assistance.</p>
+                <p>This brief proposes the <strong>Liahona Food Program</strong>: a SNAP-modeled, income-tested food benefit funded entirely from Ensign Peak investment income and administered through an independent Office of Member Welfare Accountability. Benefits are calibrated to SNAP FY2026 maximum allotments and a 130% federal-poverty-level gross-income threshold, applied across 38 countries and regions covering about 90% of the Church's 17.89 million members, with a wage-ratio multiplier scaling benefits to local economic conditions.</p>
+                <p>At full global implementation the program would serve approximately <strong>4.78 million</strong> eligible members at an annual cost of <strong>$3.43 billion</strong> &mdash; 38% of estimated annual returns at the midpoint. Modeled conservatively against the SNAP literature and international cash transfer research, it would lift roughly <strong>584,000 members</strong> out of poverty each year at a cost of $5,868 per person, competitive with the most efficient anti-poverty programs in the world. Even under a conservative $124 billion asset scenario the program consumes only 55% of returns. The principal portfolio is preserved in full, and no tithing revenue is required.</p>
+            </section>
+
+            <section>
+                <p class="section-label">Key figures</p>
+                <div class="figures">
+                    <div class="figure">
+                        <p class="value">$180B</p>
+                        <p class="label">Ensign Peak AUM (midpoint)</p>
+                        <p class="note">Per Widow's Mite 2023&ndash;24 consensus; total Church investments</p>
+                    </div>
+                    <div class="figure">
+                        <p class="value">$9.0B</p>
+                        <p class="label">Annual returns at midpoint</p>
+                        <p class="note">5% endowment spending rule on $180B trailing AUM</p>
+                    </div>
+                    <div class="figure">
+                        <p class="value">17.89M</p>
+                        <p class="label">Global LDS members</p>
+                        <p class="note">Official 2025 statistical report (Dec 31, 2025)</p>
+                    </div>
+                    <div class="figure">
+                        <p class="value">4.78M</p>
+                        <p class="label">Globally eligible members</p>
+                        <p class="note">Below 130% of local poverty line (SNAP gross income limit)</p>
+                    </div>
+                    <div class="figure">
+                        <p class="value">$3.43B</p>
+                        <p class="label">Global annual program cost</p>
+                        <p class="note">Wage-ratio multiplier applied; $15/month floor benefit</p>
+                    </div>
+                    <div class="figure">
+                        <p class="value">~584K</p>
+                        <p class="label">Members lifted out of poverty</p>
+                        <p class="note">Annually, first-order headcount effect; 12% of eligible</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <p class="section-label">Key assumptions</p>
+                <div class="assumptions">
+                    <ul>
+                        <li>Ensign Peak assets-under-management midpoint of $180 billion (Widow's Mite consensus for total Church investment assets, 2023&ndash;24)</li>
+                        <li>Current LDS humanitarian baseline of $1.45 billion (2024 official figure)</li>
+                        <li>Benefit structure aligned with SNAP FY2026 maximum allotments</li>
+                        <li>Eligibility threshold of 130% of the local poverty level, consistent with SNAP gross income limits</li>
+                        <li>Modeled per-recipient average benefit of $190 per month, matching SNAP's actual average</li>
+                        <li>Global membership of 17.89 million per the official 2025 statistical report</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section>
+                <p class="section-label">Contents</p>
+                <div class="contents">
+                    <ol>
+                        <li>Executive Summary</li>
+                        <li>Problem Statement</li>
+                        <li>Assessment of Current LDS Welfare Infrastructure</li>
+                        <li>Program Design: The Liahona Food Program</li>
+                        <li>Financial Feasibility Analysis</li>
+                        <li>Global Reach &amp; Cost Distribution</li>
+                        <li>Poverty Impact Analysis</li>
+                        <li>Governance &amp; Accountability Framework</li>
+                        <li>Policy Recommendations</li>
+                        <li class="unnumbered">References</li>
+                        <li class="unnumbered">Annex A: Country-Level Wage &amp; Benefit Data</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section>
+                <p class="section-label">Read the brief</p>
+                <div class="viewer">
+                    <iframe src="Liahona_Food_Program_Policy_Brief.pdf#view=FitH"
+                            title="The Liahona Food Program: Policy Brief (PDF, 20 pages)"></iframe>
+                    <p class="fallback">If the document does not appear above, <a href="Liahona_Food_Program_Policy_Brief.pdf" target="_blank" rel="noopener">open the PDF directly</a> or <a href="Liahona_Food_Program_Policy_Brief.pdf" download>download it</a>.</p>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            <p><strong style="color:#fff;font-weight:600;">Dallin Overstreet, PhD</strong> &middot; State &amp; Local Public Finance Research</p>
+            <p><a href="https://dloverstreet.github.io/">dloverstreet.github.io</a> &nbsp;&middot;&nbsp; <a href="https://polimetrics.substack.com/" target="_blank" rel="noopener">PoliMetrics</a></p>
+            <p class="cite">Suggested citation: Overstreet, D. (2026). <em>From accumulation to application: The Liahona Food Program &mdash; designing a globally comprehensive member food security program funded by Ensign Peak investment returns</em> (Policy Brief No. 2026-01). PoliMetrics.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
