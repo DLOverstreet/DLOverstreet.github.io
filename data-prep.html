@@ -361,6 +361,25 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
   border:1px dashed var(--line);border-radius:var(--r-sm);padding:.9rem;text-align:center;
   font-size:.75rem;color:var(--muted);
 }
+.cat-row{
+  display:flex;align-items:center;gap:.4rem;width:100%;text-align:left;background:none;border:none;
+  padding:.28rem .3rem;border-radius:var(--r-xs);cursor:pointer;font-size:.75rem;color:var(--body);
+}
+.cat-row:hover{background:var(--accent-soft)}
+.cat-row.on{background:var(--accent-soft);color:var(--accent-dk);font-weight:600}
+.cat-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-tick{color:var(--accent);font-weight:700}
+button.linkish{background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;text-decoration:underline;padding:0}
+details.adv{border:1px solid var(--line);border-radius:var(--r-sm);padding:.4rem .55rem;margin-bottom:.9rem;background:var(--surface-2)}
+details.adv > summary{
+  cursor:pointer;font-size:.6875rem;font-weight:600;color:var(--ink-soft);text-transform:uppercase;
+  letter-spacing:.05em;list-style:none;padding:.15rem 0;
+}
+details.adv > summary::-webkit-details-marker{display:none}
+details.adv > summary::before{content:'▸ ';color:var(--muted)}
+details.adv[open] > summary::before{content:'▾ '}
+details.adv[open] > summary{margin-bottom:.5rem}
+details.adv .fieldset:last-child{margin-bottom:.2rem}
 .tokenlist{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.35rem}
 .token{
   font-size:.6875rem;background:var(--accent-soft);color:var(--accent-dk);border-radius:20px;
@@ -4028,7 +4047,9 @@ const SOURCE_PRESETS = {
     format: 'csv',
     build: (c) => c.domain && c.dataset
       ? 'https://' + stripProto(c.domain) + '/resource/' + String(c.dataset).replace(/\.(csv|json)$/i, '') + '.csv?' +
-        qs({ '$limit': c.limit || 5000, '$select': c.select, '$where': c.where, '$$app_token': c.key })
+        qs({ '$limit': c.limit || 5000,
+             '$select': (c.selectCols && c.selectCols.length) ? c.selectCols.join(',') : c.select,
+             '$where': c.where, '$$app_token': c.key })
       : ''
   },
   census: {
@@ -4042,10 +4063,12 @@ const SOURCE_PRESETS = {
     ],
     keyLabel: 'Census API key (optional)',
     format: 'json',
-    build: (c) => c.dataset
-      ? 'https://api.census.gov/data/' + trimSlash(c.dataset) + '?' +
-        qs({ get: c.vars || 'NAME', for: c.forGeo, in: c.inGeo, key: c.key })
-      : ''
+    build: (c) => {
+      const path = c.path ? (c.year || '2023') + '/' + c.path : trimSlash(c.dataset || '');
+      if (!path) return '';
+      return 'https://api.census.gov/data/' + trimSlash(path) + '?' +
+        qs({ get: censusVarsString(c), for: c.forGeo, in: c.inGeo, key: c.key });
+    }
   },
   worldbank: {
     label: 'World Bank indicators',
@@ -4292,6 +4315,9 @@ function openConnectionEditor(dsId, startPreset) {
     conn.format = p.format || 'auto';
     conn.jsonPath = p.jsonPath || '';
     conn.customUrl = '';
+    ['year', 'path', 'vars', 'varList', 'forGeo', 'forGeoName', 'inGeo', 'requires', 'topic', 'indicator',
+     'countryList', 'yearFrom', 'yearTo', 'dates', 'searchQ', 'searchGo', 'dataset', 'selectCols',
+     'select', 'where', 'resource', '_found'].forEach((k) => { delete conn[k]; });
     draw();
 
   });
@@ -4309,14 +4335,28 @@ function openConnectionEditor(dsId, startPreset) {
     const p = SOURCE_PRESETS[conn.preset];
     fieldWrap.innerHTML = '';
     fieldWrap.appendChild(el('div', { class: 'hint', style: 'margin:-.3rem 0 .8rem', text: p.blurb }));
-    p.fields.forEach((f) => {
-      const inp = textInput(conn[f.k], (v) => { conn[f.k] = v; drawUrl(); }, f.ph);
-      fieldWrap.appendChild(labeled(f.l, inp, f.hint));
-    });
+    const guide = GUIDED[conn.preset];
+    if (guide) {
+      const g = el('div', { class: 'guided' });
+      try { guide(g, conn, () => { draw(); }); }
+      catch (e) { g.appendChild(el('div', { class: 'warn-msg', text: 'The guided picker failed: ' + e.message + ' — use Advanced below.' })); }
+      fieldWrap.appendChild(g);
+    }
     if (p.keyLabel) {
       const k = textInput(conn.key, (v) => { conn.key = v; drawUrl(); }, 'paste your key');
       fieldWrap.appendChild(labeled(p.keyLabel, k,
         'Stored in this browser only. Keys are never written into a saved or exported flow file.'));
+    }
+    // the original code-entry fields, kept for people who know them
+    if (p.fields.length) {
+      const det = el('details', { class: 'adv' });
+      det.open = !guide;
+      det.appendChild(el('summary', { text: guide ? 'Advanced — enter codes directly' : 'Settings' }));
+      p.fields.forEach((f) => {
+        const inp = textInput(conn[f.k], (v) => { conn[f.k] = v; drawUrl(); }, f.ph);
+        det.appendChild(labeled(f.l, inp, f.hint));
+      });
+      fieldWrap.appendChild(det);
     }
     drawUrl();
     drawAdvanced();
@@ -4436,6 +4476,8 @@ function openConnectionEditor(dsId, startPreset) {
     if (!lastTable) { await doTest(testBtn()); if (!lastTable) return; }
     const clean = JSON.parse(JSON.stringify(conn));
     delete clean.key;                       // keys live in local storage, not the flow
+    delete clean._found;                    // transient search results
+    delete clean.searchGo;
     const finalName = (nameIn.value || name || 'Linked data').trim();
     if (existing) {
       existing.connection = clean;
@@ -4471,6 +4513,453 @@ function openConnectionEditor(dsId, startPreset) {
       { label: existing ? 'Save connection' : 'Add source', primary: true, fn: doSave }
     ]
   });
+}
+
+/* =====================================================================
+   Source catalogues
+   Every code offered in a dropdown — Census variables and geographies,
+   World Bank indicators and countries, Socrata datasets and columns —
+   is read from the provider's own metadata endpoint at the moment you
+   open the picker. Nothing here ships a list of codes; if a catalogue
+   cannot be reached the picker says so and falls back to typing it in,
+   rather than showing something invented.
+   ===================================================================== */
+const CAT_TTL = 7 * 864e5;
+const catMem = Object.create(null);
+
+async function fetchCatalog(url, pick, opts) {
+  opts = opts || {};
+  if (catMem[url]) return catMem[url];
+  const slot = 'dps.cat.' + hashStr(url);
+  if (!opts.fresh) {
+    const stored = lsGet(slot);
+    if (stored && stored.t > Date.now() - CAT_TTL && stored.v) {
+      catMem[url] = { rows: stored.v, at: stored.t, url: url };
+      return catMem[url];
+    }
+  }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 60000);
+  let res;
+  try {
+    res = await fetch(url, { signal: ctrl.signal, credentials: 'omit' });
+  } catch (e) {
+    clearTimeout(timer);
+    if (e && e.name === 'AbortError') throw new Error('The catalogue at ' + url + ' took too long to load.');
+    throw new Error('Could not reach ' + hostOf(url) + ' to list what is available. It may be down, or it may not permit browser requests. You can still type the codes in under Advanced.');
+  }
+  clearTimeout(timer);
+  if (!res.ok) throw new Error(hostOf(url) + ' replied ' + res.status + ' when asked for its catalogue.');
+  let json;
+  try { json = JSON.parse(await res.text()); }
+  catch (e) { throw new Error('The catalogue from ' + hostOf(url) + ' was not readable JSON.'); }
+  let rows;
+  try { rows = pick(json); } catch (e) { rows = null; }
+  if (!Array.isArray(rows) || !rows.length) {
+    throw new Error('The reply from ' + hostOf(url) + ' did not contain a list this tool recognises. Use Advanced to enter the values directly.');
+  }
+  const rec = { rows: rows, at: Date.now(), url: url };
+  catMem[url] = rec;
+  // very large catalogues (the ACS variable list runs to tens of thousands of
+  // entries) stay in memory only rather than churning browser storage
+  if (rows.length <= 8000) lsSet(slot, { t: rec.at, v: rows });
+  return rec;
+}
+function hostOf(u) { try { return new URL(u).host; } catch (e) { return u; } }
+
+/* --------------------------- catalogue sources ------------------------ */
+const CATALOGS = {
+  censusDatasets: () => fetchCatalog('https://api.census.gov/data.json', (j) => {
+    const list = j.dataset || j.datasets || [];
+    return list.filter((d) => d && d.c_dataset && d.c_vintage).map((d) => ({
+      id: d.c_dataset.join('/'), vintage: d.c_vintage, title: d.title || d.c_dataset.join('/'),
+      label: (d.title || d.c_dataset.join('/')) + ' — ' + d.c_vintage,
+      search: [d.title, d.c_dataset.join('/'), d.c_vintage, d.description].join(' ').toLowerCase()
+    }));
+  }),
+  censusVariables: (year, path) => fetchCatalog(
+    'https://api.census.gov/data/' + year + '/' + path + '/variables.json',
+    (j) => {
+      const v = j.variables || j;
+      return Object.keys(v).filter((k) => ['for', 'in', 'ucgid'].indexOf(k) < 0).map((k) => {
+        const d = v[k] || {};
+        const lab = String(d.label || '').replace(/!!/g, ' › ').replace(/^Estimate › /, '');
+        return {
+          id: k, label: k + ' — ' + (lab || k), concept: d.concept || '',
+          search: (k + ' ' + lab + ' ' + (d.concept || '')).toLowerCase()
+        };
+      });
+    }),
+  censusGeographies: (year, path) => fetchCatalog(
+    'https://api.census.gov/data/' + year + '/' + path + '/geography.json',
+    (j) => (j.fips || j.geographies || []).map((g) => ({
+      id: g.name, label: g.name + (g.requires && g.requires.length ? '  (within ' + g.requires.join(', ') + ')' : ''),
+      requires: g.requires || [], wildcard: g.wildcard || []
+    }))),
+  wbTopics: () => fetchCatalog('https://api.worldbank.org/v2/topic?format=json&per_page=100',
+    (j) => (Array.isArray(j) && j[1] ? j[1] : []).map((t) => ({ id: t.id, label: t.value }))),
+  wbIndicators: (topicId) => fetchCatalog(
+    'https://api.worldbank.org/v2/topic/' + topicId + '/indicator?format=json&per_page=600',
+    (j) => (Array.isArray(j) && j[1] ? j[1] : []).map((i) => ({
+      id: i.id, label: i.id + ' — ' + i.name, note: i.sourceNote || '',
+      search: (i.id + ' ' + i.name).toLowerCase()
+    }))),
+  wbCountries: () => fetchCatalog('https://api.worldbank.org/v2/country?format=json&per_page=400',
+    (j) => (Array.isArray(j) && j[1] ? j[1] : []).map((c) => ({
+      id: c.id, label: c.name + ' (' + c.id + ')',
+      aggregate: !c.region || c.region.id === 'NA' || /aggregates/i.test((c.region && c.region.value) || ''),
+      search: (c.id + ' ' + c.name + ' ' + (c.iso2Code || '')).toLowerCase()
+    }))),
+  socrataSearch: (q, domain) => fetchCatalog(
+    'https://api.us.socrata.com/api/catalog/v1?' + qs({ q: q, domains: domain || '', limit: 40, only: 'dataset' }),
+    (j) => (j.results || []).map((r) => {
+      const rs = r.resource || {};
+      return {
+        id: rs.id, label: rs.name || rs.id,
+        domain: (r.metadata && r.metadata.domain) || domain || '',
+        note: (rs.description || '').slice(0, 160),
+        columns: (rs.columns_field_name || []).map((f, i) => ({
+          id: f, label: f + (rs.columns_name && rs.columns_name[i] ? ' — ' + rs.columns_name[i] : '') +
+            (rs.columns_datatype && rs.columns_datatype[i] ? ' (' + rs.columns_datatype[i] + ')' : '')
+        }))
+      };
+    }), { fresh: true }),
+  socrataColumns: (domain, id) => fetchCatalog(
+    'https://' + stripProto(domain) + '/api/views/' + id + '.json',
+    (j) => (j.columns || []).map((c) => ({
+      id: c.fieldName, label: c.fieldName + (c.name ? ' — ' + c.name : '') + (c.dataTypeName ? ' (' + c.dataTypeName + ')' : '')
+    }))),
+  ckanSearch: (domain, q) => fetchCatalog(
+    'https://' + stripProto(domain) + '/api/3/action/package_search?' + qs({ q: q || '', rows: 25 }),
+    (j) => {
+      const packs = (j.result && j.result.results) || [];
+      const out = [];
+      packs.forEach((p) => {
+        (p.resources || []).forEach((r) => {
+          if (r.datastore_active === false) return;
+          out.push({
+            id: r.id, label: (p.title || p.name) + (r.name ? ' — ' + r.name : '') + (r.format ? ' [' + r.format + ']' : ''),
+            note: (p.notes || '').slice(0, 140)
+          });
+        });
+      });
+      return out;
+    }, { fresh: true })
+};
+
+/* --------------------------- picker widgets --------------------------- */
+/** A searchable list with single or multiple selection, fed from a catalogue. */
+function catalogPicker(opts) {
+  // opts: { load(), value, multi, onChange, placeholder, label, hint, emptyHint }
+  const wrap = el('div', { class: 'fieldset' });
+  if (opts.label) wrap.appendChild(el('label', { text: opts.label }));
+  const status = el('div', { class: 'hint' });
+  const chips = el('div', { class: 'tokenlist' });
+  const search = el('input', { type: 'text', placeholder: opts.placeholder || 'Type to search…' });
+  const list = el('div', { class: 'scrollbox', style: 'max-height:190px;display:none' });
+  const value = () => (opts.multi ? (opts.value || []) : (opts.value ? [opts.value] : []));
+  let rows = null;
+
+  function drawChips() {
+    chips.innerHTML = '';
+    value().forEach((v) => {
+      const row = rows ? rows.filter((r) => r.id === v)[0] : null;
+      const t = el('span', { class: 'token', text: row ? row.label.slice(0, 48) : v, title: row ? row.label : v });
+      t.appendChild(el('button', {
+        html: '&times;', title: 'Remove', onclick: () => {
+          opts.onChange(opts.multi ? value().filter((x) => x !== v) : '');
+        }
+      }));
+      chips.appendChild(t);
+    });
+  }
+  function drawList() {
+    const q = search.value.trim().toLowerCase();
+    list.innerHTML = '';
+    if (!rows) { list.style.display = 'none'; return; }
+    const terms = q.split(/\s+/).filter(Boolean);
+    const hits = rows.filter((r) => !terms.length || terms.every((t) => (r.search || r.label.toLowerCase()).indexOf(t) >= 0));
+    list.style.display = '';
+    hits.slice(0, 150).forEach((r) => {
+      const chosen = value().indexOf(r.id) >= 0;
+      const b = el('button', {
+        class: 'cat-row' + (chosen ? ' on' : ''), title: r.note || r.label,
+        onclick: () => {
+          if (opts.multi) {
+            opts.onChange(chosen ? value().filter((x) => x !== r.id) : value().concat([r.id]));
+          } else {
+            opts.onChange(r.id);
+          }
+        }
+      });
+      b.appendChild(el('span', { class: 'cat-lbl', text: r.label }));
+      if (chosen) b.appendChild(el('span', { class: 'cat-tick', html: '&#10003;' }));
+      list.appendChild(b);
+    });
+    if (!hits.length) list.appendChild(el('div', { class: 'hint', text: 'Nothing matches "' + q + '".' }));
+    else if (hits.length > 150) list.appendChild(el('div', { class: 'hint', text: 'Showing 150 of ' + fmtInt(hits.length) + ' matches — keep typing to narrow it.' }));
+  }
+  async function load(fresh) {
+    status.textContent = 'Loading the list from the provider…';
+    list.style.display = 'none';
+    try {
+      const rec = await opts.load(fresh);
+      rows = rec.rows;
+      status.innerHTML = fmtInt(rows.length) + ' option' + (rows.length === 1 ? '' : 's') +
+        ', fetched from <b>' + esc(hostOf(rec.url)) + '</b> ' + esc(timeAgo(rec.at)) +
+        ' · <button class="linkish" type="button">refresh</button>';
+      const rb = status.querySelector('button');
+      if (rb) rb.addEventListener('click', () => { delete catMem[rec.url]; load(true); });
+      drawChips(); drawList();
+    } catch (e) {
+      rows = null;
+      status.innerHTML = '';
+      const err = el('div', { class: 'warn-msg', text: e.message });
+      err.appendChild(el('button', { class: 'btn sm', style: 'margin-top:.4rem', text: 'Try again', onclick: () => load(true) }));
+      status.appendChild(err);
+    }
+  }
+  search.addEventListener('input', debounce(drawList, 160));
+  search.addEventListener('focus', drawList);
+  wrap.appendChild(chips);
+  wrap.appendChild(search);
+  wrap.appendChild(list);
+  wrap.appendChild(status);
+  if (opts.hint) wrap.appendChild(el('div', { class: 'hint', text: opts.hint }));
+  drawChips();
+  load(false);
+  return wrap;
+}
+
+/** A plain <select> whose options come from a catalogue. */
+function catalogSelect(opts) {
+  const wrap = el('div', { class: 'fieldset' });
+  if (opts.label) wrap.appendChild(el('label', { text: opts.label }));
+  const sel = el('select');
+  sel.appendChild(el('option', { value: '', text: 'Loading…' }));
+  sel.disabled = true;
+  const status = el('div', { class: 'hint' });
+  wrap.appendChild(sel);
+  wrap.appendChild(status);
+  if (opts.hint) wrap.appendChild(el('div', { class: 'hint', text: opts.hint }));
+  (async function () {
+    try {
+      const rec = await opts.load();
+      sel.innerHTML = '';
+      sel.appendChild(el('option', { value: '', text: opts.placeholder || '— choose —' }));
+      rec.rows.forEach((r) => sel.appendChild(el('option', { value: r.id, text: r.label })));
+      sel.value = opts.value == null ? '' : opts.value;
+      sel.disabled = false;
+      status.innerHTML = fmtInt(rec.rows.length) + ' option' + (rec.rows.length === 1 ? '' : 's') +
+        ' from <b>' + esc(hostOf(rec.url)) + '</b>';
+      sel.addEventListener('change', () => opts.onChange(sel.value, rec.rows.filter((r) => r.id === sel.value)[0]));
+    } catch (e) {
+      sel.innerHTML = '';
+      sel.appendChild(el('option', { value: '', text: 'unavailable' }));
+      status.innerHTML = '';
+      status.appendChild(el('div', { class: 'warn-msg', text: e.message }));
+    }
+  })();
+  return wrap;
+}
+
+/* =====================================================================
+   Guided panels — point and click instead of typing codes
+   ===================================================================== */
+const CENSUS_YEARS = (() => {
+  const now = new Date().getFullYear(), out = [];
+  for (let y = now; y >= 2005; y--) out.push(String(y));
+  return out;
+})();
+
+const GUIDED = {
+  /* ------------------------------ Census ----------------------------- */
+  census: function (wrap, conn, redraw) {
+    wrap.appendChild(el('div', { class: 'hint', style: 'margin-bottom:.7rem', text:
+      'Pick a survey and a year, then search the survey\'s own variable list. Every code below comes from the Census API itself.' }));
+
+    const yearRow = el('div', { class: 'row g2' });
+    const ysel = selectFrom(CENSUS_YEARS.map((y) => ({ v: y, l: y })), conn.year || '2023', (v) => {
+      conn.year = v; conn.dataset = (conn.path || '') ? v + '/' + conn.path : conn.dataset; redraw();
+    });
+    yearRow.appendChild(labeled('Year', ysel));
+    wrap.appendChild(yearRow);
+
+    wrap.appendChild(catalogPicker({
+      label: 'Survey',
+      placeholder: 'Search the Census dataset catalogue, e.g. "acs5" or "county business"',
+      value: conn.path || '',
+      load: (fresh) => CATALOGS.censusDatasets(fresh).then((rec) => ({
+        rows: rec.rows.filter((r) => String(r.vintage) === String(conn.year || '2023')),
+        at: rec.at, url: rec.url
+      })),
+      onChange: (v) => { conn.path = v; conn.dataset = (conn.year || '2023') + '/' + v; conn.varList = []; conn.forGeo = ''; conn.forGeoName = ''; conn.inGeo = ''; redraw(); },
+      hint: 'The Census catalogue is a sizeable one-off download, so the first load can take a few seconds; it is then cached here for a week.'
+    }));
+
+    if (!conn.path) {
+      wrap.appendChild(el('div', { class: 'hint', text: 'Choose a survey to load its variables and geographies.' }));
+      return;
+    }
+
+    wrap.appendChild(catalogPicker({
+      label: 'Variables', multi: true,
+      placeholder: 'Search by name or code, e.g. "median household income"',
+      value: Array.isArray(conn.varList) ? conn.varList : [],
+      load: () => CATALOGS.censusVariables(conn.year || '2023', conn.path),
+      onChange: (v) => { conn.varList = v; redraw(); },
+      hint: 'NAME is added automatically so rows are labelled.'
+    }));
+
+    wrap.appendChild(catalogSelect({
+      label: 'Geography', value: conn.forGeoName || '',
+      placeholder: '— choose a geography level —',
+      load: () => CATALOGS.censusGeographies(conn.year || '2023', conn.path),
+      onChange: (v, row) => {
+        conn.forGeoName = v;
+        conn.forGeo = v ? v + ':*' : '';
+        conn.requires = row ? row.requires : [];
+        conn.inGeo = '';
+        redraw();
+      }
+    }));
+    if (conn.requires && conn.requires.length) {
+      wrap.appendChild(labeled('Within (' + conn.requires.join(', ') + ')',
+        textInput(conn.inGeo, (v) => { conn.inGeo = v; redraw(); }, conn.requires.map((r) => r + ':*').join(' ')),
+        'This geography is only published inside a parent. Use * for all, or a FIPS code such as state:04.'));
+    }
+  },
+
+  /* ---------------------------- World Bank --------------------------- */
+  worldbank: function (wrap, conn, redraw) {
+    wrap.appendChild(el('div', { class: 'hint', style: 'margin-bottom:.7rem', text:
+      'Choose a topic, then an indicator from the World Bank\'s own list for that topic.' }));
+
+    wrap.appendChild(catalogSelect({
+      label: 'Topic', value: conn.topic || '',
+      placeholder: '— choose a topic —',
+      load: () => CATALOGS.wbTopics(),
+      onChange: (v) => { conn.topic = v; conn.indicator = ''; redraw(); }
+    }));
+
+    if (conn.topic) {
+      wrap.appendChild(catalogPicker({
+        label: 'Indicator',
+        placeholder: 'Search this topic\'s indicators',
+        value: conn.indicator || '',
+        load: () => CATALOGS.wbIndicators(conn.topic),
+        onChange: (v) => { conn.indicator = v; redraw(); }
+      }));
+    }
+
+    wrap.appendChild(catalogPicker({
+      label: 'Countries', multi: true,
+      placeholder: 'Search countries, e.g. "United States"',
+      value: (conn.countryList || []),
+      load: () => CATALOGS.wbCountries().then((rec) => ({
+        rows: conn.includeAggregates ? rec.rows : rec.rows.filter((r) => !r.aggregate),
+        at: rec.at, url: rec.url
+      })),
+      onChange: (v) => { conn.countryList = v; conn.countries = v.length ? v.join(';') : 'all'; redraw(); },
+      hint: 'Leave empty for every country.'
+    }));
+    const agg = el('label', { class: 'chk' });
+    const acb = el('input', { type: 'checkbox' }); acb.checked = !!conn.includeAggregates;
+    acb.addEventListener('change', () => { conn.includeAggregates = acb.checked; redraw(); });
+    agg.appendChild(acb); agg.appendChild(el('span', { text: 'Include regional and income aggregates' }));
+    wrap.appendChild(el('div', { class: 'fieldset' }, [agg]));
+
+    const now = new Date().getFullYear();
+    const years = []; for (let y = now; y >= 1960; y--) years.push(String(y));
+    const row = el('div', { class: 'row g2' });
+    const from = conn.yearFrom || '', to = conn.yearTo || '';
+    row.appendChild(labeled('From year', selectFrom([{ v: '', l: 'earliest' }].concat(years.map((y) => ({ v: y, l: y }))), from,
+      (v) => { conn.yearFrom = v; conn.dates = v || conn.yearTo ? (v || '1960') + ':' + (conn.yearTo || String(now)) : ''; redraw(); })));
+    row.appendChild(labeled('To year', selectFrom([{ v: '', l: 'latest' }].concat(years.map((y) => ({ v: y, l: y }))), to,
+      (v) => { conn.yearTo = v; conn.dates = conn.yearFrom || v ? (conn.yearFrom || '1960') + ':' + (v || String(now)) : ''; redraw(); })));
+    wrap.appendChild(row);
+  },
+
+  /* ------------------------------ Socrata ---------------------------- */
+  socrata: function (wrap, conn, redraw) {
+    wrap.appendChild(el('div', { class: 'hint', style: 'margin-bottom:.7rem', text:
+      'Search the Socrata catalogue for a dataset, then pick its columns. Leave the portal blank to search every portal.' }));
+    wrap.appendChild(labeled('Portal (optional)', textInput(conn.domain, (v) => { conn.domain = v; redraw(); }, 'data.ny.gov')));
+
+    const qRow = el('div', { class: 'row' });
+    const qIn = el('input', { type: 'text', value: conn.searchQ || '', placeholder: 'Search datasets, e.g. "budget expenditures"' });
+    qIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { conn.searchQ = qIn.value; conn.searchGo = true; redraw(); } });
+    qRow.appendChild(qIn);
+    qRow.appendChild(el('button', { class: 'btn', text: 'Search', onclick: () => { conn.searchQ = qIn.value; conn.searchGo = true; redraw(); } }));
+    wrap.appendChild(labeled('Find a dataset', qRow));
+
+    if (conn.searchGo && conn.searchQ) {
+      wrap.appendChild(catalogPicker({
+        label: 'Matching datasets',
+        placeholder: 'Filter these results',
+        value: conn.dataset || '',
+        load: () => CATALOGS.socrataSearch(conn.searchQ, conn.domain).then((rec) => {
+          conn._found = rec.rows;
+          return rec;
+        }),
+        onChange: (v) => {
+          conn.dataset = v;
+          const hit = (conn._found || []).filter((r) => r.id === v)[0];
+          if (hit && hit.domain) conn.domain = hit.domain;
+          conn.selectCols = [];
+          redraw();
+        }
+      }));
+    }
+
+    if (conn.dataset && conn.domain) {
+      wrap.appendChild(catalogPicker({
+        label: 'Columns to return', multi: true,
+        placeholder: 'Search this dataset\'s columns',
+        value: conn.selectCols || [],
+        load: () => CATALOGS.socrataColumns(conn.domain, conn.dataset),
+        onChange: (v) => { conn.selectCols = v; conn.select = v.join(', '); redraw(); },
+        hint: 'Leave empty for every column.'
+      }));
+      wrap.appendChild(labeled('Filter (optional)', textInput(conn.where, (v) => { conn.where = v; redraw(); },
+        "e.g. year = 2024 AND amount > 1000"), 'Socrata SoQL, applied on their server before download.'));
+    }
+  },
+
+  /* -------------------------------- CKAN ----------------------------- */
+  ckan: function (wrap, conn, redraw) {
+    wrap.appendChild(el('div', { class: 'hint', style: 'margin-bottom:.7rem', text:
+      'Search a CKAN portal and pick a resource; the resource id is filled in for you.' }));
+    wrap.appendChild(labeled('Portal domain', textInput(conn.domain, (v) => { conn.domain = v; redraw(); }, 'catalog.data.gov')));
+    if (!conn.domain) return;
+    const qRow = el('div', { class: 'row' });
+    const qIn = el('input', { type: 'text', value: conn.searchQ || '', placeholder: 'Search datasets' });
+    qIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { conn.searchQ = qIn.value; conn.searchGo = true; redraw(); } });
+    qRow.appendChild(qIn);
+    qRow.appendChild(el('button', { class: 'btn', text: 'Search', onclick: () => { conn.searchQ = qIn.value; conn.searchGo = true; redraw(); } }));
+    wrap.appendChild(labeled('Find a dataset', qRow));
+    if (conn.searchGo && conn.searchQ) {
+      wrap.appendChild(catalogPicker({
+        label: 'Matching resources', value: conn.resource || '',
+        placeholder: 'Filter these results',
+        load: () => CATALOGS.ckanSearch(conn.domain, conn.searchQ),
+        onChange: (v) => { conn.resource = v; redraw(); }
+      }));
+    }
+  }
+};
+
+/** Census needs its own URL builder once the guided fields are set. */
+function censusVarsString(conn) {
+  let vars = Array.isArray(conn.varList) && conn.varList.length ? conn.varList.slice() : null;
+  if (!vars) {
+    const raw = conn.vars;
+    vars = Array.isArray(raw) ? raw.slice()
+      : String(raw == null ? '' : raw).split(',').map((x) => x.trim()).filter(Boolean);
+  }
+  if (!vars.length) return 'NAME';
+  if (vars.indexOf('NAME') < 0) vars.unshift('NAME');
+  return vars.join(',');
 }
 
 /* =====================================================================
@@ -5460,6 +5949,10 @@ function openHelp(section) {
     '<li><b>Census Bureau API</b> — any dataset path, variables, and geography.</li>' +
     '<li><b>World Bank indicators</b>, <b>CKAN portals</b> (data.gov and similar), and <b>Google Sheets</b> shared for anyone with the link.</li>' +
     '</ul>' +
+    '<h4>Choosing without knowing the codes</h4>' +
+    '<p>Census, World Bank, Socrata and CKAN each open with a guided panel: pick a year and survey and search the variable list by name (&ldquo;median household income&rdquo; finds B19013_001E); pick a World Bank topic and then an indicator; search the Socrata catalogue for a dataset and tick the columns you want. The geography list, the parent geography a level requires, the country list and the column list all come with it.</p>' +
+    '<p><b>Every option in those lists is fetched from the provider when you open the picker</b> &mdash; Census variables from api.census.gov, indicators and countries from api.worldbank.org, datasets from the Socrata catalogue, resources from the portal&rsquo;s own CKAN API. This tool ships no built-in list of codes, so nothing you pick can be an invented or out-of-date code. Each picker says where its list came from and when, with a refresh link; lists are cached here for a week. If a provider cannot be reached the picker says so and offers a retry, and <b>Advanced &mdash; enter codes directly</b> still takes typed codes for anyone who knows them.</p>' +
+    '<p>Whatever route you take, the request URL stays visible and editable, and <b>Test connection</b> fetches real rows and shows them before the source is added &mdash; so you see the actual data, from the actual endpoint, before it enters the flow.</p>' +
     '<p>A linked input shows a coloured dot in the source list. By default it re-pulls every time you press <b>Run flow</b>, and once when you reopen the flow; turn that off per source in the input step, or use <b>Refresh sources</b> to force a pull. Because the fetch happens in your browser, the source has to permit cross-origin reads &mdash; if it does not, the error says so, and you can either route the request through a CORS proxy (the connection screen warns you what that means) or download the file and add it directly.</p>' +
     '<p><b>Keys and tokens</b> typed into a connection\'s key field are kept in this browser only. They are never written into a saved flow or an exported flow file, so sharing a flow does not share your credentials &mdash; whoever opens it supplies their own. A key you paste directly into the URL is not protected this way.</p>' +
     '<h4>The steps</h4>' +
