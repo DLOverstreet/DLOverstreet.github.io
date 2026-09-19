@@ -434,24 +434,119 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 .ctxmenu hr{border:none;border-top:1px solid var(--line-2);margin:3px 0}
 
 /* ---------- Mobile ---------- */
-.mobile-note{display:none}
+/* ---------- Touch affordances (any coarse-pointer device) ---------- */
+.canvas{touch-action:none}
+@media (pointer:coarse){
+  .port{width:22px;height:22px;border-width:2.5px}
+  .port.in{left:-11px}
+  .port.out{right:-11px}
+  .step-acts{opacity:1}
+  .icb{width:30px;height:30px}
+  .btn{padding:.45rem .7rem}
+  .btn.sm{padding:.35rem .55rem}
+  .bar-row{padding:.3rem 0}
+  table.grid th,table.grid td{padding:.4rem .6rem}
+  .tbtn,.mobnav button,.res-tab,.pal-item,.ds-item{touch-action:manipulation}
+}
+.link-hint{
+  position:absolute;left:50%;transform:translateX(-50%);top:10px;z-index:9;
+  background:var(--accent);color:#fff;border-radius:20px;padding:.36rem .5rem .36rem .8rem;
+  font-size:.75rem;font-weight:500;box-shadow:var(--shadow-2);display:none;align-items:center;gap:.5rem;
+  max-width:calc(100% - 24px);pointer-events:none;   /* taps must reach the steps underneath */
+}
+.link-hint.show{display:flex}
+.link-hint button{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:12px;
+  padding:.1rem .5rem;font-size:.6875rem;cursor:pointer;pointer-events:auto}
+.port.pending{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 4px rgba(31,95,158,.25)}
+
+/* ---------- Mobile pane switcher ---------- */
+.mobnav{display:none}
+.tbtn.more{display:none}
 @media (max-width:860px){
-  body{overflow:auto}
-  .app{height:auto;min-height:100vh}
-  .mobile-note{
-    display:block;background:var(--warn-soft);border-bottom:1px solid #f0dcb4;color:#7a5400;
-    padding:.5rem .875rem;font-size:.75rem;line-height:1.5;
+  body{overflow:hidden}
+  .app{height:100vh;height:100dvh}
+
+  /* compact top bar */
+  .topbar{padding:.4rem .5rem;gap:.35rem;flex-wrap:nowrap}
+  .topbar .home{padding:.3rem .4rem;font-size:.875rem}
+  .brand,.topbar .divider,.save-state{display:none}
+  .flow-name{flex:1;min-width:0;max-width:none;font-size:.8125rem}
+  #btnOpen,#btnExport,#btnImport,#btnNew,#btnHelp{display:none}
+  .tbtn.more{display:inline-flex;font-size:1rem;line-height:1;padding:.36rem .55rem}
+  .topbar .spacer{display:none}
+
+  /* the left rail becomes a horizontal strip of chips */
+  .main{flex-direction:column;min-height:0}
+  .rail{
+    width:auto;flex:0 0 auto;border-right:none;border-bottom:1px solid var(--line);
+    flex-direction:row;align-items:center;gap:.35rem;padding:.35rem .5rem;
+    overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;
   }
-  .main{flex-direction:column;height:auto}
-  .rail{width:auto;flex:0 0 auto;border-right:none;border-bottom:1px solid var(--line);
-    flex-direction:row;flex-wrap:wrap;overflow:visible}
-  .rail .rail-sec{flex:1 1 260px;border-bottom:none;border-right:1px solid var(--line-2)}
-  .canvas-wrap{height:56vh;flex:0 0 auto}
-  .inspector{width:auto;flex:0 0 auto;border-left:none;border-top:1px solid var(--line)}
-  .insp-body{max-height:none}
-  .results{height:340px}
-  .topbar{flex-wrap:wrap}
-  .flow-name{min-width:120px}
+  .rail::-webkit-scrollbar{display:none}
+  .rail h2,.rail .ds-empty,.rail .mini,#flowStats{display:none}
+  .rail .rail-sec{
+    border-bottom:none;padding-bottom:0;display:flex;align-items:center;gap:.35rem;flex:0 0 auto;
+  }
+  .rail .rail-sec:first-child:not(:empty){border-right:1px solid var(--line);padding-right:.5rem}
+  .palette,.ds-list{flex-direction:row;padding:0;gap:.35rem}
+  .pal-item{
+    flex-direction:column;gap:1px;padding:.3rem .4rem;width:auto;min-width:56px;
+    border-color:var(--line);background:var(--surface-2);align-items:center;
+  }
+  .pal-txt span{display:none}
+  .pal-txt strong{font-size:.625rem;text-align:center;line-height:1.3}
+  .ds-item{border-color:var(--line);background:var(--surface-2);max-width:148px;flex:0 0 auto}
+  .ds-item .sz{display:none}
+
+  /* one pane at a time */
+  .center{display:none;flex:1;min-height:0}
+  .inspector{display:none;width:auto;flex:1;border-left:none;min-height:0}
+  body.v-flow .center{display:flex}
+  body.v-flow .results{display:none}
+  body.v-data .center{display:flex}
+  body.v-data .canvas-wrap{display:none}
+  body.v-data .results{height:auto!important;flex:1;border-top:none}
+  body.v-data .rail,body.v-step .rail{display:none}
+  body.v-step .inspector{display:flex}
+  .res-grip,#btnCollapse,.canvas-hint{display:none}
+  .canvas-tools{left:8px;bottom:8px}
+  .insp-body{padding:.75rem .8rem 2.5rem}
+  .insp-head{padding:.6rem .8rem}
+  .res-head{padding:.4rem .5rem;gap:.35rem}
+  .res-head .ctx{display:none}
+  .canvas-empty .box{padding:1.2rem 1rem;margin:0 14px}
+
+  /* dialogs become bottom sheets */
+  .overlay{padding:0;align-items:flex-end}
+  .modal{max-width:none;max-height:92vh;border-radius:14px 14px 0 0}
+  .modal.wide{max-width:none}
+  .modal-f{position:sticky;bottom:0}
+  .modal-f .btn{flex:1;justify-content:center}
+
+  .mobnav{
+    display:flex;flex:0 0 auto;background:var(--surface);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom);z-index:30;
+  }
+  .mobnav button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:.4rem 0 .45rem;
+    background:none;border:none;color:var(--muted);font-size:.6875rem;font-weight:600;cursor:pointer;
+    border-top:2px solid transparent;
+  }
+  .mobnav button svg{width:18px;height:18px}
+  .mobnav button.active{color:var(--accent);border-top-color:var(--accent);background:var(--accent-soft)}
+  .mobnav .dot-badge{
+    position:absolute;transform:translate(14px,-2px);width:7px;height:7px;border-radius:50%;background:var(--err)
+  }
+  .mobnav button{position:relative}
+}
+@media (max-width:860px){
+  .toasts{bottom:calc(64px + env(safe-area-inset-bottom));width:100%;padding:0 12px}
+  .toast{width:100%;text-align:center}
+}
+@media (max-width:560px){
+  .pcard{width:100%}
+  #btnAddData .lbl,#btnSave .lbl{display:none}
+  .profile{padding:.5rem}
 }
 @media print{.topbar,.rail,.inspector,.canvas-tools{display:none}}
 </style>
@@ -468,20 +563,19 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
     <span class="spacer"></span>
     <button class="tbtn primary" id="btnAddData" title="Add a data source (U)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V3M5 6l3-3 3 3M2.5 11v2h11v-2"/></svg>
-      Add data
+      <span class="lbl">Add data</span>
     </button>
     <button class="tbtn" id="btnSave" title="Save flow to this browser (Ctrl/Cmd+S)">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5h8l3 3v8h-11z"/><path d="M5 2.5v4h5v-4M5 13.5v-4h6v4"/></svg>
-      Save
+      <span class="lbl">Save</span>
     </button>
     <button class="tbtn" id="btnOpen" title="Open a saved flow">Open</button>
     <button class="tbtn" id="btnExport" title="Download this flow as a .json file">Export</button>
     <button class="tbtn" id="btnImport" title="Load a flow from a .json file">Import</button>
     <button class="tbtn" id="btnNew" title="Start a new flow">New</button>
     <button class="tbtn" id="btnHelp" title="How this works (?)">?</button>
+    <button class="tbtn more" id="btnMore" title="More actions" aria-label="More actions">&#8943;</button>
   </div>
-
-  <p class="mobile-note">This tool is built for a larger screen &mdash; the flow canvas needs room. It works here, but a laptop or desktop is a much better experience.</p>
 
   <div class="main">
 
@@ -526,7 +620,11 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
           <button id="zoomIn" title="Zoom in">+</button>
           <button id="zoomFit" title="Fit flow to view">&#9723;</button>
         </div>
-        <div class="canvas-hint">Drag from a node's right dot to connect &middot; scroll to zoom &middot; right-click a node for options</div>
+        <div class="link-hint" id="linkHint">
+          <span id="linkHintText">Now tap the step to connect to</span>
+          <button type="button" id="linkHintCancel">Cancel</button>
+        </div>
+        <div class="canvas-hint" id="canvasHint">Drag from a node's right dot to connect &middot; scroll to zoom &middot; right-click a node for options</div>
       </div>
 
       <section class="results" id="results" aria-label="Results">
@@ -566,6 +664,22 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
     </aside>
 
   </div>
+
+  <nav class="mobnav" id="mobnav" aria-label="Views">
+    <button data-view="flow" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="2" y="4" width="8" height="6" rx="1.5"/><rect x="14" y="14" width="8" height="6" rx="1.5"/><path d="M10 7h2a2 2 0 0 1 2 2v8"/></svg>
+      Flow
+    </button>
+    <button data-view="step">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      <span id="mobStepBadge"></span>
+      Step
+    </button>
+    <button data-view="data">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg>
+      Data
+    </button>
+  </nav>
 </div>
 
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
@@ -1792,6 +1906,16 @@ function addNode(type, x, y, cfg) {
   markDirty();
   return n;
 }
+/** Find a spot near (x,y) that does not sit on top of an existing step. */
+function freeSpot(x, y) {
+  let ty = y;
+  for (let guard = 0; guard < 40; guard++) {
+    const clash = state.flow.nodes.some((n) => Math.abs(n.x - x) < NODE_W * 0.8 && Math.abs(n.y - ty) < NODE_GAP * 0.8);
+    if (!clash) break;
+    ty += NODE_GAP;
+  }
+  return { x: Math.round(x), y: Math.round(ty) };
+}
 function defaultNodeName(type) {
   const base = NODE_TYPES[type].label;
   let k = 0, nm = base;
@@ -1952,13 +2076,14 @@ function screenToFlow(cx, cy) {
   const r = canvas().getBoundingClientRect();
   return { x: (cx - r.left - state.view.x) / state.view.z, y: (cy - r.top - state.view.y) / state.view.z };
 }
-const NODE_W = 186, NODE_H = 78;
+const NODE_W = 186, NODE_H = 78, NODE_GAP = 140;
 
 function renderCanvas() {
   const layer = $('#nodeLayer');
   layer.innerHTML = '';
   state.flow.nodes.forEach((n) => layer.appendChild(renderNode(n)));
   renderEdges();
+  applyPendingLink();
   $('#canvasEmpty').style.display = state.flow.nodes.length ? 'none' : 'grid';
   const nds = state.flow.nodes.length;
   const errs = state.flow.nodes.filter((n) => { const r = resultOf(n.id); return r && r.error && !r.upstream; }).length;
@@ -2083,9 +2208,23 @@ function tidyLayout() {
   const layers = {};
   state.flow.nodes.forEach((n) => { (layers[depth[n.id]] = layers[depth[n.id]] || []).push(n); });
   Object.keys(layers).forEach((k) => {
-    layers[k].forEach((n, i) => { n.x = 40 + (+k) * 250; n.y = 40 + i * 118; });
+    layers[k].forEach((n, i) => { n.x = 40 + (+k) * 250; n.y = 40 + i * NODE_GAP; });
   });
   markDirty(); renderCanvas(); fitView();
+}
+/** Pan just enough to bring a step fully into the visible canvas. */
+function ensureVisible(n) {
+  const r = canvas().getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const z = state.view.z, pad = 26;
+  const left = state.view.x + n.x * z, top = state.view.y + n.y * z;
+  const w = NODE_W * z, h = 118 * z;
+  let dx = 0, dy = 0;
+  if (left < pad) dx = pad - left;
+  else if (left + w > r.width - pad) dx = (r.width - pad) - (left + w);
+  if (top < pad) dy = pad - top;
+  else if (top + h > r.height - pad) dy = (r.height - pad) - (top + h);
+  if (dx || dy) { state.view.x += dx; state.view.y += dy; applyView(); }
 }
 function fitView() {
   const ns = state.flow.nodes;
@@ -2097,7 +2236,8 @@ function fitView() {
     maxX = Math.max(maxX, n.x + NODE_W); maxY = Math.max(maxY, n.y + NODE_H + 22);
   });
   const pad = 50;
-  const z = clamp(Math.min((wrap.width - pad * 2) / (maxX - minX), (wrap.height - pad * 2) / (maxY - minY)), 0.35, 1.2);
+  const pad2 = wrap.width < 700 ? 16 : pad;
+  const z = clamp(Math.min((wrap.width - pad2 * 2) / (maxX - minX), (wrap.height - pad2 * 2) / (maxY - minY)), 0.25, 1.2);
   state.view.z = z;
   state.view.x = (wrap.width - (maxX - minX) * z) / 2 - minX * z;
   state.view.y = (wrap.height - (maxY - minY) * z) / 2 - minY * z;
@@ -2108,9 +2248,83 @@ function fitView() {
    Canvas interaction: select, drag, connect, pan, zoom, context menu
    ===================================================================== */
 let drag = null;      // { mode:'node'|'pan'|'link', ... }
+const pointers = new Map();   // live pointers over the canvas, for pinch-zoom
+let pinch = null;
+let longPress = null;
+
+const isCoarse = () => window.matchMedia('(pointer:coarse)').matches;
+const isMobile = () => window.matchMedia('(max-width:860px)').matches;
+
+function cancelDrag() {
+  if (!drag) return;
+  if (drag.temp) drag.temp.remove();
+  if (drag.el) drag.el.classList.remove('dragging');
+  $$('.node.drop-ok').forEach((n) => n.classList.remove('drop-ok'));
+  canvas().classList.remove('panning');
+  drag = null;
+}
+function clearLongPress() { if (longPress) { clearTimeout(longPress); longPress = null; } }
+
+/* Tap a port, then tap a step: the touch-friendly way to connect. */
+function setPendingLink(id, dir) {
+  state.pendingLink = { id: id, dir: dir };
+  applyPendingLink();
+  $('#linkHintText').textContent = dir === 'out'
+    ? 'Now tap the step this should feed into'
+    : 'Now tap the step that should feed this one';
+  $('#linkHint').classList.add('show');
+}
+function clearPendingLink() {
+  state.pendingLink = null;
+  $$('.port.pending').forEach((p) => p.classList.remove('pending'));
+  $('#linkHint').classList.remove('show');
+}
+function applyPendingLink() {
+  $$('.port.pending').forEach((p) => p.classList.remove('pending'));
+  const pl = state.pendingLink;
+  if (!pl) return;
+  const el2 = $('.node[data-id="' + pl.id + '"] .port.' + pl.dir);
+  if (el2) el2.classList.add('pending');
+}
 
 function onCanvasPointerDown(e) {
   if (e.button === 2) return;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pointers.size === 2) {           // second finger down: pinch, not drag
+    clearLongPress();
+    cancelDrag();
+    const pts = Array.from(pointers.values());
+    pinch = {
+      dist: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1,
+      mid: { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 },
+      view: { x: state.view.x, y: state.view.y, z: state.view.z }
+    };
+    return;
+  }
+  if (pointers.size > 2) return;
+
+  // completing a tap-to-connect
+  if (state.pendingLink) {
+    const target = e.target.closest('.node');
+    const pl = state.pendingLink;
+    clearPendingLink();
+    e.preventDefault();
+    if (target && target.dataset.id !== pl.id) {
+      const ok = pl.dir === 'out' ? connect(pl.id, target.dataset.id) : connect(target.dataset.id, pl.id);
+      if (ok) refresh();
+    }
+    return;
+  }
+
+  if (e.pointerType === 'touch') {
+    const tx = e.clientX, ty = e.clientY, tEl = e.target;
+    longPress = setTimeout(() => {
+      longPress = null;
+      if (drag && drag.moved) return;
+      cancelDrag();
+      onContextMenu({ target: tEl, clientX: tx, clientY: ty, preventDefault: function () {} });
+    }, 520);
+  }
   const portEl = e.target.closest('.port');
   const nodeEl = e.target.closest('.node');
   const edgeEl = e.target.closest('path.hit, path.edge');
@@ -2137,11 +2351,12 @@ function onCanvasPointerDown(e) {
   }
   if (nodeEl) {
     const id = nodeEl.dataset.id;
+    const wasSelected = state.selected === id;
     select(id);
     nodeEl.classList.add('dragging');
     const n = getNode(id);
     const st = screenToFlow(e.clientX, e.clientY);
-    drag = { mode: 'node', id: id, dx: st.x - n.x, dy: st.y - n.y, el: nodeEl, moved: false };
+    drag = { mode: 'node', id: id, dx: st.x - n.x, dy: st.y - n.y, el: nodeEl, moved: false, wasSelected: wasSelected };
     e.preventDefault();
     return;
   }
@@ -2151,7 +2366,24 @@ function onCanvasPointerDown(e) {
 }
 
 function onPointerMove(e) {
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch) {
+    const pts = Array.from(pointers.values());
+    if (pts.length < 2) return;
+    const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+    const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    const r = canvas().getBoundingClientRect();
+    const z = clamp(pinch.view.z * (dist / pinch.dist), 0.25, 2.2);
+    const k = z / pinch.view.z;
+    // keep the point under the fingers put, and follow the midpoint as it moves
+    state.view.z = z;
+    state.view.x = (mid.x - r.left) - ((pinch.mid.x - r.left) - pinch.view.x) * k;
+    state.view.y = (mid.y - r.top) - ((pinch.mid.y - r.top) - pinch.view.y) * k;
+    applyView();
+    return;
+  }
   if (!drag) return;
+  if (longPress && (Math.abs(e.clientX - (drag.sx || e.clientX)) > 8 || drag.moved)) clearLongPress();
   if (drag.mode === 'node') {
     const st = screenToFlow(e.clientX, e.clientY);
     const n = getNode(drag.id);
@@ -2159,6 +2391,7 @@ function onPointerMove(e) {
     n.x = Math.round(st.x - drag.dx); n.y = Math.round(st.y - drag.dy);
     drag.el.style.left = n.x + 'px'; drag.el.style.top = n.y + 'px';
     drag.moved = true;
+    clearLongPress();
     renderEdges();
   } else if (drag.mode === 'pan') {
     state.view.x = drag.vx + (e.clientX - drag.sx);
@@ -2169,6 +2402,7 @@ function onPointerMove(e) {
     const pt = screenToFlow(e.clientX, e.clientY);
     const a = drag.from ? drag.start : pt;
     const b = drag.from ? pt : drag.start;
+    if (!drag.moved) { drag.moved = true; clearLongPress(); }
     drag.temp.setAttribute('d', edgePath(a, b));
     $$('.node.drop-ok').forEach((n) => n.classList.remove('drop-ok'));
     const over = document.elementFromPoint(e.clientX, e.clientY);
@@ -2182,10 +2416,15 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+  pointers.delete(e.pointerId);
+  clearLongPress();
+  if (pinch && pointers.size < 2) { pinch = null; drag = null; return; }
   if (!drag) return;
   if (drag.mode === 'node') {
     drag.el.classList.remove('dragging');
     if (drag.moved) markDirty();
+    // on a phone, tapping an already-selected step opens its settings
+    else if (drag.wasSelected && isMobile()) setView('step');
   } else if (drag.mode === 'pan') {
     canvas().classList.remove('panning');
     if (!drag.moved) { select(null); }
@@ -2194,10 +2433,14 @@ function onPointerUp(e) {
     $$('.node.drop-ok').forEach((n) => n.classList.remove('drop-ok'));
     const over = document.elementFromPoint(e.clientX, e.clientY);
     const nodeEl = over && over.closest ? over.closest('.node') : null;
-    if (nodeEl) {
+    const selfId = drag.from || drag.to;
+    if (nodeEl && nodeEl.dataset.id !== selfId) {
       const tid = nodeEl.dataset.id;
       const ok = drag.from ? connect(drag.from, tid) : connect(tid, drag.to);
       if (ok) refresh();
+    } else if (!drag.moved) {
+      // released without dragging: arm tap-to-connect instead
+      setPendingLink(selfId, drag.from ? 'out' : 'in');
     }
   }
   drag = null;
@@ -2275,7 +2518,7 @@ function onContextMenu(e) {
 function addAfter(id, type) {
   const src = getNode(id);
   const siblings = childrenOf(id).length;
-  const n = addNode(type, src.x + 250, src.y + siblings * 110);
+  const n = addNode(type, src.x + 250, src.y + siblings * NODE_GAP);
   connect(id, n.id);
   select(n.id);
   refresh();
@@ -2285,7 +2528,7 @@ function duplicateNode(id) {
   const copy = JSON.parse(JSON.stringify(src));
   copy.id = uid('n');
   copy.name = defaultNodeNameFrom(src.name);
-  copy.x = src.x + 30; copy.y = src.y + 110;
+  copy.x = src.x + 30; copy.y = src.y + NODE_GAP;
   copy.inputs = (src.inputs || []).slice();
   state.flow.nodes.push(copy);
   markDirty(); select(copy.id); refresh();
@@ -2310,11 +2553,20 @@ function initPalette() {
     b.appendChild(tx);
     b.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', 'type:' + type); e.dataTransfer.effectAllowed = 'copy'; });
     b.addEventListener('click', () => {
-      const r = canvas().getBoundingClientRect();
-      const pt = screenToFlow(r.left + r.width / 2 + (Math.random() * 60 - 30), r.top + r.height / 2 + (Math.random() * 60 - 30));
-      const n = addNode(type, pt.x - NODE_W / 2, pt.y - 40);
+      const sel = state.selected ? getNode(state.selected) : null;
+      let spot;
+      if (sel) {
+        // sit to the right of the step it will feed from
+        spot = freeSpot(sel.x + 250, sel.y + childrenOf(sel.id).length * NODE_GAP);
+      } else {
+        const r = canvas().getBoundingClientRect();
+        const pt = screenToFlow(r.left + r.width / 2, r.top + r.height / 2);
+        spot = freeSpot(pt.x - NODE_W / 2, pt.y - 40);
+      }
+      const n = addNode(type, spot.x, spot.y);
       if (state.selected && canConnect(state.selected, n.id) === null) connect(state.selected, n.id);
-      select(n.id); refresh();
+      select(n.id); refresh(); ensureVisible(n);
+      if (isMobile()) setView('step');
     });
     pal.appendChild(b);
   });
@@ -2337,6 +2589,24 @@ function initPalette() {
   });
 }
 
+/* --------------------------- mobile pane views ------------------------- */
+function setView(v) {
+  state.pane = v;
+  document.body.classList.remove('v-flow', 'v-step', 'v-data');
+  document.body.classList.add('v-' + v);
+  $$('#mobnav button').forEach((b) => b.classList.toggle('active', b.dataset.view === v));
+  if (v === 'data') renderResults();
+  if (v === 'step') renderInspector();
+  if (v === 'flow') requestAnimationFrame(applyView);
+}
+function updateMobBadge() {
+  const b = $('#mobStepBadge');
+  if (!b) return;
+  const n = state.selected ? getNode(state.selected) : null;
+  const r = n ? resultOf(n.id) : null;
+  b.className = (r && r.error && !r.upstream) ? 'dot-badge' : '';
+}
+
 /* ------------------------------ selection ----------------------------- */
 function select(id) {
   if (state.selected === id) return;
@@ -2345,6 +2615,7 @@ function select(id) {
   $$('.node').forEach((n) => n.classList.toggle('sel', n.dataset.id === id));
   renderInspector();
   renderResults();
+  updateMobBadge();
 }
 
 /* =====================================================================
@@ -3202,7 +3473,7 @@ function addFilterFromProfile(node, column, value) {
     const kid = childrenOf(node.id).filter((k) => k.type === 'clean')[0];
     if (kid) target = kid;
     else {
-      target = addNode('clean', node.x + 250, node.y + childrenOf(node.id).length * 110);
+      target = addNode('clean', node.x + 250, node.y + childrenOf(node.id).length * NODE_GAP);
       connect(node.id, target.id);
       toast('Added a Clean step to hold the filter');
     }
@@ -3328,12 +3599,7 @@ function renderDatasets() {
     const ds = state.flow.datasets[id];
     const row = el('div', {
       class: 'ds-item', draggable: 'true', title: (ds.source || ds.name) + '\nDrag onto the canvas to add an input',
-      onclick: () => {
-        const r = canvas().getBoundingClientRect();
-        const pt = screenToFlow(r.left + 120, r.top + 120 + state.flow.nodes.length * 10);
-        const n = addNode('input', pt.x, pt.y, { datasetId: id });
-        select(n.id); refresh();
-      }
+      onclick: () => { placeInput(id); }
     });
     row.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', 'dataset:' + id); e.dataTransfer.effectAllowed = 'copy'; });
     row.appendChild(el('span', { class: 'nm', text: ds.name }));
@@ -3405,11 +3671,11 @@ function openAddData() {
 
 function placeInput(datasetId) {
   const existing = state.flow.nodes.filter((n) => n.type === 'input');
-  const x = 40, y = 40 + existing.length * 118;
+  const x = 40, y = 40 + existing.length * NODE_GAP;
   const n = addNode('input', x, y, { datasetId: datasetId });
   select(n.id);
   refresh();
-  if (state.flow.nodes.length === 1) fitView();
+  if (state.flow.nodes.length === 1) fitView(); else ensureVisible(n);
 }
 
 function handleFiles(fileList, dropPoint) {
@@ -3426,7 +3692,7 @@ function handleFiles(fileList, dropPoint) {
       if (done === files.length) {
         added.forEach((a, i) => {
           if (dropPoint) {
-            const n = addNode('input', dropPoint.x - NODE_W / 2, dropPoint.y - 40 + i * 118, { datasetId: a.id });
+            const n = addNode('input', dropPoint.x - NODE_W / 2, dropPoint.y - 40 + i * NODE_GAP, { datasetId: a.id });
             if (i === added.length - 1) select(n.id);
           } else placeInput(a.id);
         });
@@ -3813,6 +4079,14 @@ function openHelp(section) {
     '<li><b>Select a step</b> to configure it on the right and preview its output below.</li>' +
     '<li><b>Right-click</b> a step for quick actions: insert a step after it, duplicate, swap join inputs, delete.</li>' +
     '</ul>' +
+    '<h4>On a phone or tablet</h4>' +
+    '<p>The three tabs along the bottom switch between the <b>Flow</b> canvas, the selected step\'s <b>Step</b> settings, and the <b>Data</b> profile and preview.</p>' +
+    '<ul>' +
+    '<li>Drag one finger to pan the canvas; pinch with two to zoom. The step chips along the top add a step next to whichever one is selected.</li>' +
+    '<li>To connect: tap the dot on a step\'s edge, then tap the step to connect it to. Tap empty canvas to cancel.</li>' +
+    '<li>Tap a step to select it; tap it again to open its settings. Press and hold for the quick-actions menu.</li>' +
+    '<li>The <b>&#8943;</b> button in the top bar holds saving, opening, exporting, importing, and this help.</li>' +
+    '</ul>' +
     '<h4>The steps</h4>' +
     '<ul>' +
     '<li><b>Clean</b> holds an ordered list of operations on one table — filter rows, rename and retype fields, calculate new ones, standardise text, group messy values, split fields, fill or drop nulls, deduplicate, sort, limit. Steps run top to bottom and can be reordered or switched off.</li>' +
@@ -3835,6 +4109,7 @@ function openHelp(section) {
     '<tr><td>F</td><td>Fit the flow to the view</td></tr>' +
     '<tr><td>Esc</td><td>Close a dialog / deselect</td></tr>' +
     '</table>' +
+    '<p class="hint">Clicking a port without dragging also arms tap-to-connect on a desktop.</p>' +
     '<h4>Limits worth knowing</h4>' +
     '<p>Everything is held in memory, so very large files (past roughly a few hundred thousand rows) will feel slow, and browser storage caps a saved flow at a few megabytes of embedded data. Field types are inferred from the first few hundred rows; a Clean step can override any of them.</p>'
   );
@@ -3846,6 +4121,7 @@ function openHelp(section) {
    ===================================================================== */
 let refreshQueued = false;
 function refresh() {
+  updateMobBadge();
   if (refreshQueued) return;
   refreshQueued = true;
   requestAnimationFrame(() => {
@@ -3909,6 +4185,24 @@ function initTopbar() {
     fr.readAsText(f);
   });
 
+  $$('#mobnav button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+  $('#btnMore').addEventListener('click', (e) => {
+    e.stopPropagation();   // otherwise the global click handler closes it immediately
+    const r = e.currentTarget.getBoundingClientRect();
+    showCtxMenu(r.right - 180, r.bottom + 6, [
+      { label: 'Run flow', fn: () => { refresh(); toast('Flow re-run', 'ok', 1400); } },
+      { label: 'Tidy layout', fn: tidyLayout },
+      { label: 'Fit to view', fn: fitView },
+      '-',
+      { label: 'Open a saved flow', fn: openFlowManager },
+      { label: 'Export flow', fn: exportFlow },
+      { label: 'Import a flow file', fn: () => $('#flowPicker').click() },
+      { label: 'New flow', fn: newFlowPrompt },
+      '-',
+      { label: 'Load sample data', fn: () => { loadSampleData(); refresh(); toast('Sample tables added', 'ok'); } },
+      { label: 'How this works', fn: () => openHelp() }
+    ]);
+  });
   $('#zoomIn').addEventListener('click', () => zoomBy(1.2));
   $('#zoomOut').addEventListener('click', () => zoomBy(1 / 1.2));
   $('#zoomFit').addEventListener('click', fitView);
@@ -3954,15 +4248,23 @@ function initResize() {
 
 function initCanvas() {
   const cv = canvas();
-  cv.addEventListener('mousedown', onCanvasPointerDown);
-  window.addEventListener('mousemove', onPointerMove);
-  window.addEventListener('mouseup', onPointerUp);
+  cv.addEventListener('pointerdown', onCanvasPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
   cv.addEventListener('wheel', onWheel, { passive: false });
   cv.addEventListener('contextmenu', onContextMenu);
   cv.addEventListener('dblclick', (e) => {
     const nodeEl = e.target.closest('.node');
-    if (nodeEl) { select(nodeEl.dataset.id); $('#inspName').focus(); $('#inspName').select(); }
+    if (!nodeEl) return;
+    select(nodeEl.dataset.id);
+    if (isMobile()) { setView('step'); return; }
+    $('#inspName').focus(); $('#inspName').select();
   });
+  $('#linkHintCancel').addEventListener('click', clearPendingLink);
+  $('#canvasHint').textContent = isCoarse()
+    ? 'Drag to pan · pinch to zoom · tap a dot then a step to connect · long-press for options'
+    : "Drag from a node's right dot to connect · scroll to zoom · right-click a node for options";
   window.addEventListener('click', (e) => { if (!e.target.closest('.ctxmenu')) hideCtxMenu(); });
   window.addEventListener('scroll', hideCtxMenu, true);
 
@@ -3995,6 +4297,18 @@ function initKeys() {
   });
 }
 
+function initResponsive() {
+  setView('flow');
+  const mq = window.matchMedia('(max-width:860px)');
+  const onChange = () => {
+    if (!mq.matches) clearPendingLink();
+    requestAnimationFrame(() => { applyView(); renderEdges(); });
+  };
+  if (mq.addEventListener) mq.addEventListener('change', onChange);
+  else if (mq.addListener) mq.addListener(onChange);
+  window.addEventListener('orientationchange', () => setTimeout(() => { applyView(); renderEdges(); }, 220));
+}
+
 /* ------------------------------- startup ------------------------------ */
 function init() {
   initPalette();
@@ -4002,6 +4316,7 @@ function init() {
   initCanvas();
   initResize();
   initKeys();
+  initResponsive();
   renderSavedCount();
 
   const auto = lsGet(AUTO_KEY);
