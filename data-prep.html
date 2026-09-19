@@ -110,6 +110,10 @@ input,select,textarea{font:inherit;color:inherit}
 .ds-item:hover{background:var(--surface-2);border-color:var(--line)}
 .ds-item .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);font-weight:500}
 .ds-item .sz{font-size:.6875rem;color:var(--muted);white-space:nowrap}
+.link-dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 7px}
+.link-dot.bad{background:var(--err)}
+.link-dot.busy{background:var(--warn);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .ds-empty{padding:.15rem .875rem .5rem;font-size:.75rem;color:var(--muted);line-height:1.5}
 .rail .mini{display:block;width:calc(100% - 1rem);margin:.4rem .5rem 0}
 
@@ -593,6 +597,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
       <div class="rail-sec" style="border-bottom:none">
         <h2>Flow</h2>
         <button class="btn sm mini" id="btnRun">Run flow</button>
+        <button class="btn sm mini" id="btnRefresh" title="Re-pull every linked source">Refresh sources</button>
         <button class="btn sm mini" id="btnTidy">Tidy layout</button>
         <div class="ds-empty" id="flowStats"></div>
       </div>
@@ -2019,7 +2024,12 @@ function computeNode(n, ins) {
     case 'input': {
       const ds = state.flow.datasets[n.config.datasetId];
       if (!ds) throw new Error('No data source is attached to this input.');
-      if (!ds.rows) throw new Error('The data for "' + ds.name + '" was not saved with this flow. Use "Relink data" to load the file again.');
+      if (ds.error) throw new Error(ds.error);
+      if (!ds.rows) {
+        throw new Error(ds.connection
+          ? 'This source has not been pulled yet. Press "Run flow" or "Refresh now".'
+          : 'The data for "' + ds.name + '" was not saved with this flow. Use "Relink data" to load the file again.');
+      }
       return { fields: cloneFields(ds.fields), rows: ds.rows };
     }
     case 'clean': {
@@ -2097,7 +2107,13 @@ function nodeSummary(n) {
   switch (n.type) {
     case 'input': {
       const ds = state.flow.datasets[c.datasetId];
-      return ds ? (ds.rows ? fmtInt(ds.rows.length) + ' rows · ' + ds.fields.length + ' fields' : 'Data not loaded — relink needed') : 'No data source selected';
+      if (!ds) return 'No data source selected';
+      if (ds.status === 'loading') return 'Fetching…';
+      if (ds.connection && ds.error) return 'Connection failed — open this step';
+      const base = ds.rows
+        ? fmtInt(ds.rows.length) + ' rows · ' + ds.fields.length + ' fields'
+        : (ds.connection ? 'Not pulled yet — run the flow' : 'Data not loaded — relink needed');
+      return ds.connection ? base + ' · linked' + (ds.autoRefresh !== false ? ', auto' : '') : base;
     }
     case 'clean': {
       const steps = (c.steps || []).filter((s) => !s.disabled);
@@ -2746,18 +2762,58 @@ function inspInput(body, n) {
     markDirty(); refresh();
   });
   body.appendChild(labeled('Data source', s));
-  const ds = state.flow.datasets[n.config.datasetId];
+  const dsId = n.config.datasetId;
+  const ds = state.flow.datasets[dsId];
   if (ds) {
     const info = el('div', { class: 'hint' });
     info.innerHTML = '<b>' + esc(ds.name) + '</b><br>' +
       (ds.rows ? fmtInt(ds.rows.length) + ' rows &middot; ' + ds.fields.length + ' fields' : '<span style="color:var(--err)">Data not loaded</span>') +
-      (ds.source ? '<br>From ' + esc(ds.source) : '') +
-      (ds.loaded ? '<br>Loaded ' + esc(timeAgo(ds.loaded)) : '');
+      (ds.source ? '<br>' + (ds.connection ? 'Linked to ' : 'From ') + esc(ds.source) : '') +
+      (ds.loaded ? '<br>Last pulled ' + esc(timeAgo(ds.loaded)) : '');
     body.appendChild(labeled('', info));
-    const b = el('button', { class: 'btn full', text: ds.rows ? 'Replace this data (re-upload)' : 'Relink data (upload the file)', onclick: () => relinkDataset(n.config.datasetId) });
-    body.appendChild(labeled('', b));
+
+    if (ds.connection) {
+      if (ds.error) body.appendChild(el('div', { class: 'err-msg', text: ds.error }));
+      const p = SOURCE_PRESETS[ds.connection.preset];
+      if (p && p.keyLabel) {
+        const kv = getKey(dsId);
+        body.appendChild(labeled(p.keyLabel, textInput(kv, (v) => { setKey(dsId, v); }, kv ? '' : 'not set'),
+          'Held in this browser only, never written into the flow file.'));
+      }
+      const auto = el('label', { class: 'chk' });
+      const cb = el('input', { type: 'checkbox' });
+      cb.checked = ds.autoRefresh !== false;
+      cb.addEventListener('change', () => { ds.autoRefresh = cb.checked; markDirty(); renderCanvas(); });
+      auto.appendChild(cb);
+      auto.appendChild(el('span', { text: 'Re-pull this source when the flow runs' }));
+      body.appendChild(el('div', { class: 'fieldset' }, [auto]));
+
+      const row = el('div', { class: 'row g2' });
+      row.appendChild(el('button', {
+        class: 'btn primary', text: ds.status === 'loading' ? 'Fetching…' : 'Refresh now',
+        disabled: ds.status === 'loading' ? 'disabled' : null,
+        onclick: async () => {
+          const ok = await refreshDataset(dsId);
+          refresh();
+          toast(ok ? 'Pulled ' + fmtInt(ds.rows.length) + ' rows' : 'Could not refresh — see the message above', ok ? 'ok' : 'err', ok ? 2600 : 5000);
+        }
+      }));
+      row.appendChild(el('button', { class: 'btn', text: 'Edit connection', onclick: () => openConnectionEditor(dsId) }));
+      body.appendChild(el('div', { class: 'fieldset' }, [row]));
+      const u = el('div', { class: 'hint', style: 'word-break:break-all' });
+      u.textContent = buildConnectionUrl(connWithKey(ds.connection, dsId)).replace(getKey(dsId) || '\u0000', getKey(dsId) ? '•••' : '');
+      body.appendChild(labeled('Request URL', u));
+    } else {
+      body.appendChild(labeled('', el('button', {
+        class: 'btn full', text: ds.rows ? 'Replace this data (re-upload)' : 'Relink data (upload the file)',
+        onclick: () => relinkDataset(dsId)
+      })));
+    }
   }
-  body.appendChild(labeled('', el('button', { class: 'btn full', text: 'Add another data source…', onclick: openAddData })));
+  const add = el('div', { class: 'row g2' });
+  add.appendChild(el('button', { class: 'btn', text: 'Add a file…', onclick: openAddData }));
+  add.appendChild(el('button', { class: 'btn', text: 'Connect a URL…', onclick: () => openConnectionEditor(null) }));
+  body.appendChild(el('div', { class: 'fieldset' }, [add]));
   body.appendChild(el('div', { class: 'hint', text: 'Types are detected from the first few hundred rows. Use a Clean step to change them.' }));
 }
 
@@ -3602,8 +3658,14 @@ function renderDatasets() {
       onclick: () => { placeInput(id); }
     });
     row.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/plain', 'dataset:' + id); e.dataTransfer.effectAllowed = 'copy'; });
+    if (ds.connection) {
+      row.appendChild(el('span', {
+        class: 'link-dot' + (ds.status === 'error' ? ' bad' : ds.status === 'loading' ? ' busy' : ''),
+        title: ds.status === 'error' ? 'Last refresh failed' : ds.status === 'loading' ? 'Fetching…' : 'Linked source'
+      }));
+    }
     row.appendChild(el('span', { class: 'nm', text: ds.name }));
-    row.appendChild(el('span', { class: 'sz', text: ds.rows ? fmtInt(ds.rows.length) : '—' }));
+    row.appendChild(el('span', { class: 'sz', text: ds.status === 'loading' ? '…' : (ds.rows ? fmtInt(ds.rows.length) : '—') }));
     row.appendChild(el('button', {
       class: 'icb danger', html: '&times;', title: 'Remove this data source',
       onclick: (e) => {
@@ -3621,6 +3683,27 @@ function renderDatasets() {
 
 function openAddData() {
   const body = el('div');
+  const tabs = el('div', { class: 'res-tabs', style: 'margin-bottom:.9rem;border-bottom:1px solid var(--line);padding-bottom:.4rem' });
+  const paneFile = el('div'), paneLink = el('div', { style: 'display:none' }), panePaste = el('div', { style: 'display:none' });
+  const showPane = (k) => {
+    paneFile.style.display = k === 'file' ? '' : 'none';
+    paneLink.style.display = k === 'link' ? '' : 'none';
+    panePaste.style.display = k === 'paste' ? '' : 'none';
+    const addBtn = $$('.modal-f .btn').filter((b) => b.textContent === 'Add pasted data')[0];
+    if (addBtn) addBtn.style.display = k === 'paste' ? '' : 'none';
+  };
+  [['file', 'From a file'], ['link', 'From a URL or API'], ['paste', 'Paste data']].forEach(([k, l], i) => {
+    const b = el('button', {
+      class: 'res-tab' + (i === 0 ? ' active' : ''), text: l,
+      onclick: () => {
+        $$('.res-tab', tabs).forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        showPane(k);
+      }
+    });
+    tabs.appendChild(b);
+  });
+  body.appendChild(tabs);
   const drop = el('div', {
     class: 'drop', html:
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>' +
@@ -3630,11 +3713,23 @@ function openAddData() {
   ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
   ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
   drop.addEventListener('drop', (e) => { if (e.dataTransfer.files && e.dataTransfer.files.length) { closeModal(); handleFiles(e.dataTransfer.files); } });
-  body.appendChild(drop);
+  paneFile.appendChild(drop);
+  body.appendChild(paneFile);
 
-  body.appendChild(el('div', { class: 'flabel', style: 'margin-top:1.1rem', text: 'Or paste data' }));
+  paneLink.appendChild(el('p', { class: 'hint', text: 'Point an input at a live source — a CSV or JSON link, an open data portal, or an API. The flow can re-pull it every time you run.' }));
+  PRESET_ORDER.forEach((k) => {
+    const p = SOURCE_PRESETS[k];
+    paneLink.appendChild(el('button', {
+      class: 'btn full', style: 'justify-content:flex-start;text-align:left;margin-top:.4rem',
+      text: p.label, onclick: () => { closeModal(); openConnectionEditor(null, k); }
+    }));
+  });
+  paneLink.appendChild(el('div', { class: 'hint', style: 'margin-top:.7rem', text: 'A source has to allow browser access (CORS). If one refuses, the connection screen explains the options.' }));
+  body.appendChild(paneLink);
+
+  panePaste.appendChild(el('div', { class: 'flabel', text: 'Paste CSV, TSV, or JSON' }));
   const ta = el('textarea', { placeholder: 'Paste CSV, TSV, or JSON here…', style: 'min-height:120px' });
-  body.appendChild(ta);
+  panePaste.appendChild(ta);
   const opts = el('div', { class: 'row', style: 'margin-top:.5rem' });
   const nameIn = el('input', { type: 'text', placeholder: 'Name for this data source' });
   opts.appendChild(nameIn);
@@ -3642,10 +3737,11 @@ function openAddData() {
   const hdr = el('input', { type: 'checkbox' }); hdr.checked = true;
   hdrLab.appendChild(hdr); hdrLab.appendChild(el('span', { text: 'First row is a header' }));
   opts.appendChild(hdrLab);
-  body.appendChild(opts);
-  body.appendChild(el('div', { class: 'hint', text: 'Nothing leaves your browser — parsing, transforming, and saving all happen on this page.' }));
+  panePaste.appendChild(opts);
+  body.appendChild(panePaste);
+  body.appendChild(el('div', { class: 'hint', style: 'margin-top:.8rem', text: 'Files and pasted data never leave your browser. A linked source is fetched by your browser directly from that server.' }));
 
-  openModal({
+  const modalRef = openModal({
     title: 'Add data', body: body, buttons: [
       { label: 'Load the sample data', fn: () => { closeModal(); loadSampleData(); } },
       { label: 'Cancel', fn: closeModal },
@@ -3667,6 +3763,8 @@ function openAddData() {
       }
     ]
   });
+  showPane('file');
+  return modalRef;
 }
 
 function placeInput(datasetId) {
@@ -3840,6 +3938,494 @@ function buildSampleFlow() {
 }
 
 /* =====================================================================
+   Live data connections
+   An input can point at a URL or API instead of an uploaded file, and
+   re-fetch when the flow runs. Everything still happens in the browser,
+   so a source has to allow cross-origin reads (CORS) — the error text
+   below explains the options when it does not.
+   ===================================================================== */
+const KEY_STORE = 'dps.keys.v1';
+const DEFAULT_PROXY = 'https://api.allorigins.win/raw?url=';
+
+/** Query string that leaves : , * $ readable, the way these APIs document them. */
+function qs(obj) {
+  return Object.keys(obj)
+    .filter((k) => obj[k] != null && String(obj[k]).trim() !== '')
+    .map((k) => {
+      const ek = encodeURIComponent(k).replace(/%24/g, '$');
+      const ev = encodeURIComponent(obj[k]).replace(/%3A/gi, ':').replace(/%2C/g, ',').replace(/%2A/g, '*').replace(/%24/g, '$');
+      return ek + '=' + ev;
+    }).join('&');
+}
+const stripProto = (s) => String(s || '').replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+const trimSlash = (s) => String(s || '').replace(/^\/+|\/+$/g, '');
+
+const SOURCE_PRESETS = {
+  url: {
+    label: 'Direct link to a data file',
+    blurb: 'Any CSV, TSV, or JSON file the server allows a browser to read — a raw GitHub file, an agency download link, an open API endpoint.',
+    fields: [{ k: 'url', l: 'File or endpoint URL', ph: 'https://example.org/data.csv', wide: true }],
+    build: (c) => c.url || ''
+  },
+  socrata: {
+    label: 'Socrata portal (many city, state & federal open data sites)',
+    blurb: 'Portals on the Socrata platform — data.cityofnewyork.us, data.ny.gov, data.wa.gov, healthdata.gov and many more. Find the dataset identifier in its URL.',
+    fields: [
+      { k: 'domain', l: 'Portal domain', ph: 'data.cityofnewyork.us' },
+      { k: 'dataset', l: 'Dataset identifier', ph: 'erm2-nwe9' },
+      { k: 'select', l: 'Columns to return ($select, optional)', ph: 'agency, complaint_type, created_date', wide: true },
+      { k: 'where', l: 'Filter ($where, optional)', ph: "created_date > '2024-01-01'", wide: true }
+    ],
+    keyLabel: 'App token (optional, raises rate limits)',
+    format: 'csv',
+    build: (c) => c.domain && c.dataset
+      ? 'https://' + stripProto(c.domain) + '/resource/' + String(c.dataset).replace(/\.(csv|json)$/i, '') + '.csv?' +
+        qs({ '$limit': c.limit || 5000, '$select': c.select, '$where': c.where, '$$app_token': c.key })
+      : ''
+  },
+  census: {
+    label: 'U.S. Census Bureau API',
+    blurb: 'Any Census API dataset. The response is a table whose first row holds the variable names.',
+    fields: [
+      { k: 'dataset', l: 'Dataset path', ph: '2023/acs/acs5', hint: 'As it appears after /data/ — e.g. 2023/acs/acs5, 2022/acs/acs1/subject, timeseries/govs' },
+      { k: 'vars', l: 'Variables (get)', ph: 'NAME,B01001_001E', wide: true },
+      { k: 'forGeo', l: 'Geography (for)', ph: 'state:*' },
+      { k: 'inGeo', l: 'Within (in, optional)', ph: 'state:04' }
+    ],
+    keyLabel: 'Census API key (optional)',
+    format: 'json',
+    build: (c) => c.dataset
+      ? 'https://api.census.gov/data/' + trimSlash(c.dataset) + '?' +
+        qs({ get: c.vars || 'NAME', for: c.forGeo, in: c.inGeo, key: c.key })
+      : ''
+  },
+  worldbank: {
+    label: 'World Bank indicators',
+    blurb: 'World Development Indicators and related series. Country codes are ISO-3 (or "all"); indicator codes look like NY.GDP.MKTP.CD.',
+    fields: [
+      { k: 'countries', l: 'Countries', ph: 'USA;MEX;CAN  (or all)' },
+      { k: 'indicator', l: 'Indicator code', ph: 'NY.GDP.MKTP.CD' },
+      { k: 'dates', l: 'Years (optional)', ph: '2010:2023' }
+    ],
+    format: 'json',
+    jsonPath: '1',
+    build: (c) => c.indicator
+      ? 'https://api.worldbank.org/v2/country/' + (c.countries || 'all') + '/indicator/' + c.indicator + '?' +
+        qs({ format: 'json', per_page: c.limit || 5000, date: c.dates })
+      : ''
+  },
+  ckan: {
+    label: 'CKAN data portal (data.gov and similar)',
+    blurb: 'Reads a resource through the CKAN datastore API. The resource id is on the dataset page, under the resource preview.',
+    fields: [
+      { k: 'domain', l: 'Portal domain', ph: 'catalog.data.gov' },
+      { k: 'resource', l: 'Resource id', ph: '3d7e84d4-...' },
+      { k: 'q', l: 'Search filter (optional)', ph: 'Arizona', wide: true }
+    ],
+    format: 'json',
+    jsonPath: 'result.records',
+    build: (c) => c.domain && c.resource
+      ? 'https://' + stripProto(c.domain) + '/api/3/action/datastore_search?' +
+        qs({ resource_id: c.resource, limit: c.limit || 5000, q: c.q })
+      : ''
+  },
+  gsheet: {
+    label: 'Google Sheet',
+    blurb: 'The sheet must be shared so that anyone with the link can view it. Paste the sheet URL or just its id.',
+    fields: [
+      { k: 'sheetId', l: 'Sheet URL or id', ph: 'https://docs.google.com/spreadsheets/d/1AbC.../edit', wide: true },
+      { k: 'gid', l: 'Tab gid (optional)', ph: '0' },
+      { k: 'range', l: 'Range (optional)', ph: 'A1:F500' }
+    ],
+    format: 'csv',
+    build: (c) => {
+      const raw = String(c.sheetId || '').trim();
+      if (!raw) return '';
+      const m = raw.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      const id = m ? m[1] : raw;
+      const gidM = raw.match(/[#&?]gid=(\d+)/);
+      const gid = c.gid || (gidM ? gidM[1] : '');
+      return 'https://docs.google.com/spreadsheets/d/' + id + '/gviz/tq?' +
+        qs({ tqx: 'out:csv', gid: gid, range: c.range });
+    }
+  }
+};
+const PRESET_ORDER = ['url', 'socrata', 'census', 'worldbank', 'ckan', 'gsheet'];
+
+function buildConnectionUrl(conn) {
+  if (conn.customUrl && conn.customUrl.trim()) return conn.customUrl.trim();
+  const p = SOURCE_PRESETS[conn.preset] || SOURCE_PRESETS.url;
+  return p.build(conn);
+}
+function applyProxy(url, proxy) {
+  const base = proxy || DEFAULT_PROXY;
+  return base + (/[?&]$|=$/.test(base) ? '' : '') + encodeURIComponent(url);
+}
+function shortUrl(u) {
+  const s = String(u || '');
+  return s.length > 64 ? s.slice(0, 40) + '…' + s.slice(-20) : s;
+}
+
+/* -------------------------- key storage (local) ------------------------ */
+function getKey(dsId) { const m = lsGet(KEY_STORE) || {}; return m[dsId] || ''; }
+function setKey(dsId, val) {
+  const m = lsGet(KEY_STORE) || {};
+  if (val) m[dsId] = val; else delete m[dsId];
+  lsSet(KEY_STORE, m);
+}
+function connWithKey(conn, dsId) {
+  const k = dsId ? getKey(dsId) : '';
+  return k ? Object.assign({}, conn, { key: k }) : conn;
+}
+
+/* ------------------------------ fetching ------------------------------ */
+function pickPath(obj, path) {
+  if (!path) return obj;
+  return String(path).split('.').reduce((o, k) => {
+    if (o == null) return null;
+    return o[/^\d+$/.test(k) ? Number(k) : k];
+  }, obj);
+}
+function parsePayload(text, conn, contentType) {
+  let fmt = conn.format || 'auto';
+  if (fmt === 'auto') {
+    if (/json/i.test(contentType)) fmt = 'json';
+    else if (/tab-separated/i.test(contentType)) fmt = 'tsv';
+    else if (/csv/i.test(contentType)) fmt = 'csv';
+    else fmt = /^\s*[\[{]/.test(text.slice(0, 300).replace(/^﻿/, '')) ? 'json' : 'csv';
+  }
+  if (fmt === 'json') {
+    let data;
+    try { data = JSON.parse(text); }
+    catch (e) {
+      // Google's gviz endpoint wraps its reply in a callback
+      const m = text.match(/setResponse\(([\s\S]*)\);?\s*$/);
+      if (!m) throw new Error('The response is not valid JSON. If it is a CSV file, set the format explicitly.');
+      data = JSON.parse(m[1]);
+    }
+    const picked = conn.jsonPath ? pickPath(data, conn.jsonPath) : data;
+    if (picked == null) throw new Error('Nothing found at "' + conn.jsonPath + '" in the response. Check the records path.');
+    return tableFromJSON(picked);
+  }
+  const rows = parseDelimited(text, fmt === 'tsv' ? '\t' : null);
+  if (!rows.length) throw new Error('The response was empty.');
+  return tableFromMatrix(rows);
+}
+
+async function fetchConnection(conn) {
+  const url = buildConnectionUrl(conn);
+  if (!url) throw new Error('This connection is missing the fields needed to build its URL.');
+  const target = conn.proxy ? applyProxy(url, conn.proxyUrl) : url;
+  const ctrl = new AbortController();
+  const secs = Math.max(5, Math.min(120, parseInt(conn.timeout, 10) || 45));
+  const timer = setTimeout(() => ctrl.abort(), secs * 1000);
+  let res;
+  try {
+    res = await fetch(target, { signal: ctrl.signal, redirect: 'follow', credentials: 'omit' });
+  } catch (e) {
+    clearTimeout(timer);
+    if (e && e.name === 'AbortError') throw new Error('The request timed out after ' + secs + ' seconds.');
+    throw new Error(
+      'The browser could not read that URL. Almost always this means the server does not allow cross-origin requests ' +
+      '(it sends no Access-Control-Allow-Origin header), which a page like this one cannot work around. ' +
+      'Either use a source that permits browser access, switch on "Route through a CORS proxy" below, ' +
+      'or download the file and add it under "File".'
+    );
+  }
+  clearTimeout(timer);
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 200).replace(/\s+/g, ' ').trim(); } catch (e) { /* ignore */ }
+    throw new Error('The server replied ' + res.status + (res.statusText ? ' ' + res.statusText : '') + (detail ? ' — ' + detail : ''));
+  }
+  const ct = res.headers.get('content-type') || '';
+  const isExcel = conn.format === 'excel' ||
+    (conn.format === 'auto' && (/spreadsheet|ms-excel|officedocument/i.test(ct) || /\.xlsx?($|\?)/i.test(url)));
+  if (isExcel) {
+    if (typeof XLSX === 'undefined') throw new Error('The Excel reader has not loaded — check your connection, or point at a CSV version of the file.');
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(new Uint8Array(buf), { type: 'array' });
+    const first = wb.SheetNames[conn.sheet && wb.SheetNames.indexOf(conn.sheet) >= 0 ? wb.SheetNames.indexOf(conn.sheet) : 0];
+    const matrix = XLSX.utils.sheet_to_json(wb.Sheets[first], { header: 1, raw: true, defval: null, blankrows: false });
+    if (!matrix.length) throw new Error('Sheet "' + first + '" is empty.');
+    const xt = tableFromMatrix(matrix.map((r) => r.map((c) => (c && c.getTime) ? isoDate(c) : c)));
+    const xcap = parseInt(conn.limit, 10);
+    if (xcap > 0 && xt.rows.length > xcap) xt.rows = xt.rows.slice(0, xcap);
+    return { table: xt, url: url, bytes: buf.byteLength, contentType: ct, sheets: wb.SheetNames, sheet: first };
+  }
+  const text = await res.text();
+  if (!text.trim()) throw new Error('The server returned an empty response.');
+  if (text.length > 30e6) throw new Error('That response is ' + fmtBytes(text.length) + ', too large to hold in the browser. Add a row limit or filter.');
+  const table = parsePayload(text, conn, ct);
+  const cap = parseInt(conn.limit, 10);
+  if (cap > 0 && table.rows.length > cap) table.rows = table.rows.slice(0, cap);
+  if (!table.fields.length) throw new Error('No columns were found in the response.');
+  return { table: table, url: url, bytes: text.length, contentType: ct };
+}
+
+/** Re-pull one connected source. Never throws; the error is kept on the dataset. */
+async function refreshDataset(dsId) {
+  const ds = state.flow.datasets[dsId];
+  if (!ds || !ds.connection) return true;
+  ds.status = 'loading';
+  renderDatasets();
+  try {
+    const r = await fetchConnection(connWithKey(ds.connection, dsId));
+    ds.fields = r.table.fields;
+    ds.rows = r.table.rows;
+    ds.loaded = Date.now();
+    ds.bytes = r.bytes;
+    ds.source = shortUrl(r.url);
+    ds.error = null;
+    ds.status = 'ok';
+    markDirty();
+    return true;
+  } catch (e) {
+    ds.error = e && e.message ? e.message : String(e);
+    ds.status = 'error';
+    return false;
+  }
+}
+
+/** Pull every connected source that wants refreshing, then re-run the flow. */
+let fetching = false;
+async function runFlowWithSources(force) {
+  if (fetching) return;
+  const ids = Object.keys(state.flow.datasets).filter((id) => {
+    const ds = state.flow.datasets[id];
+    if (!ds.connection) return false;
+    return force || ds.autoRefresh !== false || !ds.rows;
+  });
+  if (!ids.length) { refresh(); toast('Flow re-run', 'ok', 1400); return; }
+  fetching = true;
+  setFetchingUI(true, ids.length);
+  try {
+    await Promise.all(ids.map(refreshDataset));
+  } finally {
+    fetching = false;
+    setFetchingUI(false);
+  }
+  refresh();
+  const failed = ids.filter((id) => state.flow.datasets[id].status === 'error');
+  const okRows = ids.filter((id) => state.flow.datasets[id].status === 'ok')
+    .reduce((a, id) => a + (state.flow.datasets[id].rows || []).length, 0);
+  if (failed.length) {
+    toast(failed.length + ' of ' + ids.length + ' sources failed — open the input step to see why', 'err', 6000);
+  } else {
+    toast('Pulled ' + fmtInt(okRows) + ' rows from ' + ids.length + ' source' + (ids.length === 1 ? '' : 's'), 'ok');
+  }
+}
+function setFetchingUI(on, n) {
+  const b = $('#btnRun');
+  if (b) { b.disabled = !!on; b.textContent = on ? 'Fetching…' : 'Run flow'; }
+  const s = $('#saveState');
+  if (s && on) s.textContent = 'fetching ' + n + ' source' + (n === 1 ? '' : 's') + '…';
+  else if (s) updateSaveState();
+}
+
+/* --------------------------- connection editor ------------------------ */
+function openConnectionEditor(dsId, startPreset) {
+  const existing = dsId ? state.flow.datasets[dsId] : null;
+  const conn = existing && existing.connection
+    ? JSON.parse(JSON.stringify(existing.connection))
+    : { preset: startPreset || 'url', format: 'auto', jsonPath: '', limit: 5000, proxy: false, proxyUrl: DEFAULT_PROXY, timeout: 45 };
+  if (!existing && startPreset && SOURCE_PRESETS[startPreset]) {
+    conn.format = SOURCE_PRESETS[startPreset].format || 'auto';
+    conn.jsonPath = SOURCE_PRESETS[startPreset].jsonPath || '';
+  }
+  conn.key = dsId ? getKey(dsId) : (conn.key || '');
+  let name = existing ? existing.name : '';
+  let lastTable = null;
+
+  const body = el('div');
+  const presetSel = selectFrom(PRESET_ORDER.map((k) => ({ v: k, l: SOURCE_PRESETS[k].label })), conn.preset, (v) => {
+    conn.preset = v;
+    const p = SOURCE_PRESETS[v];
+    conn.format = p.format || 'auto';
+    conn.jsonPath = p.jsonPath || '';
+    conn.customUrl = '';
+    draw();
+
+  });
+  body.appendChild(labeled('Source type', presetSel));
+  const fieldWrap = el('div');
+  body.appendChild(fieldWrap);
+  const urlBox = el('div');
+  body.appendChild(urlBox);
+  const advWrap = el('div');
+  body.appendChild(advWrap);
+  const resultBox = el('div');
+  body.appendChild(resultBox);
+
+  function draw() {
+    const p = SOURCE_PRESETS[conn.preset];
+    fieldWrap.innerHTML = '';
+    fieldWrap.appendChild(el('div', { class: 'hint', style: 'margin:-.3rem 0 .8rem', text: p.blurb }));
+    p.fields.forEach((f) => {
+      const inp = textInput(conn[f.k], (v) => { conn[f.k] = v; drawUrl(); }, f.ph);
+      fieldWrap.appendChild(labeled(f.l, inp, f.hint));
+    });
+    if (p.keyLabel) {
+      const k = textInput(conn.key, (v) => { conn.key = v; drawUrl(); }, 'paste your key');
+      fieldWrap.appendChild(labeled(p.keyLabel, k,
+        'Stored in this browser only. Keys are never written into a saved or exported flow file.'));
+    }
+    drawUrl();
+    drawAdvanced();
+  }
+  /* The URL box is built once and only updated, so editing it is never
+     interrupted by a field handler firing mid-keystroke. */
+  let urlTa = null, urlNote = null;
+  function drawUrl() {
+    if (!urlTa) {
+      urlTa = el('textarea', { style: 'min-height:54px', placeholder: 'https://…' });
+      urlTa.addEventListener('input', () => { conn.customUrl = urlTa.value.trim(); syncUrlNote(); });
+      urlBox.appendChild(labeled('Request URL', urlTa, 'Built from the fields above. Edit it directly if you need to.'));
+      urlNote = el('div', { class: 'row', style: 'margin:-.5rem 0 1rem;display:none' });
+      urlNote.appendChild(el('span', { class: 'hint', style: 'flex:1;margin:0', text: 'Using the URL you typed; the fields above no longer change it.' }));
+      urlNote.appendChild(el('button', {
+        class: 'btn sm', text: 'Rebuild from fields',
+        onclick: () => { conn.customUrl = ''; urlTa.value = buildConnectionUrl(conn); syncUrlNote(); }
+      }));
+      urlBox.appendChild(urlNote);
+    }
+    if (!(conn.customUrl && conn.customUrl.trim()) && document.activeElement !== urlTa) {
+      urlTa.value = buildConnectionUrl(conn);
+    }
+    syncUrlNote();
+  }
+  function syncUrlNote() {
+    if (urlNote) urlNote.style.display = (conn.customUrl && conn.customUrl.trim()) ? 'flex' : 'none';
+  }
+  function drawAdvanced() {
+    advWrap.innerHTML = '';
+    const row = el('div', { class: 'row g2' });
+    row.appendChild(labeled('Format', selectFrom([
+      { v: 'auto', l: 'Detect automatically' }, { v: 'csv', l: 'CSV' }, { v: 'tsv', l: 'TSV' },
+      { v: 'json', l: 'JSON' }, { v: 'excel', l: 'Excel workbook' }
+    ], conn.format || 'auto', (v) => { conn.format = v; drawAdvanced(); })));
+    row.appendChild(labeled('Max rows', numInput(conn.limit, (v) => { conn.limit = v; drawUrl(); })));
+    advWrap.appendChild(row);
+    if (conn.format === 'json' || conn.format === 'auto') {
+      advWrap.appendChild(labeled('Records path in the JSON (optional)',
+        textInput(conn.jsonPath, (v) => { conn.jsonPath = v; }, 'e.g. result.records or 1'),
+        'Leave blank when the response is already a list of records. Use dots for nesting and a number for a list position.'));
+    }
+    const lab = el('label', { class: 'chk' });
+    const cb = el('input', { type: 'checkbox' });
+    cb.checked = !!conn.proxy;
+    cb.addEventListener('change', () => { conn.proxy = cb.checked; drawAdvanced(); });
+    lab.appendChild(cb);
+    lab.appendChild(el('span', { text: 'Route through a CORS proxy if the source blocks browsers' }));
+    advWrap.appendChild(el('div', { class: 'fieldset' }, [lab]));
+    if (conn.proxy) {
+      advWrap.appendChild(el('div', {
+        class: 'warn-msg',
+        text: 'The request, including any key in the URL, will pass through this third-party service. Only use it for public data.'
+      }));
+      advWrap.appendChild(labeled('Proxy prefix', textInput(conn.proxyUrl || DEFAULT_PROXY, (v) => { conn.proxyUrl = v; })));
+    }
+  }
+
+  function showResult(kind, msg, table) {
+    resultBox.innerHTML = '';
+    resultBox.appendChild(el('div', { class: kind === 'ok' ? 'ok-msg' : 'err-msg', text: msg }));
+    if (!table) return;
+    const wrap = el('div', { style: 'overflow:auto;max-height:190px;border:1px solid var(--line);border-radius:var(--r-sm);margin-top:.5rem' });
+    const t = el('table', { class: 'grid' });
+    const thead = el('thead'), tr = el('tr');
+    table.fields.slice(0, 8).forEach((f) => {
+      const th = el('th');
+      th.appendChild(el('span', { class: 'type-tag t-' + f.type, text: f.type.slice(0, 3) }));
+      th.appendChild(document.createTextNode(' ' + f.name));
+      tr.appendChild(th);
+    });
+    if (table.fields.length > 8) tr.appendChild(el('th', { text: '+' + (table.fields.length - 8) + ' more' }));
+    thead.appendChild(tr); t.appendChild(thead);
+    const tb = el('tbody');
+    table.rows.slice(0, 5).forEach((r) => {
+      const row = el('tr');
+      table.fields.slice(0, 8).forEach((f) => {
+        const v = r[f.name];
+        row.appendChild(el('td', { class: v == null ? 'nul' : (f.type === 'number' ? 'num' : ''), text: v == null ? 'null' : display(v, f.type) }));
+      });
+      if (table.fields.length > 8) row.appendChild(el('td', { text: '…' }));
+      tb.appendChild(row);
+    });
+    t.appendChild(tb); wrap.appendChild(t);
+    resultBox.appendChild(wrap);
+  }
+
+  draw();
+
+  const doTest = async (btn) => {
+    const old = btn.textContent;
+    btn.textContent = 'Testing…'; btn.disabled = true;
+    resultBox.innerHTML = '';
+    try {
+      const r = await fetchConnection(conn);
+      lastTable = r.table;
+      if (!name) {
+        const u = r.url.split('?')[0].split('/').filter(Boolean);
+        name = decodeURIComponent(u[u.length - 1] || 'Linked data').replace(/\.[a-z]+$/i, '');
+        nameIn.value = name;
+      }
+      showResult('ok', 'Connected — ' + fmtInt(r.table.rows.length) + ' rows, ' + r.table.fields.length + ' fields, ' + fmtBytes(r.bytes) + '.' +
+        (r.sheets && r.sheets.length > 1 ? ' Read sheet "' + r.sheet + '" of ' + r.sheets.length + '.' : ''), r.table);
+    } catch (e) {
+      lastTable = null;
+      showResult('err', e.message);
+    }
+    btn.textContent = old; btn.disabled = false;
+  };
+
+  const nameIn = textInput(name, (v) => { name = v; }, 'Name for this source');
+  body.appendChild(labeled('Name it', nameIn));
+
+  const testBtn = () => $$('.modal-f .btn')[1];
+  const doSave = async () => {
+    if (!buildConnectionUrl(conn)) { toast('Fill in the fields that build the URL first', 'err'); return; }
+    if (!lastTable) { await doTest(testBtn()); if (!lastTable) return; }
+    const clean = JSON.parse(JSON.stringify(conn));
+    delete clean.key;                       // keys live in local storage, not the flow
+    const finalName = (nameIn.value || name || 'Linked data').trim();
+    if (existing) {
+      existing.connection = clean;
+      existing.name = finalName;
+      existing.fields = lastTable.fields;
+      existing.rows = lastTable.rows;
+      existing.loaded = Date.now();
+      existing.source = shortUrl(buildConnectionUrl(conn));
+      existing.error = null; existing.status = 'ok';
+      setKey(dsId, conn.key);
+      closeModal(); markDirty(); refresh();
+      toast('Connection updated', 'ok');
+    } else {
+      const id = addDataset(finalName, lastTable, shortUrl(buildConnectionUrl(conn)));
+      const ds = state.flow.datasets[id];
+      ds.connection = clean;
+      ds.autoRefresh = true;
+      ds.status = 'ok';
+      setKey(id, conn.key);
+      closeModal();
+      placeInput(id);
+      toast('Connected — ' + fmtInt(lastTable.rows.length) + ' rows loaded', 'ok');
+    }
+  };
+
+  openModal({
+    title: existing ? 'Edit connection' : 'Connect to a data source',
+    wide: true,
+    body: body,
+    buttons: [
+      { label: 'Cancel', fn: closeModal },
+      { label: 'Test connection', fn: () => doTest(testBtn()) },
+      { label: existing ? 'Save connection' : 'Add source', primary: true, fn: doSave }
+    ]
+  });
+}
+
+/* =====================================================================
    Saving, loading, import / export
    ===================================================================== */
 const STORE_KEY = 'dps.flows.v1';
@@ -3866,7 +4452,11 @@ function serialize(flow, includeData) {
   Object.keys(flow.datasets).forEach((id) => {
     const ds = flow.datasets[id];
     const rec = { name: ds.name, fields: ds.fields, source: ds.source, loaded: ds.loaded, rowCount: ds.rows ? ds.rows.length : 0 };
-    if (includeData && ds.rows) rec.matrix = ds.rows.map((r) => ds.fields.map((f) => r[f.name]));
+    if (ds.connection) {
+      rec.connection = ds.connection;          // never carries the key
+      rec.autoRefresh = ds.autoRefresh !== false;
+    }
+    if (includeData && ds.rows && !ds.connection) rec.matrix = ds.rows.map((r) => ds.fields.map((f) => r[f.name]));
     out.datasets[id] = rec;
   });
   return out;
@@ -3880,6 +4470,7 @@ function deserialize(obj) {
   Object.keys(obj.datasets || {}).forEach((id) => {
     const d = obj.datasets[id];
     const ds = { name: d.name, fields: d.fields || [], source: d.source || '', loaded: d.loaded, rows: null, rowCount: d.rowCount || 0 };
+    if (d.connection) { ds.connection = d.connection; ds.autoRefresh = d.autoRefresh !== false; ds.status = 'idle'; }
     if (d.matrix) {
       ds.rows = d.matrix.map((arr) => { const o = {}; ds.fields.forEach((f, i) => { o[f.name] = arr[i] === undefined ? null : arr[i]; }); return o; });
     }
@@ -3939,10 +4530,12 @@ function loadFlow(flowObj, savedId) {
   $('#flowName').value = state.flow.name;
   refresh();
   fitView();
-  const missing = Object.keys(state.flow.datasets).filter((k) => !state.flow.datasets[k].rows);
+  const linked = Object.keys(state.flow.datasets).filter((k) => state.flow.datasets[k].connection);
+  const missing = Object.keys(state.flow.datasets).filter((k) => !state.flow.datasets[k].rows && !state.flow.datasets[k].connection);
   if (missing.length) {
     toast(missing.length + ' data source' + (missing.length === 1 ? '' : 's') + ' need relinking — select the input step and choose the file again.', '', 7000);
   }
+  if (linked.length) runFlowWithSources(false);
 }
 
 function openFlowManager() {
@@ -3959,9 +4552,11 @@ function openFlowManager() {
       const t = el('div', { class: 't' });
       t.appendChild(el('b', { text: f.name || 'Untitled flow' }));
       const dsCount = Object.keys(f.datasets || {}).length;
-      const hasData = Object.keys(f.datasets || {}).every((k) => f.datasets[k].matrix);
+      const hasData = Object.keys(f.datasets || {}).every((k) => f.datasets[k].matrix || f.datasets[k].connection);
+      const linkedN = Object.keys(f.datasets || {}).filter((k) => f.datasets[k].connection).length;
       t.appendChild(el('span', {
         text: (f.nodes || []).length + ' steps · ' + dsCount + ' data source' + (dsCount === 1 ? '' : 's') +
+          (linkedN ? ', ' + linkedN + ' linked' : '') +
           (dsCount && !hasData ? ' (needs relinking)' : '') + ' · saved ' + timeAgo(f.saved || Date.now())
       }));
       row.appendChild(t);
@@ -4073,7 +4668,7 @@ function openHelp(section) {
     '<p>A visual data preparation tool that runs entirely in your browser. Load files, wire together steps that clean, join, aggregate, and reshape the data, then export the result. Nothing is uploaded — the files never leave this page.</p>' +
     '<h4>Building a flow</h4>' +
     '<ul>' +
-    '<li><b>Add data</b> to create an input. CSV, TSV, JSON, and Excel files all work, as does pasted text.</li>' +
+    '<li><b>Add data</b> to create an input. CSV, TSV, JSON, and Excel files all work, as does pasted text or a live link to a URL or API.</li>' +
     '<li><b>Drag a step</b> from the left rail onto the canvas, or click it to drop it next to the selected step.</li>' +
     '<li><b>Connect steps</b> by dragging from the blue dot on a step\'s right edge to the dot on another step\'s left edge. Click a connection to remove it.</li>' +
     '<li><b>Select a step</b> to configure it on the right and preview its output below.</li>' +
@@ -4087,6 +4682,16 @@ function openHelp(section) {
     '<li>Tap a step to select it; tap it again to open its settings. Press and hold for the quick-actions menu.</li>' +
     '<li>The <b>&#8943;</b> button in the top bar holds saving, opening, exporting, importing, and this help.</li>' +
     '</ul>' +
+    '<h4>Connecting to a live source</h4>' +
+    '<p>Under <b>Add data &rarr; From a URL or API</b> you can point an input at a source instead of a file. Pick a source type, fill in its fields, press <b>Test connection</b> to see the first rows, and add it. The generated request URL is always shown and can be edited by hand.</p>' +
+    '<ul>' +
+    '<li><b>Direct link</b> — any CSV, TSV, or JSON file the server lets a browser read.</li>' +
+    '<li><b>Socrata portal</b> — city, state, and federal open data sites, with optional <code>$select</code> and <code>$where</code> filters applied server-side.</li>' +
+    '<li><b>Census Bureau API</b> — any dataset path, variables, and geography.</li>' +
+    '<li><b>World Bank indicators</b>, <b>CKAN portals</b> (data.gov and similar), and <b>Google Sheets</b> shared for anyone with the link.</li>' +
+    '</ul>' +
+    '<p>A linked input shows a coloured dot in the source list. By default it re-pulls every time you press <b>Run flow</b>, and once when you reopen the flow; turn that off per source in the input step, or use <b>Refresh sources</b> to force a pull. Because the fetch happens in your browser, the source has to permit cross-origin reads &mdash; if it does not, the error says so, and you can either route the request through a CORS proxy (the connection screen warns you what that means) or download the file and add it directly.</p>' +
+    '<p><b>Keys and tokens</b> typed into a connection\'s key field are kept in this browser only. They are never written into a saved flow or an exported flow file, so sharing a flow does not share your credentials &mdash; whoever opens it supplies their own. A key you paste directly into the URL is not protected this way.</p>' +
     '<h4>The steps</h4>' +
     '<ul>' +
     '<li><b>Clean</b> holds an ordered list of operations on one table — filter rows, rename and retype fields, calculate new ones, standardise text, group messy values, split fields, fill or drop nulls, deduplicate, sort, limit. Steps run top to bottom and can be reordered or switched off.</li>' +
@@ -4099,6 +4704,7 @@ function openHelp(section) {
     '<h4>Reading the panel below</h4>' +
     '<p><b>Profile</b> shows each field with its type, distinct and null counts, a distribution, and summary statistics. Clicking a value in a profile bar adds a filter for it. <b>Data</b> is the first few hundred rows of the selected step. <b>Log</b> shows what each step produced and how long it took.</p>' +
     '<h4>Saving your work</h4>' +
+    '<p>Linked sources are stored as the connection itself rather than as a copy of the data, so a saved or exported flow stays small and pulls fresh numbers when it is opened.</p>' +
     '<p><b>Save</b> keeps the flow in this browser (localStorage), including the loaded data when it fits. <b>Export</b> writes a <code>.flow.json</code> file you can keep, share, or reopen with <b>Import</b>; you choose whether to embed the data. If a saved flow was too large to hold the data, reopening it asks you to relink each source by picking the file again — the steps are all preserved.</p>' +
     '<h4>Keyboard</h4>' +
     '<table>' +
@@ -4162,7 +4768,8 @@ function initTopbar() {
   $('#btnImport').addEventListener('click', () => $('#flowPicker').click());
   $('#btnNew').addEventListener('click', newFlowPrompt);
   $('#btnHelp').addEventListener('click', () => openHelp());
-  $('#btnRun').addEventListener('click', () => { refresh(); toast('Flow re-run', 'ok', 1400); });
+  $('#btnRun').addEventListener('click', () => runFlowWithSources(false));
+  $('#btnRefresh').addEventListener('click', () => runFlowWithSources(true));
   $('#btnTidy').addEventListener('click', tidyLayout);
 
   $('#filePicker').addEventListener('change', function () {
@@ -4190,7 +4797,8 @@ function initTopbar() {
     e.stopPropagation();   // otherwise the global click handler closes it immediately
     const r = e.currentTarget.getBoundingClientRect();
     showCtxMenu(r.right - 180, r.bottom + 6, [
-      { label: 'Run flow', fn: () => { refresh(); toast('Flow re-run', 'ok', 1400); } },
+      { label: 'Run flow', fn: () => runFlowWithSources(false) },
+      { label: 'Refresh all linked sources', fn: () => runFlowWithSources(true) },
       { label: 'Tidy layout', fn: tidyLayout },
       { label: 'Fit to view', fn: fitView },
       '-',
