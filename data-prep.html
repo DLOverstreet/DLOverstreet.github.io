@@ -323,6 +323,8 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 .btn svg{width:13px;height:13px}
 .btn[disabled]{opacity:.5;cursor:not-allowed}
 .chk{display:flex;align-items:center;gap:.4rem;font-size:.8125rem;cursor:pointer;padding:.12rem 0}
+/* a checkbox that sits directly in a fieldset must not take the field-label styling */
+.fieldset > label.chk{text-transform:none;letter-spacing:0;font-weight:400;color:var(--body);font-size:.8125rem;margin-bottom:0}
 .chk input{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
 .scrollbox{max-height:190px;overflow-y:auto;border:1px solid var(--line);border-radius:var(--r-sm);padding:.35rem .45rem;background:var(--surface-2)}
 
@@ -459,6 +461,17 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
   max-width:calc(100% - 24px);pointer-events:none;   /* taps must reach the steps underneath */
 }
 .link-hint.show{display:flex}
+.ai-progress{
+  position:absolute;left:50%;transform:translateX(-50%);top:10px;z-index:10;display:none;
+  align-items:center;gap:.6rem;background:var(--ink);color:#fff;border-radius:20px;
+  padding:.4rem .5rem .4rem .85rem;font-size:.75rem;font-weight:500;box-shadow:var(--shadow-2);
+  max-width:calc(100% - 24px);
+}
+.ai-progress.show{display:flex}
+.ai-progress-bar{width:90px;height:5px;background:rgba(255,255,255,.25);border-radius:3px;overflow:hidden}
+.ai-progress-bar i{display:block;height:100%;background:#7fc4ff;transition:width .2s}
+.ai-progress button{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:12px;padding:.12rem .55rem;font-size:.6875rem;cursor:pointer}
+.ai-progress button:hover{background:rgba(255,255,255,.35)}
 .link-hint button{background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:12px;
   padding:.1rem .5rem;font-size:.6875rem;cursor:pointer;pointer-events:auto}
 .port.pending{border-color:var(--accent);background:var(--accent);box-shadow:0 0 0 4px rgba(31,95,158,.25)}
@@ -599,6 +612,7 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
         <button class="btn sm mini" id="btnRun">Run flow</button>
         <button class="btn sm mini" id="btnRefresh" title="Re-pull every linked source">Refresh sources</button>
         <button class="btn sm mini" id="btnTidy">Tidy layout</button>
+        <button class="btn sm mini" id="btnAiSettings" title="Claude API key and spend">Claude settings</button>
         <div class="ds-empty" id="flowStats"></div>
       </div>
     </aside>
@@ -628,6 +642,11 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
         <div class="link-hint" id="linkHint">
           <span id="linkHintText">Now tap the step to connect to</span>
           <button type="button" id="linkHintCancel">Cancel</button>
+        </div>
+        <div class="ai-progress" id="aiProgress">
+          <div class="ai-progress-bar"><i id="aiProgressFill"></i></div>
+          <span id="aiProgressText">Working…</span>
+          <button type="button" id="aiCancel">Stop</button>
         </div>
         <div class="canvas-hint" id="canvasHint">Drag from a node's right dot to connect &middot; scroll to zoom &middot; right-click a node for options</div>
       </div>
@@ -1866,7 +1885,8 @@ const ICONS = {
   join: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="8" r="4"/><circle cx="10" cy="8" r="4"/></svg>',
   union: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2.5" width="12" height="4.5" rx="1"/><rect x="2" y="9" width="12" height="4.5" rx="1"/></svg>',
   pivot: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.5h11M5.5 2.5v11"/><rect x="2.5" y="2.5" width="11" height="11" rx="1"/></svg>',
-  output: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M5 7.5l3 3 3-3M2.5 11v2.5h11V11"/></svg>'
+  output: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M5 7.5l3 3 3-3M2.5 11v2.5h11V11"/></svg>',
+  ai: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.6l1.5 3.9 3.9 1.5-3.9 1.5L8 12.4 6.5 8.5 2.6 7l3.9-1.5z"/><path d="M12.8 11.2l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z"/></svg>'
 };
 const NODE_TYPES = {
   input:     { label: 'Input',      color: '#1f5f9e', inputs: 0,  desc: 'A loaded data source' },
@@ -1875,9 +1895,10 @@ const NODE_TYPES = {
   pivot:     { label: 'Pivot',      color: '#b06a00', inputs: 1,  desc: 'Reshape columns and rows' },
   join:      { label: 'Join',       color: '#c2410c', inputs: 2,  desc: 'Match rows across two inputs' },
   union:     { label: 'Union',      color: '#0e7490', inputs: 99, desc: 'Stack inputs on top of each other' },
+  ai:        { label: 'Claude',     color: '#b8560f', inputs: 1,  desc: 'Classify, extract, standardise with AI' },
   output:    { label: 'Output',     color: '#3d5a7a', inputs: 1,  desc: 'Preview and export the result' }
 };
-const PALETTE_ORDER = ['clean', 'aggregate', 'join', 'union', 'pivot', 'output'];
+const PALETTE_ORDER = ['clean', 'aggregate', 'join', 'union', 'pivot', 'ai', 'output'];
 
 const MAX_PREVIEW_ROWS = 300;
 
@@ -1936,6 +1957,11 @@ function defaultConfig(type) {
     case 'join': return { type: 'inner', keys: [{ left: '', right: '' }], rsuffix: ' (right)', dropRightKeys: true, ignoreCase: false, trimKeys: false };
     case 'union': return { ignoreCase: true, addSource: false };
     case 'pivot': return { mode: 'toRows', columns: [], nameField: 'Field', valueField: 'Value', dropNulls: false, keyColumn: '', valueColumn: '', agg: 'sum', groupBy: [] };
+    case 'ai': return {
+      mode: 'classify', columns: [], labels: [], allowOther: true, outName: 'category',
+      fields: [], instruction: '', notes: '', canon: '', rubric: '', min: 1, max: 5, words: 20,
+      model: 'claude-opus-5', effort: 'low', batch: 25, cache: {}, cacheSig: '', spend: 0, calls: 0
+    };
     case 'output': return { format: 'csv', filename: '' };
     default: return {};
   }
@@ -2050,6 +2076,7 @@ function computeNode(n, ins) {
       const names = (n.inputs || []).map((id) => (getNode(id) || {}).name || 'Input');
       return runUnion(ins, Object.assign({}, n.config, { names: names }));
     }
+    case 'ai': return runAiStep(ins[0], n);
     case 'output': return { fields: cloneFields(ins[0].fields), rows: ins[0].rows };
     default: throw new Error('Unknown step type.');
   }
@@ -2133,6 +2160,12 @@ function nodeSummary(n) {
     case 'pivot': return c.mode === 'toColumns'
       ? 'Rows to columns' + (c.keyColumn ? ' from ' + c.keyColumn : '')
       : 'Columns to rows' + ((c.columns || []).length ? ' (' + c.columns.length + ' fields)' : '');
+    case 'ai': {
+      const m = AI_MODES[c.mode];
+      const cols = (c.columns || []).length ? ' from ' + c.columns.slice(0, 2).join(', ') : '';
+      const pend = c.pending || 0;
+      return (m ? m.label : 'Claude') + cols + (pend ? ' · ' + fmtInt(pend) + ' to process' : (c.total ? ' · up to date' : ''));
+    }
     case 'output': return 'Export as ' + String(c.format || 'csv').toUpperCase();
     default: return '';
   }
@@ -2744,6 +2777,7 @@ function renderInspector() {
     case 'join': inspJoin(body, n); break;
     case 'union': inspUnion(body, n); break;
     case 'pivot': inspPivot(body, n); break;
+    case 'ai': inspAi(body, n); break;
     case 'output': inspOutput(body, n); break;
   }
 }
@@ -2847,6 +2881,11 @@ function inspClean(body, n) {
   add.appendChild(sel);
   body.appendChild(add);
 
+  body.appendChild(el('button', {
+    class: 'btn full', id: 'btnSuggest', style: 'margin-bottom:.7rem',
+    text: 'Suggest steps with Claude', title: 'Sends this table\'s column profile — not the data — and proposes cleaning steps',
+    onclick: () => suggestSteps(n)
+  }));
   if (!steps.length) {
     body.appendChild(el('div', { class: 'empty-steps', text: 'No steps yet. Add one above, or click a value in the Profile panel below to filter on it.' }));
     return;
@@ -3003,7 +3042,16 @@ function buildStepForm(b, n, s, index) {
         }));
       });
       b.appendChild(labeled('Insert a field', toks));
-      b.appendChild(el('button', { class: 'btn sm full', text: 'Function reference', onclick: () => openHelp('calc') }));
+      const btnRow = el('div', { class: 'row g2' });
+      btnRow.appendChild(el('button', {
+        class: 'btn sm', text: 'Write it with Claude',
+        onclick: () => writeExpression(s, flds, (expr, why) => {
+          s.expr = expr; ta.value = expr; upd();
+          toast(why || 'Expression written', 'ok', 5000);
+        })
+      }));
+      btnRow.appendChild(el('button', { class: 'btn sm', text: 'Function reference', onclick: () => openHelp('calc') }));
+      b.appendChild(btnRow);
       break;
     }
     case 'clean': {
@@ -4426,6 +4474,728 @@ function openConnectionEditor(dsId, startPreset) {
 }
 
 /* =====================================================================
+   Claude steps
+   An AI step sends values from the table to the Claude API and writes
+   the answers back as new fields. Calls are deliberate: a step never
+   fires on its own while you edit, only when you press Run, and every
+   answer is cached so re-running the flow costs nothing.
+   ===================================================================== */
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_VERSION = '2023-06-01';
+const AI_KEY_ID = 'anthropic-api-key';
+
+const AI_MODELS = [
+  { id: 'claude-opus-5', label: 'Claude Opus 5', in: 5, out: 25, note: 'Best judgement. The default.' },
+  { id: 'claude-sonnet-5', label: 'Claude Sonnet 5', in: 2, out: 10, note: 'Cheaper; good for bulk labelling.' },
+  { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5', in: 1, out: 5, note: 'Cheapest and fastest; simple tasks only.' },
+  { id: 'claude-fable-5-1', label: 'Claude Fable 5.1', in: 10, out: 50, note: 'Most capable; the most expensive.' }
+];
+const modelInfo = (id) => AI_MODELS.filter((m) => m.id === id)[0] || AI_MODELS[0];
+const EFFORTS = [
+  { v: 'low', l: 'Low — labelling, standardising, simple picks' },
+  { v: 'medium', l: 'Medium — everyday extraction' },
+  { v: 'high', l: 'High — judgement calls, nuanced text' },
+  { v: 'xhigh', l: 'Very high' },
+  { v: 'max', l: 'Maximum — slowest and dearest' }
+];
+
+/* The modes are presets over one engine: take some fields, return some fields. */
+const AI_MODES = {
+  classify: {
+    label: 'Classify',
+    blurb: 'Put every value into one of the categories you define.',
+    outputs: (c) => [{ name: c.outName || 'category', type: 'string', desc: 'The category this belongs to', enum: (c.labels || []).filter(Boolean) }],
+    task: (c) => 'Assign each item to exactly one of these categories: ' + (c.labels || []).join('; ') + '.' +
+      (c.allowOther ? ' If none genuinely fits, answer "Other".' : ' Always choose the closest category, even when the fit is imperfect.')
+  },
+  extract: {
+    label: 'Extract fields',
+    blurb: 'Pull named pieces of information out of free text into new fields.',
+    outputs: (c) => (c.fields && c.fields.length ? c.fields : [{ name: 'value', type: 'string', desc: '' }]),
+    task: () => 'Extract the requested fields from each item. If a field is not present in the text, return an empty string for it rather than guessing.'
+  },
+  standardize: {
+    label: 'Standardise values',
+    blurb: 'Map messy or inconsistent values onto one canonical form.',
+    outputs: (c) => [{ name: c.outName || 'standardized', type: 'string', desc: 'The canonical form of this value' }],
+    task: (c) => 'Rewrite each value in its canonical form.' +
+      ((c.canon || '').trim() ? ' Use exactly one of these accepted values: ' + c.canon.split('\n').map((x) => x.trim()).filter(Boolean).join('; ') + '.'
+        : ' Keep the same spelling for values that already agree, so that variants of the same thing collapse to one identical string.')
+  },
+  score: {
+    label: 'Score',
+    blurb: 'Rate each value on a numeric scale you describe.',
+    outputs: (c) => [{ name: c.outName || 'score', type: 'number', desc: 'The rating' }],
+    task: (c) => 'Rate each item from ' + (c.min == null ? 1 : c.min) + ' to ' + (c.max == null ? 5 : c.max) + '. ' + (c.rubric || 'Higher means more of the quality described.')
+  },
+  summarize: {
+    label: 'Summarise',
+    blurb: 'Write a short summary of each value.',
+    outputs: (c) => [{ name: c.outName || 'summary', type: 'string', desc: 'A short summary' }],
+    task: (c) => 'Write a summary of at most ' + (c.words || 20) + ' words for each item. Plain text, no quotation marks.'
+  },
+  custom: {
+    label: 'Custom instruction',
+    blurb: 'Write your own instruction and name the fields you want back.',
+    outputs: (c) => (c.fields && c.fields.length ? c.fields : [{ name: 'answer', type: 'string', desc: '' }]),
+    task: (c) => c.instruction || 'Answer for each item.'
+  }
+};
+const AI_MODE_ORDER = ['classify', 'extract', 'standardize', 'score', 'summarize', 'custom'];
+
+/* ------------------------------- key ---------------------------------- */
+const getApiKey = () => getKey(AI_KEY_ID);
+const setApiKey = (v) => setKey(AI_KEY_ID, (v || '').trim());
+const hasApiKey = () => !!getApiKey();
+
+/* ----------------------------- transport ------------------------------ */
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** One Messages API call. Returns {json, usage}. Throws Error with a readable message. */
+async function callClaude(body, opts) {
+  opts = opts || {};
+  const key = getApiKey();
+  if (!key) throw new Error('No Claude API key is set. Open the Claude settings and paste one.');
+  let attempt = 0;
+  for (;;) {
+    attempt++;
+    let res;
+    try {
+      res = await fetch(ANTHROPIC_URL, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-api-key': key,
+          'anthropic-version': ANTHROPIC_VERSION,
+          // required for calls made straight from a browser page
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify(body),
+        signal: opts.signal
+      });
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw e;
+      throw new Error('Could not reach the Claude API from the browser. Check the connection, and that no extension is blocking api.anthropic.com.');
+    }
+    if (res.status === 429 || res.status === 529 || res.status >= 500) {
+      if (attempt > 4) {
+        throw new Error(res.status === 429
+          ? 'Claude is rate-limiting these requests. Wait a moment, lower the batch size, or try a smaller selection.'
+          : 'The Claude API is temporarily unavailable (' + res.status + '). Try again shortly.');
+      }
+      const ra = parseFloat(res.headers.get('retry-after') || '0');
+      await sleep(Math.max(ra * 1000, Math.pow(2, attempt) * 600));
+      continue;
+    }
+    const text = await res.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch (e) { /* handled below */ }
+    if (!res.ok) {
+      const msg = json && json.error && json.error.message ? json.error.message : text.slice(0, 300);
+      if (res.status === 401) throw new Error('Claude rejected the API key (401). Check that it is correct and still active.');
+      if (res.status === 400) throw new Error('Claude rejected the request (400): ' + msg);
+      if (res.status === 403) throw new Error('That key is not allowed to make this call (403): ' + msg);
+      throw new Error('Claude replied ' + res.status + ': ' + msg);
+    }
+    if (!json) throw new Error('Claude returned a response that could not be read.');
+    if (json.stop_reason === 'refusal') {
+      throw new Error('Claude declined to answer this request' +
+        (json.stop_details && json.stop_details.explanation ? ': ' + json.stop_details.explanation : '.'));
+    }
+    if (json.stop_reason === 'max_tokens') {
+      throw new Error('The answer was cut off because it hit the token limit. Lower the rows-per-request setting and run again.');
+    }
+    return json;
+  }
+}
+
+/** Concatenate the text blocks of a response and parse them as JSON. */
+function responseJSON(json) {
+  const text = (json.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+  if (!text.trim()) throw new Error('Claude returned an empty answer.');
+  try { return JSON.parse(text); } catch (e) { /* fall through */ }
+  const a = text.indexOf('{'), b = text.lastIndexOf('}');
+  if (a >= 0 && b > a) {
+    try { return JSON.parse(text.slice(a, b + 1)); } catch (e2) { /* fall through */ }
+  }
+  throw new Error('Claude did not return readable JSON.');
+}
+
+/* ------------------------------- costing ------------------------------ */
+const estTokens = (s) => Math.ceil(String(s == null ? '' : s).length / 3.6);
+function costOf(model, inTok, outTok) {
+  const m = modelInfo(model);
+  return (inTok / 1e6) * m.in + (outTok / 1e6) * m.out;
+}
+function fmtCost(c) {
+  if (c == null) return '—';
+  if (c === 0) return '$0.00';
+  if (c < 0.01) return '<$0.01';
+  return '$' + c.toFixed(c < 1 ? 2 : 2);
+}
+function addSpend(node, usage, model) {
+  if (!usage) return 0;
+  const inTok = (usage.input_tokens || 0) + (usage.cache_read_input_tokens || 0) + (usage.cache_creation_input_tokens || 0);
+  const c = costOf(model, inTok, usage.output_tokens || 0);
+  node.config.spend = (node.config.spend || 0) + c;
+  node.config.calls = (node.config.calls || 0) + 1;
+  state.sessionSpend = (state.sessionSpend || 0) + c;
+  return c;
+}
+
+/* --------------------------- schema + prompt -------------------------- */
+function aiOutputs(node) {
+  const mode = AI_MODES[node.config.mode] || AI_MODES.classify;
+  return (mode.outputs(node.config) || []).filter((o) => o && o.name);
+}
+function aiSchema(node) {
+  const props = { i: { type: 'integer', description: 'The index of the item this answer is for' } };
+  const required = ['i'];
+  aiOutputs(node).forEach((o) => {
+    let p;
+    if (o.type === 'number') p = { type: 'number' };
+    else if (o.type === 'boolean') p = { type: 'boolean' };
+    else if (o.enum && o.enum.length) p = { type: 'string', enum: o.enum.concat(node.config.allowOther ? ['Other'] : []) };
+    else p = { type: 'string' };
+    if (o.desc) p.description = o.desc;
+    props[o.name] = p;
+    required.push(o.name);
+  });
+  return {
+    type: 'object', additionalProperties: false, required: ['results'],
+    properties: {
+      results: {
+        type: 'array',
+        description: 'One entry per item, in any order, each carrying the item index i.',
+        items: { type: 'object', additionalProperties: false, required: required, properties: props }
+      }
+    }
+  };
+}
+function aiSystemPrompt(node) {
+  const mode = AI_MODES[node.config.mode] || AI_MODES.classify;
+  const outs = aiOutputs(node);
+  return [
+    'You are labelling records inside a data preparation tool. You will be given a JSON array of items, each with an "i" index and one or more source fields.',
+    '',
+    'Your task: ' + mode.task(node.config),
+    node.config.notes ? '\nAdditional instructions from the analyst:\n' + node.config.notes : '',
+    '',
+    'Return one result per item, echoing its "i" exactly, with these fields: ' + outs.map((o) => o.name + (o.desc ? ' (' + o.desc + ')' : '')).join(', ') + '.',
+    'Answer for every item, including ones you are unsure about. Be consistent: identical inputs must get identical answers.',
+    'Judge only from the text given. Do not invent facts that are not there.'
+  ].filter(Boolean).join('\n');
+}
+
+/* ------------------------- gathering the work ------------------------- */
+function configSig(node) {
+  const c = node.config;
+  return hashStr(JSON.stringify({
+    mode: c.mode, model: c.model, effort: c.effort, cols: c.columns, labels: c.labels,
+    allowOther: c.allowOther, fields: c.fields, instruction: c.instruction, notes: c.notes,
+    canon: c.canon, rubric: c.rubric, min: c.min, max: c.max, words: c.words, outName: c.outName
+  }));
+}
+function hashStr(s) {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+/** The distinct inputs this step needs answers for. */
+function aiWorkItems(node, table) {
+  const cols = (node.config.columns || []).filter((c) => findField(table.fields, c));
+  if (!cols.length) return { cols: [], items: [], keys: [] };
+  const seen = Object.create(null), items = [];
+  const perRow = new Array(table.rows.length);
+  for (let i = 0; i < table.rows.length; i++) {
+    const r = table.rows[i];
+    const vals = {};
+    cols.forEach((c) => { vals[c] = r[c] == null ? '' : String(display(r[c], typeOf(table.fields, c))); });
+    const key = cols.map((c) => vals[c]).join('\u0001');
+    perRow[i] = key;
+    if (!seen[key]) { seen[key] = 1; items.push({ key: key, vals: vals }); }
+  }
+  return { cols: cols, items: items, perRow: perRow };
+}
+
+/** Apply cached answers to the table. Never calls the API. */
+function runAiStep(table, node) {
+  const outs = aiOutputs(node);
+  if (!outs.length) throw new Error('Add at least one output field.');
+  const work = aiWorkItems(node, table);
+  if (!work.cols.length) throw new Error('Choose at least one field for Claude to read.');
+  // answers only count while the settings that produced them are unchanged
+  const cache = (node.config.cacheSig === configSig(node)) ? (node.config.cache || {}) : {};
+  const names = [];
+  const existing = fieldNames(table.fields).slice();
+  outs.forEach((o) => { const nm = dedupeName(o.name, existing); existing.push(nm); names.push(nm); });
+  const rows = table.rows.map((r, i) => {
+    const o = {};
+    for (const k in r) o[k] = r[k];
+    const hit = cache[work.perRow[i]];
+    outs.forEach((out, j) => { o[names[j]] = hit ? coerce(hit[out.name], out.type === 'number' ? 'number' : 'string') : null; });
+    return o;
+  });
+  const fields = cloneFields(table.fields).concat(outs.map((o, j) => ({ name: names[j], type: o.type === 'number' ? 'number' : 'string' })));
+  node.config.pending = work.items.filter((it) => !cache[it.key]).length;
+  node.config.total = work.items.length;
+  return { fields: fields, rows: rows };
+}
+
+/* ----------------------------- the run -------------------------------- */
+let aiRun = null;     // { cancel: AbortController, done, total }
+
+async function runAiNode(nodeId, opts) {
+  opts = opts || {};
+  const node = getNode(nodeId);
+  if (!node) return;
+  if (!hasApiKey()) { openAiSettings(); return; }
+  const src = (node.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  if (!table) { toast('Connect an input first', 'err'); return; }
+
+  const sig = configSig(node);
+  if (node.config.cacheSig !== sig) { node.config.cache = {}; node.config.cacheSig = sig; }
+  const cache = node.config.cache = node.config.cache || {};
+  const work = aiWorkItems(node, table);
+  const todo = work.items.filter((it) => !cache[it.key]);
+  if (!todo.length) { toast('Everything is already processed', 'ok'); refresh(); return; }
+
+  const model = node.config.model || 'claude-opus-5';
+  const size = clamp(parseInt(node.config.batch, 10) || 25, 1, 200);
+  const batches = [];
+  for (let i = 0; i < todo.length; i += size) batches.push(todo.slice(i, i + size));
+
+  const ctrl = new AbortController();
+  aiRun = { ctrl: ctrl, done: 0, total: batches.length, items: todo.length, node: nodeId, failed: 0 };
+  setAiRunUI();
+
+  const system = aiSystemPrompt(node);
+  const schema = aiSchema(node);
+  const outs = aiOutputs(node);
+  let firstError = null;
+
+  const runBatch = async (batch) => {
+    const payload = batch.map((it, idx) => Object.assign({ i: idx }, it.vals));
+    const body = {
+      model: model,
+      max_tokens: 16000,
+      system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+      output_config: { format: { type: 'json_schema', schema: schema }, effort: node.config.effort || 'low' },
+      messages: [{ role: 'user', content: 'Here are the items:\n\n' + JSON.stringify(payload) }]
+    };
+    const json = await callClaude(body, { signal: ctrl.signal });
+    addSpend(node, json.usage, model);
+    const parsed = responseJSON(json);
+    const results = (parsed && parsed.results) || [];
+    let got = 0;
+    results.forEach((r) => {
+      const item = batch[r && typeof r.i === 'number' ? r.i : -1];
+      if (!item) return;
+      const rec = {};
+      outs.forEach((o) => { rec[o.name] = r[o.name]; });
+      cache[item.key] = rec;
+      got++;
+    });
+    if (got < batch.length) aiRun.failed += batch.length - got;
+  };
+
+  const queue = batches.slice();
+  const workers = new Array(Math.min(3, queue.length)).fill(0).map(async () => {
+    while (queue.length) {
+      if (ctrl.signal.aborted) return;
+      const b = queue.shift();
+      try { await runBatch(b); }
+      catch (e) {
+        if (e && e.name === 'AbortError') return;
+        if (!firstError) firstError = e.message || String(e);
+        aiRun.failed += b.length;
+      }
+      aiRun.done++;
+      setAiRunUI();
+    }
+  });
+  await Promise.all(workers);
+
+  const cancelled = ctrl.signal.aborted;
+  const failed = aiRun.failed;
+  aiRun = null;
+  setAiRunUI();
+  markDirty();
+  refresh();
+
+  if (cancelled) toast('Stopped — answers received so far are kept', '', 3500);
+  else if (firstError) toast('Finished with errors: ' + firstError, 'err', 8000);
+  else toast('Processed ' + fmtInt(todo.length - failed) + ' values · ' + fmtCost(node.config.spend) + ' spent on this step so far', 'ok', 5000);
+}
+
+function setAiRunUI() {
+  const bar = $('#aiProgress');
+  if (!bar) return;
+  if (!aiRun) { bar.classList.remove('show'); renderInspector(); return; }
+  bar.classList.add('show');
+  $('#aiProgressText').textContent = 'Claude: batch ' + (aiRun.done + 1) + ' of ' + aiRun.total +
+    ' (' + fmtInt(aiRun.items) + ' values)';
+  $('#aiProgressFill').style.width = Math.round(aiRun.done / aiRun.total * 100) + '%';
+}
+function cancelAiRun() { if (aiRun) aiRun.ctrl.abort(); }
+
+/* --------------------------- Claude settings -------------------------- */
+function openAiSettings() {
+  const body = el('div');
+  body.appendChild(el('p', { class: 'hint', html:
+    'AI steps call the Claude API straight from this page using your own key. ' +
+    'Create one at <b>console.anthropic.com</b> → API keys.' }));
+  const input = el('input', { type: 'text', value: getApiKey(), placeholder: 'sk-ant-…' });
+  input.type = 'password';
+  body.appendChild(labeled('API key', input));
+  const show = el('label', { class: 'chk' });
+  const cb = el('input', { type: 'checkbox' });
+  cb.addEventListener('change', () => { input.type = cb.checked ? 'text' : 'password'; });
+  show.appendChild(cb); show.appendChild(el('span', { text: 'Show the key' }));
+  body.appendChild(show);
+  body.appendChild(el('div', { class: 'warn-msg', style: 'margin-top:.8rem', html:
+    '<b>Where the key lives.</b> It is stored in this browser only and sent directly to api.anthropic.com — it is never written into a saved or exported flow, so sharing a flow does not share your key. ' +
+    'But anyone who can use this browser profile can read it, and usage is billed to your account. Do not paste a key into a shared or public machine.' }));
+  const spend = state.sessionSpend || 0;
+  body.appendChild(el('div', { class: 'hint', style: 'margin-top:.7rem',
+    text: 'Spent in this browser session: ' + fmtCost(spend) + '. The figure comes from the token counts Claude reports on each call.' }));
+  openModal({
+    title: 'Claude settings', body: body, buttons: [
+      { label: 'Remove key', danger: true, fn: () => { setApiKey(''); closeModal(); refresh(); toast('Key removed'); } },
+      { label: 'Cancel', fn: closeModal },
+      { label: 'Save key', primary: true, fn: () => {
+        const v = input.value.trim();
+        if (v && !/^sk-ant-/.test(v)) { toast('That does not look like an Anthropic key (they start with sk-ant-)', 'err', 5000); return; }
+        setApiKey(v); closeModal(); refresh();
+        toast(v ? 'Key saved in this browser' : 'Key removed', 'ok');
+      } }
+    ]
+  });
+}
+
+/* --------------------------- AI step inspector ------------------------ */
+function inspAi(body, n) {
+  const c = n.config;
+  const flds = inputFields(n);
+  const upd = () => { markDirty(); refresh(); };
+
+  if (!hasApiKey()) {
+    const w = el('div', { class: 'warn-msg' });
+    w.appendChild(document.createTextNode('No Claude API key is set yet. '));
+    w.appendChild(el('button', { class: 'btn sm', style: 'margin-top:.4rem', text: 'Add a key', onclick: openAiSettings }));
+    body.appendChild(w);
+  }
+
+  body.appendChild(labeled('What should Claude do?', selectFrom(
+    AI_MODE_ORDER.map((k) => ({ v: k, l: AI_MODES[k].label })), c.mode, (v) => {
+      c.mode = v;
+      if (v === 'classify' && !c.labels) c.labels = [];
+      upd();
+    }), AI_MODES[c.mode] ? AI_MODES[c.mode].blurb : ''));
+
+  body.appendChild(labeled('Fields Claude reads', multiFieldBox(flds, c.columns, (v) => { c.columns = v; upd(); }),
+    'Only these values are sent. Claude sees each distinct combination once, however many rows share it.'));
+
+  /* mode-specific settings */
+  if (c.mode === 'classify') {
+    const ta = el('textarea', { placeholder: 'One category per line, e.g.\nPersonnel\nCapital\nGrants' });
+    ta.value = (c.labels || []).join('\n');
+    ta.addEventListener('input', debounce(() => { c.labels = ta.value.split('\n').map((s) => s.trim()).filter(Boolean); upd(); }, 500));
+    body.appendChild(labeled('Categories', ta, 'The answer is constrained to exactly these values.'));
+    const lab = el('label', { class: 'chk' });
+    const cb = el('input', { type: 'checkbox' }); cb.checked = !!c.allowOther;
+    cb.addEventListener('change', () => { c.allowOther = cb.checked; upd(); });
+    lab.appendChild(cb); lab.appendChild(el('span', { text: 'Allow "Other" when nothing fits' }));
+    body.appendChild(el('div', { class: 'fieldset' }, [lab]));
+    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'category', (v) => { c.outName = v; upd(); })));
+  } else if (c.mode === 'standardize') {
+    const ta = el('textarea', { placeholder: 'Optional: one accepted value per line' });
+    ta.value = c.canon || '';
+    ta.addEventListener('input', debounce(() => { c.canon = ta.value; upd(); }, 500));
+    body.appendChild(labeled('Accepted values (optional)', ta, 'Leave blank to let Claude pick one consistent spelling per group.'));
+    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'standardized', (v) => { c.outName = v; upd(); })));
+  } else if (c.mode === 'score') {
+    const row = el('div', { class: 'row g2' });
+    row.appendChild(labeled('From', numInput(c.min == null ? 1 : c.min, (v) => { c.min = v; upd(); })));
+    row.appendChild(labeled('To', numInput(c.max == null ? 5 : c.max, (v) => { c.max = v; upd(); })));
+    body.appendChild(row);
+    const ta = el('textarea', { placeholder: 'What does a high score mean?' });
+    ta.value = c.rubric || '';
+    ta.addEventListener('input', debounce(() => { c.rubric = ta.value; upd(); }, 500));
+    body.appendChild(labeled('Scale description', ta));
+    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'score', (v) => { c.outName = v; upd(); })));
+  } else if (c.mode === 'summarize') {
+    body.appendChild(labeled('Maximum words', numInput(c.words || 20, (v) => { c.words = v; upd(); })));
+    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'summary', (v) => { c.outName = v; upd(); })));
+  } else if (c.mode === 'extract' || c.mode === 'custom') {
+    if (c.mode === 'custom') {
+      const ta = el('textarea', { placeholder: 'e.g. Decide whether this grant description mentions a matching-funds requirement.' });
+      ta.value = c.instruction || '';
+      ta.addEventListener('input', debounce(() => { c.instruction = ta.value; upd(); }, 500));
+      body.appendChild(labeled('Instruction', ta));
+    }
+    c.fields = c.fields && c.fields.length ? c.fields : [{ name: c.mode === 'custom' ? 'answer' : 'value', type: 'string', desc: '' }];
+    const list = el('div', { class: 'steps' });
+    c.fields.forEach((f, i) => {
+      const box = el('div', { class: 'step open' });
+      const b2 = el('div', { class: 'step-b', style: 'display:block;border-top:none' });
+      const head = el('div', { class: 'row', style: 'margin-bottom:.35rem' });
+      head.appendChild(el('span', { class: 'step-n', text: String(i + 1) }));
+      head.appendChild(el('span', { text: 'Output field', style: 'flex:1;font-size:.75rem;font-weight:600;color:var(--ink)' }));
+      if (c.fields.length > 1) {
+        head.appendChild(el('button', { class: 'icb danger', html: '&times;', onclick: () => { c.fields.splice(i, 1); upd(); } }));
+      }
+      b2.appendChild(head);
+      b2.appendChild(labeled('Name', textInput(f.name, (v) => { f.name = v; upd(); })));
+      b2.appendChild(labeled('What to put in it', textInput(f.desc, (v) => { f.desc = v; upd(); }, 'e.g. the dollar amount mentioned, digits only')));
+      b2.appendChild(labeled('Type', selectFrom([{ v: 'string', l: 'Text' }, { v: 'number', l: 'Number' }], f.type || 'string', (v) => { f.type = v; upd(); })));
+      box.appendChild(b2);
+      list.appendChild(box);
+    });
+    body.appendChild(labeled('Fields to return', list));
+    body.appendChild(el('button', { class: 'btn full', text: '+ Add output field', onclick: () => { c.fields.push({ name: 'field_' + (c.fields.length + 1), type: 'string', desc: '' }); upd(); } }));
+  }
+
+  const notes = el('textarea', { placeholder: 'Optional. e.g. "Treat any spelling of ASU as Arizona State University."' });
+  notes.value = c.notes || '';
+  notes.addEventListener('input', debounce(() => { c.notes = notes.value; upd(); }, 500));
+  body.appendChild(labeled('Extra guidance (optional)', notes));
+
+  /* model and effort */
+  const m = modelInfo(c.model);
+  body.appendChild(labeled('Model', selectFrom(AI_MODELS.map((x) => ({ v: x.id, l: x.label + ' — $' + x.in + '/$' + x.out + ' per Mtok' })), c.model || 'claude-opus-5', (v) => { c.model = v; upd(); }), m.note));
+  body.appendChild(labeled('Effort', selectFrom(EFFORTS, c.effort || 'low', (v) => { c.effort = v; upd(); }),
+    'Low suits labelling and standardising. Raise it for judgement-heavy work.'));
+  body.appendChild(labeled('Values per request', numInput(c.batch || 25, (v) => { c.batch = v; upd(); }),
+    'Smaller batches are more reliable on long text; larger ones are cheaper.'));
+
+  /* run panel */
+  const res = resultOf(n.id);
+  const pending = c.pending || 0, total = c.total || 0;
+  const panel = el('div', { class: 'fieldset', style: 'border-top:1px solid var(--line);padding-top:.8rem' });
+  const stat = el('div', { class: 'hint' });
+  stat.innerHTML = res && res.table
+    ? '<b>' + fmtInt(total - pending) + ' of ' + fmtInt(total) + '</b> distinct values answered' +
+      (pending ? ' · <span style="color:var(--warn)">' + fmtInt(pending) + ' still to do</span>' : ' · up to date') +
+      (c.spend ? '<br>Spent on this step: ' + fmtCost(c.spend) + ' over ' + (c.calls || 0) + ' request' + ((c.calls || 0) === 1 ? '' : 's') : '')
+    : 'Connect an input and pick the fields to read.';
+  panel.appendChild(stat);
+
+  if (pending) {
+    const est = estimateAiCost(n);
+    panel.appendChild(el('div', { class: 'hint', text: 'Next run: about ' + fmtInt(est.requests) + ' request' + (est.requests === 1 ? '' : 's') + ', roughly ' + fmtCost(est.cost) + ' at current prices.' }));
+  }
+  const runRow = el('div', { class: 'row g2', style: 'margin-top:.5rem' });
+  runRow.appendChild(el('button', {
+    class: 'btn primary', text: aiRun ? 'Running…' : (pending ? 'Run Claude on ' + fmtInt(pending) + ' values' : 'Nothing to run'),
+    disabled: (aiRun || !pending) ? 'disabled' : null,
+    onclick: () => runAiNode(n.id)
+  }));
+  runRow.appendChild(el('button', {
+    class: 'btn', text: 'Clear answers', disabled: Object.keys(c.cache || {}).length ? null : 'disabled',
+    onclick: () => {
+      if (!confirm('Discard the answers cached for this step? They would have to be paid for again.')) return;
+      c.cache = {}; c.spend = 0; c.calls = 0; upd();
+    }
+  }));
+  panel.appendChild(runRow);
+  body.appendChild(panel);
+  body.appendChild(el('div', { class: 'hint', text: 'Answers are cached per distinct value and saved with the flow, so re-running the flow never re-bills. Changing the settings above clears the cache.' }));
+}
+
+function estimateAiCost(n) {
+  const c = n.config;
+  const src = (n.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  if (!table) return { requests: 0, cost: 0 };
+  const work = aiWorkItems(n, table);
+  const cache = c.cache || {};
+  const todo = work.items.filter((it) => !cache[it.key]);
+  const size = clamp(parseInt(c.batch, 10) || 25, 1, 200);
+  const requests = Math.ceil(todo.length / size);
+  const sysTok = estTokens(aiSystemPrompt(n)) + estTokens(JSON.stringify(aiSchema(n)));
+  const itemTok = todo.length ? estTokens(todo.slice(0, 50).map((t) => JSON.stringify(t.vals)).join('')) / Math.min(50, todo.length) : 0;
+  const inTok = requests * sysTok + todo.length * itemTok;
+  const outTok = todo.length * 30 + requests * 120;
+  return { requests: requests, cost: costOf(c.model || 'claude-opus-5', inTok, outTok) };
+}
+
+/* ------------------- assistant: suggest cleaning steps ---------------- */
+const STEP_OPS_FOR_AI = ['rename', 'retype', 'drop', 'calc', 'clean', 'replace', 'split', 'fillna', 'dropna', 'dedupe', 'sort'];
+
+async function suggestSteps(node) {
+  if (!hasApiKey()) { openAiSettings(); return; }
+  const src = (node.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  if (!table) { toast('Connect an input first', 'err'); return; }
+  const profile = table.fields.map((f) => {
+    const p = profileColumn(table, f);
+    const top = p.top.slice(0, 5).map((e) => String(display(e.v, f.type)).slice(0, 40));
+    return {
+      name: f.name, type: f.type, nulls: p.nulls, distinct: p.distinct,
+      examples: top,
+      min: p.min != null ? display(p.min, f.type) : undefined,
+      max: p.max != null ? display(p.max, f.type) : undefined
+    };
+  });
+  const schema = {
+    type: 'object', additionalProperties: false, required: ['steps'],
+    properties: {
+      steps: {
+        type: 'array',
+        items: {
+          type: 'object', additionalProperties: false,
+          required: ['op', 'why', 'column'],
+          properties: {
+            op: { type: 'string', enum: STEP_OPS_FOR_AI },
+            column: { type: 'string', description: 'The field this acts on; empty string when not applicable' },
+            why: { type: 'string', description: 'One sentence on what this fixes' },
+            to: { type: 'string', description: 'New name for rename, or target type for retype' },
+            ops: { type: 'string', description: 'For clean: comma list of trim, squash, upper, lower, proper, punct, accents' },
+            find: { type: 'string' }, replace: { type: 'string' },
+            name: { type: 'string', description: 'For calc: the new field name' },
+            expr: { type: 'string', description: 'For calc: the expression' },
+            value: { type: 'string', description: 'For fillna: the fill value' }
+          }
+        }
+      }
+    }
+  };
+  const btn = $('#btnSuggest');
+  if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
+  try {
+    const json = await callClaude({
+      model: 'claude-opus-5',
+      max_tokens: 16000,
+      system: [{ type: 'text', text:
+        'You advise on preparing a dataset inside a visual data prep tool. You are given a column profile, not the data itself. ' +
+        'Suggest at most six concrete cleaning steps that are clearly justified by the profile — messy casing or whitespace, wrong types, nulls that need filling or dropping, obvious duplicates, a derived field that is plainly useful. ' +
+        'Only reference fields that exist. Do not suggest a step just to have one; fewer, well-founded suggestions are better. ' +
+        'For calc expressions the language has [Field] references, + - * / %, comparisons, AND/OR/NOT, and functions including IF, IFNULL, ROUND, ABS, UPPER, LOWER, PROPER, TRIM, LEN, LEFT, RIGHT, CONTAINS, REPLACE, CONCAT, YEAR, MONTH, DAY, DATEDIFF, NUMBER, STRING.' }],
+      output_config: { format: { type: 'json_schema', schema: schema }, effort: 'medium' },
+      messages: [{ role: 'user', content: 'Column profile for a table of ' + table.rows.length + ' rows:\n\n' + JSON.stringify(profile, null, 1) }]
+    });
+    const u = json.usage || {};
+    state.sessionSpend = (state.sessionSpend || 0) + costOf('claude-opus-5', u.input_tokens || 0, u.output_tokens || 0);
+    const out = responseJSON(json);
+    showSuggestions(node, (out && out.steps) || []);
+  } catch (e) {
+    toast(e.message, 'err', 8000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Suggest steps with Claude'; }
+  }
+}
+
+function showSuggestions(node, steps) {
+  const body = el('div');
+  if (!steps.length) {
+    body.appendChild(el('p', { class: 'hint', text: 'Claude did not find anything worth changing in this table.' }));
+  }
+  steps.filter((s) => aiSuggestionToStep(s)).forEach((s) => {
+    const row = el('div', { class: 'saved-row' });
+    const t = el('div', { class: 't' });
+    t.appendChild(el('b', { text: (STEP_DEFS[s.op] ? STEP_DEFS[s.op].label : s.op) + (s.column ? ' — ' + s.column : '') }));
+    t.appendChild(el('span', { text: s.why || '' }));
+    row.appendChild(t);
+    row.appendChild(el('button', {
+      class: 'btn sm primary', text: 'Add',
+      onclick: (e) => {
+        const step = aiSuggestionToStep(s);
+        if (!step) { toast('That suggestion could not be turned into a step', 'err'); return; }
+        node.config.steps = node.config.steps || [];
+        node.config.steps.push(step);
+        state.openStep = step.id;
+        markDirty(); refresh();
+        e.target.textContent = 'Added';
+        e.target.disabled = true;
+      }
+    }));
+    body.appendChild(row);
+  });
+  body.appendChild(el('div', { class: 'hint', style: 'margin-top:.8rem', text: 'Suggestions come from the column profile — field names, types, null counts and the commonest values — not from the whole table. Check each one before trusting it.' }));
+  openModal({ title: 'Suggested steps', body: body, buttons: [{ label: 'Done', primary: true, fn: closeModal }] });
+}
+
+function aiSuggestionToStep(s) {
+  const base = { id: uid('s'), op: s.op };
+  switch (s.op) {
+    case 'rename': return Object.assign(base, { column: s.column, to: s.to || s.column });
+    case 'retype': return Object.assign(base, { column: s.column, to: TYPES.indexOf(s.to) >= 0 ? s.to : 'string' });
+    case 'drop': return Object.assign(base, { columns: [s.column] });
+    case 'clean': return Object.assign(base, { column: s.column, ops: String(s.ops || 'trim').split(',').map((x) => x.trim()).filter(Boolean) });
+    case 'replace': return Object.assign(base, { column: s.column, find: s.find || '', to: s.replace || '', mode: 'contains' });
+    case 'split': return Object.assign(base, { column: s.column, delim: s.find || ',', parts: 2, keep: false });
+    case 'fillna': return Object.assign(base, { column: s.column, mode: 'value', value: s.value == null ? '' : s.value });
+    case 'dropna': return Object.assign(base, { columns: s.column ? [s.column] : [], mode: 'any' });
+    case 'dedupe': return Object.assign(base, { columns: [] });
+    case 'sort': return Object.assign(base, { column: s.column, dir: 'asc' });
+    case 'calc': return Object.assign(base, { name: s.name || 'new_field', expr: s.expr || '' });
+    default: return null;
+  }
+}
+
+/* ----------------- assistant: describe a calculation ------------------ */
+function writeExpression(step, fields, onDone) {
+  if (!hasApiKey()) { openAiSettings(); return; }
+  const body = el('div');
+  body.appendChild(el('p', { class: 'hint', text: 'Describe the calculation in plain words. Claude writes it in this tool\'s expression language, and it is checked against your fields before being inserted.' }));
+  const ta = el('textarea', { placeholder: 'e.g. the actual spend as a percentage of the budget, rounded to one decimal', style: 'min-height:80px' });
+  ta.value = step.aiAsk || '';
+  body.appendChild(labeled('What should it work out?', ta));
+  body.appendChild(el('div', { class: 'hint', text: 'Fields available: ' + fields.map((f) => f.name).join(', ') }));
+  const go = async () => {
+    const want = ta.value.trim();
+    if (!want) { toast('Describe the calculation first', 'err'); return; }
+    step.aiAsk = want;
+    const btn = $$('.modal-f .btn')[1];
+    if (btn) { btn.disabled = true; btn.textContent = 'Asking Claude…'; }
+    const ok = await askForExpression(want, fields);
+    if (btn) { btn.disabled = false; btn.textContent = 'Ask Claude'; }
+    if (ok) { closeModal(); onDone(ok.expression, ok.explanation); }
+  };
+  openModal({
+    title: 'Write a calculation with Claude', body: body,
+    buttons: [{ label: 'Cancel', fn: closeModal }, { label: 'Ask Claude', primary: true, fn: go }]
+  });
+}
+
+async function askForExpression(want, fields) {
+  const schema = {
+    type: 'object', additionalProperties: false, required: ['expression', 'explanation'],
+    properties: {
+      expression: { type: 'string', description: 'The expression, using [Field] references' },
+      explanation: { type: 'string', description: 'One sentence on what it does' }
+    }
+  };
+  try {
+    const json = await callClaude({
+      model: 'claude-opus-5',
+      max_tokens: 16000,
+      system: [{ type: 'text', text:
+        'You write single-line expressions for a data prep tool. Grammar: fields are [Field Name]; operators + - * / % and = != < <= > >= and AND OR NOT; ' +
+        'functions ABS ROUND FLOOR CEILING SQRT POWER LOG EXP MIN MAX SIGN UPPER LOWER PROPER TRIM LEN LEFT RIGHT MID CONTAINS STARTSWITH ENDSWITH REPLACE SPLIT CONCAT FIND REGEXMATCH REGEXEXTRACT YEAR MONTH DAY QUARTER WEEKDAY TODAY DATEDIFF DATEADD DATETRUNC IF IFNULL ISNULL NUMBER STRING DATEVALUE BOOLEAN. ' +
+        'Return only an expression — no assignment, no semicolon. Use only the fields you are given.' }],
+      output_config: { format: { type: 'json_schema', schema: schema }, effort: 'medium' },
+      messages: [{ role: 'user', content: 'Available fields:\n' + fields.map((f) => '[' + f.name + '] (' + f.type + ')').join('\n') + '\n\nWrite an expression that: ' + want }]
+    });
+    const u2 = json.usage || {};
+    state.sessionSpend = (state.sessionSpend || 0) + costOf('claude-opus-5', u2.input_tokens || 0, u2.output_tokens || 0);
+    const out = responseJSON(json);
+    if (!out.expression) throw new Error('No expression came back.');
+    try { compileExpr(out.expression, fields.map((f) => f.name)); }
+    catch (e) {
+      toast('Claude suggested "' + out.expression + '" but it does not compile: ' + e.message, 'err', 9000);
+      return null;
+    }
+    return out;
+  } catch (e) {
+    toast(e.message, 'err', 8000);
+    return null;
+  }
+}
+
+/* =====================================================================
    Saving, loading, import / export
    ===================================================================== */
 const STORE_KEY = 'dps.flows.v1';
@@ -4699,8 +5469,20 @@ function openHelp(section) {
     '<li><b>Join</b> matches rows across two inputs on one or more key pairs, with inner, left, right, full outer, left-only, and semi-join options.</li>' +
     '<li><b>Union</b> stacks two or more inputs, aligning fields by name and filling gaps with nulls.</li>' +
     '<li><b>Pivot</b> reshapes between wide and long layouts in either direction.</li>' +
+    '<li><b>Claude</b> sends values to the Claude API and writes the answers back as new fields &mdash; see below.</li>' +
     '<li><b>Output</b> marks a result you want to export as CSV, TSV, or JSON.</li>' +
     '</ul>' +
+    '<h4>Claude steps</h4>' +
+    '<p>A <b>Claude</b> step reads the fields you choose and adds fields holding the model\'s answers. Six modes: <b>classify</b> into categories you define (the answer is constrained to exactly those values), <b>extract</b> named pieces out of free text, <b>standardise</b> messy values onto one canonical form, <b>score</b> on a scale you describe, <b>summarise</b>, and a <b>custom instruction</b> with output fields you name.</p>' +
+    '<p>Three things keep it predictable and cheap:</p>' +
+    '<ul>' +
+    '<li><b>It never runs on its own.</b> Editing a step, or running the flow, does not call the API. Only the step\'s own Run button does, and it tells you how many values and roughly what it will cost first.</li>' +
+    '<li><b>It works on distinct values, not rows.</b> Twenty thousand rows with fifty distinct agency names cost fifty answers, not twenty thousand.</li>' +
+    '<li><b>Answers are cached and saved with the flow.</b> Re-running the flow re-bills nothing. Changing the step\'s settings clears the cache, because the old answers no longer match the question.</li>' +
+    '</ul>' +
+    '<p>The model defaults to Claude Opus 5; Sonnet and Haiku are cheaper options in the picker, with prices shown. Effort defaults to low, which suits labelling and standardising &mdash; raise it for judgement-heavy extraction or summarising. The step reports what it actually spent, taken from the token counts the API returns.</p>' +
+    '<p>Claude also helps you build the flow rather than transform it: <b>Suggest steps with Claude</b> in a Clean step proposes cleaning operations from the column profile (field names, types, null counts, commonest values &mdash; not the whole table), and <b>Write it with Claude</b> in a calculated field turns a plain-English description into an expression, which is compiled against your fields before it is inserted.</p>' +
+    '<p><b>Your API key</b> is stored in this browser only and sent directly to api.anthropic.com. It is never written into a saved or exported flow, so sharing a flow shares the steps and the cached answers but not your key. Anyone who can use this browser profile can read it, and usage bills to your account &mdash; so do not paste a key into a shared machine. Set or remove it under <b>Claude settings</b>.</p>' +
     '<h4>Reading the panel below</h4>' +
     '<p><b>Profile</b> shows each field with its type, distinct and null counts, a distribution, and summary statistics. Clicking a value in a profile bar adds a filter for it. <b>Data</b> is the first few hundred rows of the selected step. <b>Log</b> shows what each step produced and how long it took.</p>' +
     '<h4>Saving your work</h4>' +
@@ -4771,6 +5553,7 @@ function initTopbar() {
   $('#btnRun').addEventListener('click', () => runFlowWithSources(false));
   $('#btnRefresh').addEventListener('click', () => runFlowWithSources(true));
   $('#btnTidy').addEventListener('click', tidyLayout);
+  $('#btnAiSettings').addEventListener('click', openAiSettings);
 
   $('#filePicker').addEventListener('change', function () {
     if (this.files && this.files.length) handleFiles(this.files);
@@ -4808,6 +5591,7 @@ function initTopbar() {
       { label: 'New flow', fn: newFlowPrompt },
       '-',
       { label: 'Load sample data', fn: () => { loadSampleData(); refresh(); toast('Sample tables added', 'ok'); } },
+      { label: 'Claude settings…', fn: openAiSettings },
       { label: 'How this works', fn: () => openHelp() }
     ]);
   });
@@ -4870,6 +5654,7 @@ function initCanvas() {
     $('#inspName').focus(); $('#inspName').select();
   });
   $('#linkHintCancel').addEventListener('click', clearPendingLink);
+  $('#aiCancel').addEventListener('click', cancelAiRun);
   $('#canvasHint').textContent = isCoarse()
     ? 'Drag to pan · pinch to zoom · tap a dot then a step to connect · long-press for options'
     : "Drag from a node's right dot to connect · scroll to zoom · right-click a node for options";
