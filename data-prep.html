@@ -367,7 +367,29 @@ select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%
 }
 .cat-row:hover{background:var(--accent-soft)}
 .cat-row.on{background:var(--accent-soft);color:var(--accent-dk);font-weight:600}
-.cat-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-lbl{flex:1;min-width:0;overflow:hidden}
+.cat-lbl b{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-row.on .cat-lbl b{font-weight:700}
+.cat-sub{display:block;font-size:.625rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-step{border-left:2px solid var(--line);padding:0 0 .9rem .7rem;margin-bottom:.2rem}
+.ai-step-h{display:flex;align-items:center;gap:.45rem;margin:0 0 .5rem -1.45rem}
+.ai-num{
+  width:20px;height:20px;flex:0 0 20px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:.6875rem;font-weight:700;display:grid;place-items:center;
+}
+.ai-title{font-size:.8125rem;font-weight:600;color:var(--ink)}
+.ai-step .hint{margin-top:0;margin-bottom:.45rem}
+.ai-step .fieldset:last-child{margin-bottom:0}
+ul.blockers{margin:.3rem 0 0 .9rem;padding:0}
+ul.blockers li{font-size:.75rem;line-height:1.55}
+pre.promptview{
+  white-space:pre-wrap;font-family:var(--mono);font-size:.6875rem;line-height:1.5;color:var(--body);
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs);padding:.5rem;max-height:220px;overflow:auto;
+}
+.facets{display:flex;gap:.4rem;margin-bottom:.35rem;flex-wrap:wrap}
+.facets .fieldset{flex:1 1 150px;margin-bottom:0}
+.facets label{font-size:.625rem;margin-bottom:.15rem}
+.facets select{font-size:.75rem;padding:.28rem .4rem;padding-right:1.3rem}
 .cat-tick{color:var(--accent);font-weight:700}
 button.linkish{background:none;border:none;color:var(--accent);cursor:pointer;font:inherit;text-decoration:underline;padding:0}
 details.adv{border:1px solid var(--line);border-radius:var(--r-sm);padding:.4rem .55rem;margin-bottom:.9rem;background:var(--surface-2)}
@@ -2634,6 +2656,10 @@ function initPalette() {
       const n = addNode(type, spot.x, spot.y);
       if (state.selected && canConnect(state.selected, n.id) === null) connect(state.selected, n.id);
       select(n.id); refresh(); ensureVisible(n);
+      if (n.type === 'ai' && !(n.config.columns || []).length) {
+        const guess = aiDefaultColumns(n);
+        if (guess.length) { n.config.columns = guess; refresh(); }
+      }
       if (isMobile()) setView('step');
     });
     pal.appendChild(b);
@@ -3784,6 +3810,21 @@ function openAddData() {
   body.appendChild(paneFile);
 
   paneLink.appendChild(el('p', { class: 'hint', text: 'Point an input at a live source — a CSV or JSON link, an open data portal, or an API. The flow can re-pull it every time you run.' }));
+  const recent = recentSources();
+  if (recent.length) {
+    paneLink.appendChild(el('div', { class: 'flabel', style: 'margin-top:.6rem', text: 'Connect again' }));
+    recent.forEach((r) => {
+      const b = el('button', {
+        class: 'btn full', style: 'justify-content:flex-start;text-align:left;margin-top:.3rem',
+        title: buildConnectionUrl(r.conn),
+        onclick: () => { closeModal(); openConnectionEditor(null, r.conn); }
+      });
+      b.appendChild(el('span', { style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis', text: r.name }));
+      b.appendChild(el('span', { style: 'font-size:.6875rem;color:var(--muted);font-weight:400', text: (SOURCE_PRESETS[r.preset] ? SOURCE_PRESETS[r.preset].label.split(' (')[0] : r.preset) }));
+      paneLink.appendChild(b);
+    });
+    paneLink.appendChild(el('div', { class: 'flabel', style: 'margin-top:1rem', text: 'Start a new connection' }));
+  }
   PRESET_ORDER.forEach((k) => {
     const p = SOURCE_PRESETS[k];
     paneLink.appendChild(el('button', {
@@ -4295,12 +4336,22 @@ function setFetchingUI(on, n) {
 }
 
 /* --------------------------- connection editor ------------------------ */
+const RECENT_KEY = 'dps.recent.v1';
+function recentSources() { return lsGet(RECENT_KEY) || []; }
+function rememberSource(name, conn) {
+  const list = recentSources().filter((r) => buildConnectionUrl(r.conn) !== buildConnectionUrl(conn));
+  list.unshift({ name: name, preset: conn.preset, conn: conn, at: Date.now() });
+  lsSet(RECENT_KEY, list.slice(0, 8));
+}
+
 function openConnectionEditor(dsId, startPreset) {
   const existing = dsId ? state.flow.datasets[dsId] : null;
   const conn = existing && existing.connection
     ? JSON.parse(JSON.stringify(existing.connection))
-    : { preset: startPreset || 'url', format: 'auto', jsonPath: '', limit: 5000, proxy: false, proxyUrl: DEFAULT_PROXY, timeout: 45 };
-  if (!existing && startPreset && SOURCE_PRESETS[startPreset]) {
+    : (startPreset && typeof startPreset === 'object'
+      ? JSON.parse(JSON.stringify(startPreset))
+      : { preset: startPreset || 'url', format: 'auto', jsonPath: '', limit: 5000, proxy: false, proxyUrl: DEFAULT_PROXY, timeout: 45 });
+  if (!existing && typeof startPreset === 'string' && SOURCE_PRESETS[startPreset]) {
     conn.format = SOURCE_PRESETS[startPreset].format || 'auto';
     conn.jsonPath = SOURCE_PRESETS[startPreset].jsonPath || '';
   }
@@ -4491,6 +4542,7 @@ function openConnectionEditor(dsId, startPreset) {
       closeModal(); markDirty(); refresh();
       toast('Connection updated', 'ok');
     } else {
+      rememberSource(finalName, clean);
       const id = addDataset(finalName, lastTable, shortUrl(buildConnectionUrl(conn)));
       const ds = state.flow.datasets[id];
       ds.connection = clean;
@@ -4574,6 +4626,7 @@ const CATALOGS = {
     return list.filter((d) => d && d.c_dataset && d.c_vintage).map((d) => ({
       id: d.c_dataset.join('/'), vintage: d.c_vintage, title: d.title || d.c_dataset.join('/'),
       label: (d.title || d.c_dataset.join('/')) + ' — ' + d.c_vintage,
+      title: d.title || d.c_dataset.join('/'), sub: d.c_dataset.join('/') + '  ·  ' + d.c_vintage,
       search: [d.title, d.c_dataset.join('/'), d.c_vintage, d.description].join(' ').toLowerCase()
     }));
   }),
@@ -4584,8 +4637,13 @@ const CATALOGS = {
       return Object.keys(v).filter((k) => ['for', 'in', 'ucgid'].indexOf(k) < 0).map((k) => {
         const d = v[k] || {};
         const lab = String(d.label || '').replace(/!!/g, ' › ').replace(/^Estimate › /, '');
+        // the E / M / EA / MA suffix convention, read off the ids actually returned
+        const kind = /(EA|MA)$/.test(k) ? 'Annotation' : /M$/.test(k) ? 'Margin of error'
+          : /E$/.test(k) ? 'Estimate' : 'Other';
         return {
-          id: k, label: k + ' — ' + (lab || k), concept: d.concept || '',
+          id: k, title: lab || k, sub: k + (d.concept ? '  ·  ' + d.concept : ''),
+          label: k + ' — ' + (lab || k),
+          concept: d.concept || '', kind: kind,
           search: (k + ' ' + lab + ' ' + (d.concept || '')).toLowerCase()
         };
       });
@@ -4614,10 +4672,15 @@ const CATALOGS = {
     'https://api.us.socrata.com/api/catalog/v1?' + qs({ q: q, domains: domain || '', limit: 40, only: 'dataset' }),
     (j) => (j.results || []).map((r) => {
       const rs = r.resource || {};
+      const dom = (r.metadata && r.metadata.domain) || domain || '';
+      const cat = (r.classification && (r.classification.domain_category || (r.classification.categories || [])[0])) || '';
       return {
-        id: rs.id, label: rs.name || rs.id,
-        domain: (r.metadata && r.metadata.domain) || domain || '',
+        id: rs.id, label: rs.name || rs.id, title: rs.name || rs.id,
+        sub: dom + (cat ? '  ·  ' + cat : ''),
+        category: cat,
+        domain: dom,
         note: (rs.description || '').slice(0, 160),
+        search: ((rs.name || '') + ' ' + (rs.description || '') + ' ' + dom + ' ' + cat).toLowerCase(),
         columns: (rs.columns_field_name || []).map((f, i) => ({
           id: f, label: f + (rs.columns_name && rs.columns_name[i] ? ' — ' + rs.columns_name[i] : '') +
             (rs.columns_datatype && rs.columns_datatype[i] ? ' (' + rs.columns_datatype[i] + ')' : '')
@@ -4649,55 +4712,123 @@ const CATALOGS = {
 
 /* --------------------------- picker widgets --------------------------- */
 /** A searchable list with single or multiple selection, fed from a catalogue. */
+/** Rank matches so the obvious answer comes first, not just any substring hit. */
+function rankRows(rows, q) {
+  if (!q) return rows;
+  const terms = q.split(/\s+/).filter(Boolean);
+  const scored = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    const hay = r.search || r.label.toLowerCase();
+    let ok = true;
+    for (let t = 0; t < terms.length; t++) { if (hay.indexOf(terms[t]) < 0) { ok = false; break; } }
+    if (!ok) continue;
+    const id = String(r.id).toLowerCase();
+    // score against the human-readable title, not the code that prefixes the haystack
+    const title = String(r.title || r.label).toLowerCase();
+    let score = 0;
+    if (id === q) score += 200;
+    else if (id.indexOf(q) === 0) score += 60;
+    const whole = title.indexOf(q);
+    if (whole === 0) score += 40;
+    else if (whole > 0) score += Math.max(6, 24 - whole / 8);
+    for (let t = 0; t < terms.length; t++) {
+      const at = title.indexOf(terms[t]);
+      if (at === 0) score += 6; else if (at > 0) score += 3;
+    }
+    if (/_001E$/.test(r.id)) score += 6;          // the headline total of a Census table
+    score -= Math.min(12, title.length / 25);     // a concise label is usually the one wanted
+    scored.push([score, i, r]);
+  }
+  scored.sort((a, b) => b[0] - a[0] || a[1] - b[1]);
+  return scored.map((x) => x[2]);
+}
+
+/** A searchable, facet-filtered list fed from a catalogue. */
 function catalogPicker(opts) {
-  // opts: { load(), value, multi, onChange, placeholder, label, hint, emptyHint }
+  // opts: { load(), value, multi, onChange, placeholder, label, hint, facets }
   const wrap = el('div', { class: 'fieldset' });
   if (opts.label) wrap.appendChild(el('label', { text: opts.label }));
   const status = el('div', { class: 'hint' });
   const chips = el('div', { class: 'tokenlist' });
+  const facetBox = el('div', { class: 'facets' });
   const search = el('input', { type: 'text', placeholder: opts.placeholder || 'Type to search…' });
-  const list = el('div', { class: 'scrollbox', style: 'max-height:190px;display:none' });
+  const list = el('div', { class: 'scrollbox', style: 'max-height:210px;display:none' });
   const value = () => (opts.multi ? (opts.value || []) : (opts.value ? [opts.value] : []));
+  const facetSel = Object.create(null);
   let rows = null;
 
   function drawChips() {
     chips.innerHTML = '';
     value().forEach((v) => {
       const row = rows ? rows.filter((r) => r.id === v)[0] : null;
-      const t = el('span', { class: 'token', text: row ? row.label.slice(0, 48) : v, title: row ? row.label : v });
+      const t = el('span', { class: 'token', text: row ? row.label.slice(0, 52) : v, title: row ? row.label : v });
       t.appendChild(el('button', {
-        html: '&times;', title: 'Remove', onclick: () => {
-          opts.onChange(opts.multi ? value().filter((x) => x !== v) : '');
-        }
+        html: '&times;', title: 'Remove',
+        onclick: () => opts.onChange(opts.multi ? value().filter((x) => x !== v) : '')
       }));
       chips.appendChild(t);
     });
+  }
+  function buildFacets() {
+    facetBox.innerHTML = '';
+    if (!rows || !opts.facets) return;
+    opts.facets.forEach((f) => {
+      // count against what the OTHER facets leave, so the numbers add up on screen
+      const pool = rows.filter((r) => (opts.facets || []).every((g) =>
+        g.key === f.key || !facetSel[g.key] || String(g.get(r)) === facetSel[g.key]));
+      const counts = new Map();
+      pool.forEach((r) => {
+        const v = f.get(r);
+        if (v == null || v === '') return;
+        counts.set(v, (counts.get(v) || 0) + 1);
+      });
+      if (counts.size < 2 && !facetSel[f.key]) return;   // a facet with one value helps nobody
+      if (facetSel[f.key] === undefined) facetSel[f.key] = f.preferred && counts.has(f.preferred) ? f.preferred : '';
+      const entries = Array.from(counts.entries())
+        .sort((a, b) => (f.sort === 'name' ? String(a[0]).localeCompare(String(b[0])) : b[1] - a[1]));
+      const sel = el('select');
+      sel.appendChild(el('option', { value: '', text: (f.allLabel || 'All') + '  ·  ' + fmtInt(pool.length) }));
+      entries.slice(0, 600).forEach((e) => sel.appendChild(el('option', {
+        value: String(e[0]), text: String(e[0]).slice(0, 70) + '  ·  ' + fmtInt(e[1])
+      })));
+      sel.value = facetSel[f.key];
+      sel.addEventListener('change', () => { facetSel[f.key] = sel.value; buildFacets(); drawList(); });
+      facetBox.appendChild(labeled(f.label, sel));
+    });
+  }
+  function filtered() {
+    let out = rows || [];
+    (opts.facets || []).forEach((f) => {
+      const want = facetSel[f.key];
+      if (want) out = out.filter((r) => String(f.get(r)) === want);
+    });
+    return out;
   }
   function drawList() {
     const q = search.value.trim().toLowerCase();
     list.innerHTML = '';
     if (!rows) { list.style.display = 'none'; return; }
-    const terms = q.split(/\s+/).filter(Boolean);
-    const hits = rows.filter((r) => !terms.length || terms.every((t) => (r.search || r.label.toLowerCase()).indexOf(t) >= 0));
+    const pool = filtered();
     list.style.display = '';
-    hits.slice(0, 150).forEach((r) => {
+    const hits = rankRows(pool, q);
+    hits.slice(0, 120).forEach((r) => {
       const chosen = value().indexOf(r.id) >= 0;
-      const b = el('button', {
-        class: 'cat-row' + (chosen ? ' on' : ''), title: r.note || r.label,
+      const b = el('button', { class: 'cat-row' + (chosen ? ' on' : ''), title: r.note || r.label,
         onclick: () => {
-          if (opts.multi) {
-            opts.onChange(chosen ? value().filter((x) => x !== r.id) : value().concat([r.id]));
-          } else {
-            opts.onChange(r.id);
-          }
-        }
-      });
-      b.appendChild(el('span', { class: 'cat-lbl', text: r.label }));
+          if (opts.multi) opts.onChange(chosen ? value().filter((x) => x !== r.id) : value().concat([r.id]));
+          else opts.onChange(r.id);
+        } });
+      const txt = el('span', { class: 'cat-lbl' });
+      txt.appendChild(el('b', { text: r.title || r.label }));
+      if (r.sub) txt.appendChild(el('span', { class: 'cat-sub', text: r.sub }));
+      b.appendChild(txt);
       if (chosen) b.appendChild(el('span', { class: 'cat-tick', html: '&#10003;' }));
       list.appendChild(b);
     });
-    if (!hits.length) list.appendChild(el('div', { class: 'hint', text: 'Nothing matches "' + q + '".' }));
-    else if (hits.length > 150) list.appendChild(el('div', { class: 'hint', text: 'Showing 150 of ' + fmtInt(hits.length) + ' matches — keep typing to narrow it.' }));
+    if (!hits.length) list.appendChild(el('div', { class: 'hint', text: 'Nothing matches that here. Try fewer words, or clear the filters.' }));
+    else if (hits.length > 120) list.appendChild(el('div', { class: 'hint',
+      text: 'Showing 120 of ' + fmtInt(hits.length) + ' — search, or narrow with the filters above.' }));
   }
   async function load(fresh) {
     status.textContent = 'Loading the list from the provider…';
@@ -4710,7 +4841,7 @@ function catalogPicker(opts) {
         ' · <button class="linkish" type="button">refresh</button>';
       const rb = status.querySelector('button');
       if (rb) rb.addEventListener('click', () => { delete catMem[rec.url]; load(true); });
-      drawChips(); drawList();
+      buildFacets(); drawChips(); drawList();
     } catch (e) {
       rows = null;
       status.innerHTML = '';
@@ -4722,6 +4853,7 @@ function catalogPicker(opts) {
   search.addEventListener('input', debounce(drawList, 160));
   search.addEventListener('focus', drawList);
   wrap.appendChild(chips);
+  wrap.appendChild(facetBox);
   wrap.appendChild(search);
   wrap.appendChild(list);
   wrap.appendChild(status);
@@ -4808,7 +4940,11 @@ const GUIDED = {
       value: Array.isArray(conn.varList) ? conn.varList : [],
       load: () => CATALOGS.censusVariables(conn.year || '2023', conn.path),
       onChange: (v) => { conn.varList = v; redraw(); },
-      hint: 'NAME is added automatically so rows are labelled.'
+      facets: [
+        { key: 'kind', label: 'Show', allLabel: 'Everything', get: (r) => r.kind, preferred: 'Estimate' },
+        { key: 'concept', label: 'Topic', allLabel: 'All topics', sort: 'name', get: (r) => r.concept }
+      ],
+      hint: 'Pick a topic to browse, or search by name. NAME is added automatically so rows are labelled.'
     }));
 
     wrap.appendChild(catalogSelect({
@@ -4898,6 +5034,10 @@ const GUIDED = {
         label: 'Matching datasets',
         placeholder: 'Filter these results',
         value: conn.dataset || '',
+        facets: [
+          { key: 'category', label: 'Category', allLabel: 'All categories', sort: 'name', get: (r) => r.category },
+          { key: 'domain', label: 'Portal', allLabel: 'All portals', get: (r) => r.domain }
+        ],
         load: () => CATALOGS.socrataSearch(conn.searchQ, conn.domain).then((rec) => {
           conn._found = rec.rows;
           return rec;
@@ -5364,65 +5504,368 @@ function openAiSettings() {
 }
 
 /* --------------------------- AI step inspector ------------------------ */
+
+/* --------------- AI step: setup help drawn from the data -------------- */
+/** Distinct sample values from the fields the step reads. */
+function aiSampleValues(node, limit) {
+  const src = (node.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  if (!table) return [];
+  const work = aiWorkItems(node, table);
+  return work.items.slice(0, limit || 40).map((it) => it.vals);
+}
+
+/** Pick a sensible field to read when the step is first added. */
+function aiDefaultColumns(node) {
+  const src = (node.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  if (!table || !table.fields.length) return [];
+  const strings = table.fields.filter((f) => f.type === 'string');
+  if (!strings.length) return [table.fields[0].name];
+  let best = strings[0], bestScore = -1;
+  strings.forEach((f) => {
+    const p = profileColumn(table, f);
+    // prefer a field with variety but not a unique key, and longer text
+    const avgLen = p.top.slice(0, 20).reduce((a, e) => a + String(e.v).length, 0) / Math.max(1, Math.min(20, p.top.length));
+    const ratio = table.rows.length ? p.distinct / table.rows.length : 1;
+    const score = avgLen + (ratio > 0.9 ? -15 : 0) + (p.distinct > 1 ? 5 : -20);
+    if (score > bestScore) { bestScore = score; best = f; }
+  });
+  return [best.name];
+}
+
+const AI_SUGGEST = {
+  classify: {
+    button: 'Suggest categories from the data',
+    schema: { type: 'object', additionalProperties: false, required: ['categories'], properties: {
+      categories: { type: 'array', description: '4 to 8 mutually exclusive category names', items: { type: 'string' } } } },
+    ask: 'Propose 4 to 8 short, mutually exclusive categories that these values naturally fall into. Use the wording an analyst would use, not the raw values.',
+    apply: (c, out) => { c.labels = (out.categories || []).filter(Boolean); }
+  },
+  extract: {
+    button: 'Suggest fields to extract',
+    schema: { type: 'object', additionalProperties: false, required: ['fields'], properties: {
+      fields: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['name', 'desc', 'type'], properties: {
+        name: { type: 'string', description: 'snake_case field name' },
+        desc: { type: 'string', description: 'what to put in it' },
+        type: { type: 'string', enum: ['string', 'number'] } } } } } },
+    ask: 'Propose 2 to 5 fields worth extracting from text like this. Only propose fields that are actually present in these samples.',
+    apply: (c, out) => { c.fields = (out.fields || []).filter((f) => f && f.name); }
+  },
+  standardize: {
+    button: 'Suggest canonical values',
+    schema: { type: 'object', additionalProperties: false, required: ['canonical'], properties: {
+      canonical: { type: 'array', description: 'The canonical spellings these values should collapse to', items: { type: 'string' } } } },
+    ask: 'These values are meant to be the same small set of things, spelled inconsistently. Propose the canonical spelling for each distinct thing you can see.',
+    apply: (c, out) => { c.canon = (out.canonical || []).join('\n'); }
+  },
+  score: {
+    button: 'Suggest a scale',
+    schema: { type: 'object', additionalProperties: false, required: ['rubric', 'min', 'max'], properties: {
+      rubric: { type: 'string', description: 'One or two sentences on what a high score means' },
+      min: { type: 'integer' }, max: { type: 'integer' } } },
+    ask: 'Propose a numeric scale that would be useful to score values like these, and describe what a high score means.',
+    apply: (c, out) => { c.rubric = out.rubric || ''; c.min = out.min; c.max = out.max; }
+  },
+  custom: {
+    button: 'Suggest an instruction',
+    schema: { type: 'object', additionalProperties: false, required: ['instruction', 'fields'], properties: {
+      instruction: { type: 'string' },
+      fields: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['name', 'desc', 'type'], properties: {
+        name: { type: 'string' }, desc: { type: 'string' }, type: { type: 'string', enum: ['string', 'number'] } } } } } },
+    ask: 'Propose one useful thing to ask about values like these, and the output fields it should return.',
+    apply: (c, out) => { c.instruction = out.instruction || ''; c.fields = (out.fields || []).filter((f) => f && f.name); }
+  }
+};
+
+async function suggestAiSetup(node, btn) {
+  const def = AI_SUGGEST[node.config.mode];
+  if (!def) return;
+  if (!hasApiKey()) { openAiSettings(); return; }
+  const samples = aiSampleValues(node, 40);
+  if (!samples.length) { toast('Choose the fields to read first', 'err'); return; }
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Looking at the data…';
+  try {
+    const json = await callClaude({
+      model: 'claude-opus-5', max_tokens: 16000,
+      system: [{ type: 'text', text:
+        'You are helping set up a step in a data preparation tool. You are shown a sample of the distinct values it will process. ' +
+        def.ask + ' Base your answer only on the samples given.' }],
+      output_config: { format: { type: 'json_schema', schema: def.schema }, effort: 'medium' },
+      messages: [{ role: 'user', content: 'Sample values:\n\n' + JSON.stringify(samples, null, 1) }]
+    });
+    const u = json.usage || {};
+    state.sessionSpend = (state.sessionSpend || 0) + costOf('claude-opus-5', u.input_tokens || 0, u.output_tokens || 0);
+    def.apply(node.config, responseJSON(json));
+    markDirty(); refresh();
+    toast('Filled in from your data — edit anything that looks off', 'ok', 5000);
+  } catch (e) {
+    toast(e.message, 'err', 8000);
+  } finally {
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
+/** What is stopping this step from running? */
+function aiBlockers(node) {
+  const c = node.config, out = [];
+  if (!(node.inputs || []).length) out.push('Connect a step into this one.');
+  if (!(c.columns || []).length) out.push('Choose at least one field for Claude to read.');
+  if (c.mode === 'classify' && !(c.labels || []).filter(Boolean).length) out.push('List the categories to sort values into.');
+  if (c.mode === 'custom' && !String(c.instruction || '').trim()) out.push('Write the instruction Claude should follow.');
+  if ((c.mode === 'extract' || c.mode === 'custom') && !(c.fields || []).filter((f) => f && f.name).length) out.push('Name at least one field to return.');
+  if (!hasApiKey()) out.push('Add your Claude API key.');
+  return out;
+}
+
+/** Run the step over a handful of values so the settings can be judged cheaply. */
+async function previewAiStep(node, btn) {
+  const src = (node.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  if (!table) return;
+  const sig = configSig(node);
+  if (node.config.cacheSig !== sig) { node.config.cache = {}; node.config.cacheSig = sig; }
+  const cache = node.config.cache;
+  const work = aiWorkItems(node, table);
+  const todo = work.items.filter((it) => !cache[it.key]).slice(0, 5);
+  if (!todo.length) { toast('Everything is already answered — nothing to preview', 'ok'); return; }
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Previewing…';
+  const outs = aiOutputs(node);
+  try {
+    const json = await callClaude({
+      model: node.config.model || 'claude-opus-5', max_tokens: 16000,
+      system: [{ type: 'text', text: aiSystemPrompt(node), cache_control: { type: 'ephemeral' } }],
+      output_config: { format: { type: 'json_schema', schema: aiSchema(node) }, effort: node.config.effort || 'low' },
+      messages: [{ role: 'user', content: 'Here are the items:\n\n' +
+        JSON.stringify(todo.map((it, i) => Object.assign({ i: i }, it.vals))) }]
+    });
+    addSpend(node, json.usage, node.config.model || 'claude-opus-5');
+    const parsed = responseJSON(json);
+    (parsed.results || []).forEach((r) => {
+      const item = todo[r && typeof r.i === 'number' ? r.i : -1];
+      if (!item) return;
+      const rec = {};
+      outs.forEach((o) => { rec[o.name] = r[o.name]; });
+      cache[item.key] = rec;
+    });
+    markDirty(); refresh();
+    showAiPreview(node, todo, outs);
+  } catch (e) {
+    toast(e.message, 'err', 8000);
+  } finally {
+    btn.disabled = false; btn.textContent = old;
+  }
+}
+
+function showAiPreview(node, items, outs) {
+  const cache = node.config.cache || {};
+  const body = el('div');
+  body.appendChild(el('p', { class: 'hint', text: 'These answers are kept, so the full run has ' + items.length + ' fewer values to do. If they look wrong, change the settings and preview again.' }));
+  const scroll = el('div', { style: 'overflow:auto;max-height:340px;border:1px solid var(--line);border-radius:var(--r-sm)' });
+  const t = el('table', { class: 'grid' });
+  const thead = el('thead'), tr = el('tr');
+  (node.config.columns || []).forEach((c) => tr.appendChild(el('th', { text: c })));
+  outs.forEach((o) => tr.appendChild(el('th', { text: '→ ' + o.name })));
+  thead.appendChild(tr); t.appendChild(thead);
+  const tb = el('tbody');
+  items.forEach((it) => {
+    const row = el('tr');
+    (node.config.columns || []).forEach((c) => row.appendChild(el('td', { text: String(it.vals[c] == null ? '' : it.vals[c]).slice(0, 90) })));
+    const got = cache[it.key] || {};
+    outs.forEach((o) => row.appendChild(el('td', {
+      text: got[o.name] == null ? '—' : String(got[o.name]),
+      style: 'font-weight:600;color:var(--ink)'
+    })));
+    tb.appendChild(row);
+  });
+  t.appendChild(tb); scroll.appendChild(t);
+  body.appendChild(scroll);
+  openModal({ title: 'Preview of Claude\'s answers', body: body, wide: true, buttons: [{ label: 'Close', primary: true, fn: closeModal }] });
+}
+
+/* --------------------------- AI step inspector ------------------------ */
+function aiSection(nnum, title, note) {
+  const d = el('div', { class: 'ai-step' });
+  const h = el('div', { class: 'ai-step-h' });
+  h.appendChild(el('span', { class: 'ai-num', text: String(nnum) }));
+  h.appendChild(el('span', { class: 'ai-title', text: title }));
+  d.appendChild(h);
+  if (note) d.appendChild(el('div', { class: 'hint', text: note }));
+  return d;
+}
+
 function inspAi(body, n) {
   const c = n.config;
   const flds = inputFields(n);
   const upd = () => { markDirty(); refresh(); };
 
+  body.appendChild(el('p', { class: 'hint', style: 'margin-top:0',
+    text: 'Claude reads the fields you pick and writes its answers into new fields. It only runs when you press the button at the bottom.' }));
+
   if (!hasApiKey()) {
     const w = el('div', { class: 'warn-msg' });
-    w.appendChild(document.createTextNode('No Claude API key is set yet. '));
+    w.appendChild(document.createTextNode('This step needs your Claude API key — it is the one thing you have to supply. '));
     w.appendChild(el('button', { class: 'btn sm', style: 'margin-top:.4rem', text: 'Add a key', onclick: openAiSettings }));
     body.appendChild(w);
   }
 
-  body.appendChild(labeled('What should Claude do?', selectFrom(
-    AI_MODE_ORDER.map((k) => ({ v: k, l: AI_MODES[k].label })), c.mode, (v) => {
-      c.mode = v;
-      if (v === 'classify' && !c.labels) c.labels = [];
-      upd();
-    }), AI_MODES[c.mode] ? AI_MODES[c.mode].blurb : ''));
+  /* 1 — fields to read */
+  const s1 = aiSection(1, 'Which fields should Claude read?',
+    'Only these values are sent. Each distinct combination is sent once, however many rows share it.');
+  if (!flds.length) {
+    s1.appendChild(el('div', { class: 'empty-steps', text: 'Connect a step into this one first.' }));
+  } else {
+    s1.appendChild(multiFieldBox(flds, c.columns, (v) => { c.columns = v; upd(); }));
+    if (!(c.columns || []).length) {
+      s1.appendChild(el('button', {
+        class: 'btn sm full', style: 'margin-top:.4rem', text: 'Use the most likely field',
+        onclick: () => { c.columns = aiDefaultColumns(n); upd(); }
+      }));
+    }
+  }
+  body.appendChild(s1);
 
-  body.appendChild(labeled('Fields Claude reads', multiFieldBox(flds, c.columns, (v) => { c.columns = v; upd(); }),
-    'Only these values are sent. Claude sees each distinct combination once, however many rows share it.'));
+  /* 2 — what to do */
+  const s2 = aiSection(2, 'What should Claude do with them?');
+  s2.appendChild(selectFrom(AI_MODE_ORDER.map((k) => ({ v: k, l: AI_MODES[k].label })), c.mode, (v) => {
+    c.mode = v;
+    if (v === 'classify' && !c.labels) c.labels = [];
+    upd();
+  }));
+  s2.appendChild(el('div', { class: 'hint', text: AI_MODES[c.mode] ? AI_MODES[c.mode].blurb : '' }));
+  body.appendChild(s2);
 
-  /* mode-specific settings */
+  /* 3 — mode settings, with a way to fill them from the data */
+  const s3 = aiSection(3, modeSetupTitle(c.mode));
+  const sug = AI_SUGGEST[c.mode];
+  if (sug) {
+    const sb = el('button', {
+      class: 'btn full', style: 'margin-bottom:.6rem', text: sug.button,
+      disabled: (c.columns || []).length ? null : 'disabled',
+      onclick: () => suggestAiSetup(n, sb)
+    });
+    s3.appendChild(sb);
+    s3.appendChild(el('div', { class: 'hint', style: 'margin:-.4rem 0 .6rem',
+      text: (c.columns || []).length
+        ? 'Reads up to 40 of your actual values and fills the boxes below. Edit anything it proposes.'
+        : 'Pick the fields above first, then this can propose settings from your data.' }));
+  }
+  buildAiModeFields(s3, n, c, upd);
+  body.appendChild(s3);
+
+  /* 4 — check and run */
+  const res = resultOf(n.id);
+  const pending = c.pending || 0, total = c.total || 0;
+  const blockers = aiBlockers(n);
+  const s4 = aiSection(4, 'Check a few, then run');
+  if (blockers.length) {
+    const ul = el('ul', { class: 'blockers' });
+    blockers.forEach((b) => ul.appendChild(el('li', { text: b })));
+    s4.appendChild(el('div', { class: 'warn-msg' }, [el('b', { text: 'Before this can run:' }), ul]));
+  } else {
+    const stat = el('div', { class: 'hint' });
+    stat.innerHTML = res && res.table
+      ? '<b>' + fmtInt(total - pending) + ' of ' + fmtInt(total) + '</b> distinct values answered' +
+        (pending ? ' · <span style="color:var(--warn)">' + fmtInt(pending) + ' still to do</span>' : ' · up to date')
+      : 'Ready.';
+    s4.appendChild(stat);
+    if (pending) {
+      const est = estimateAiCost(n);
+      s4.appendChild(el('div', { class: 'hint', text: 'A full run is about ' + fmtInt(est.requests) + ' request' +
+        (est.requests === 1 ? '' : 's') + ', roughly ' + fmtCost(est.cost) + '.' }));
+      const pb = el('button', {
+        class: 'btn full', style: 'margin-top:.5rem', text: 'Preview on 5 values',
+        disabled: aiRun ? 'disabled' : null,
+        onclick: () => previewAiStep(n, pb)
+      });
+      s4.appendChild(pb);
+    }
+    const runRow = el('div', { class: 'row g2', style: 'margin-top:.5rem' });
+    runRow.appendChild(el('button', {
+      class: 'btn primary', text: aiRun ? 'Running…' : (pending ? 'Run on ' + fmtInt(pending) + ' values' : 'Nothing left to run'),
+      disabled: (aiRun || !pending) ? 'disabled' : null,
+      onclick: () => runAiNode(n.id)
+    }));
+    runRow.appendChild(el('button', {
+      class: 'btn', text: 'Clear answers', disabled: Object.keys(c.cache || {}).length ? null : 'disabled',
+      onclick: () => {
+        if (!confirm('Discard the answers cached for this step? They would have to be paid for again.')) return;
+        c.cache = {}; c.spend = 0; c.calls = 0; upd();
+      }
+    }));
+    s4.appendChild(runRow);
+    if (c.spend) s4.appendChild(el('div', { class: 'hint', text: 'Spent on this step so far: ' + fmtCost(c.spend) + ' over ' + (c.calls || 0) + ' request' + ((c.calls || 0) === 1 ? '' : 's') + '.' }));
+  }
+  body.appendChild(s4);
+
+  /* settings that have sensible defaults, tucked away */
+  const det = el('details', { class: 'adv' });
+  det.appendChild(el('summary', { text: 'Model, effort and wording' }));
+  const m = modelInfo(c.model);
+  det.appendChild(labeled('Model', selectFrom(AI_MODELS.map((x) => ({ v: x.id, l: x.label + ' — $' + x.in + '/$' + x.out + ' per Mtok' })), c.model || 'claude-opus-5', (v) => { c.model = v; upd(); }), m.note));
+  det.appendChild(labeled('Effort', selectFrom(EFFORTS, c.effort || 'low', (v) => { c.effort = v; upd(); }),
+    'Low suits labelling and standardising. Raise it for judgement-heavy work.'));
+  det.appendChild(labeled('Values per request', numInput(c.batch || 25, (v) => { c.batch = v; upd(); })));
+  const notes = el('textarea', { placeholder: 'e.g. "Treat any spelling of ASU as Arizona State University."' });
+  notes.value = c.notes || '';
+  notes.addEventListener('input', debounce(() => { c.notes = notes.value; upd(); }, 500));
+  det.appendChild(labeled('Extra guidance (optional)', notes));
+  const seeP = el('details', { class: 'adv', style: 'margin:0' });
+  seeP.appendChild(el('summary', { text: 'See the exact instruction sent' }));
+  seeP.appendChild(el('pre', { class: 'promptview', text: aiSystemPrompt(n) }));
+  det.appendChild(seeP);
+  body.appendChild(det);
+  body.appendChild(el('div', { class: 'hint', text: 'Answers are cached per value and saved with the flow, so re-running the flow never re-bills. Changing anything above clears the cache.' }));
+}
+
+function modeSetupTitle(mode) {
+  return mode === 'classify' ? 'Set the categories'
+    : mode === 'extract' ? 'Name the fields to pull out'
+    : mode === 'standardize' ? 'Set the canonical values'
+    : mode === 'score' ? 'Describe the scale'
+    : mode === 'summarize' ? 'Set the length'
+    : 'Write the instruction';
+}
+
+function buildAiModeFields(host, n, c, upd) {
   if (c.mode === 'classify') {
     const ta = el('textarea', { placeholder: 'One category per line, e.g.\nPersonnel\nCapital\nGrants' });
     ta.value = (c.labels || []).join('\n');
-    ta.addEventListener('input', debounce(() => { c.labels = ta.value.split('\n').map((s) => s.trim()).filter(Boolean); upd(); }, 500));
-    body.appendChild(labeled('Categories', ta, 'The answer is constrained to exactly these values.'));
+    ta.addEventListener('input', debounce(() => { c.labels = ta.value.split('\n').map((x) => x.trim()).filter(Boolean); upd(); }, 500));
+    host.appendChild(labeled('Categories, one per line', ta, 'Claude must answer with exactly one of these.'));
     const lab = el('label', { class: 'chk' });
     const cb = el('input', { type: 'checkbox' }); cb.checked = !!c.allowOther;
     cb.addEventListener('change', () => { c.allowOther = cb.checked; upd(); });
     lab.appendChild(cb); lab.appendChild(el('span', { text: 'Allow "Other" when nothing fits' }));
-    body.appendChild(el('div', { class: 'fieldset' }, [lab]));
-    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'category', (v) => { c.outName = v; upd(); })));
+    host.appendChild(el('div', { class: 'fieldset' }, [lab]));
+    host.appendChild(labeled('New field name', textInput(c.outName || 'category', (v) => { c.outName = v; upd(); })));
   } else if (c.mode === 'standardize') {
-    const ta = el('textarea', { placeholder: 'Optional: one accepted value per line' });
+    const ta = el('textarea', { placeholder: 'One accepted value per line — or leave blank' });
     ta.value = c.canon || '';
     ta.addEventListener('input', debounce(() => { c.canon = ta.value; upd(); }, 500));
-    body.appendChild(labeled('Accepted values (optional)', ta, 'Leave blank to let Claude pick one consistent spelling per group.'));
-    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'standardized', (v) => { c.outName = v; upd(); })));
+    host.appendChild(labeled('Accepted values (optional)', ta, 'Leave blank to let Claude settle on one consistent spelling per group.'));
+    host.appendChild(labeled('New field name', textInput(c.outName || 'standardized', (v) => { c.outName = v; upd(); })));
   } else if (c.mode === 'score') {
     const row = el('div', { class: 'row g2' });
     row.appendChild(labeled('From', numInput(c.min == null ? 1 : c.min, (v) => { c.min = v; upd(); })));
     row.appendChild(labeled('To', numInput(c.max == null ? 5 : c.max, (v) => { c.max = v; upd(); })));
-    body.appendChild(row);
+    host.appendChild(row);
     const ta = el('textarea', { placeholder: 'What does a high score mean?' });
     ta.value = c.rubric || '';
     ta.addEventListener('input', debounce(() => { c.rubric = ta.value; upd(); }, 500));
-    body.appendChild(labeled('Scale description', ta));
-    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'score', (v) => { c.outName = v; upd(); })));
+    host.appendChild(labeled('What the scale means', ta));
+    host.appendChild(labeled('New field name', textInput(c.outName || 'score', (v) => { c.outName = v; upd(); })));
   } else if (c.mode === 'summarize') {
-    body.appendChild(labeled('Maximum words', numInput(c.words || 20, (v) => { c.words = v; upd(); })));
-    body.appendChild(labeled('Name for the new field', textInput(c.outName || 'summary', (v) => { c.outName = v; upd(); })));
-  } else if (c.mode === 'extract' || c.mode === 'custom') {
+    host.appendChild(labeled('Maximum words', numInput(c.words || 20, (v) => { c.words = v; upd(); })));
+    host.appendChild(labeled('New field name', textInput(c.outName || 'summary', (v) => { c.outName = v; upd(); })));
+  } else {
     if (c.mode === 'custom') {
-      const ta = el('textarea', { placeholder: 'e.g. Decide whether this grant description mentions a matching-funds requirement.' });
+      const ta = el('textarea', { placeholder: 'e.g. Does this grant description mention a matching-funds requirement?' });
       ta.value = c.instruction || '';
       ta.addEventListener('input', debounce(() => { c.instruction = ta.value; upd(); }, 500));
-      body.appendChild(labeled('Instruction', ta));
+      host.appendChild(labeled('Instruction', ta));
     }
     c.fields = c.fields && c.fields.length ? c.fields : [{ name: c.mode === 'custom' ? 'answer' : 'value', type: 'string', desc: '' }];
     const list = el('div', { class: 'steps' });
@@ -5432,65 +5875,17 @@ function inspAi(body, n) {
       const head = el('div', { class: 'row', style: 'margin-bottom:.35rem' });
       head.appendChild(el('span', { class: 'step-n', text: String(i + 1) }));
       head.appendChild(el('span', { text: 'Output field', style: 'flex:1;font-size:.75rem;font-weight:600;color:var(--ink)' }));
-      if (c.fields.length > 1) {
-        head.appendChild(el('button', { class: 'icb danger', html: '&times;', onclick: () => { c.fields.splice(i, 1); upd(); } }));
-      }
+      if (c.fields.length > 1) head.appendChild(el('button', { class: 'icb danger', html: '&times;', onclick: () => { c.fields.splice(i, 1); upd(); } }));
       b2.appendChild(head);
       b2.appendChild(labeled('Name', textInput(f.name, (v) => { f.name = v; upd(); })));
-      b2.appendChild(labeled('What to put in it', textInput(f.desc, (v) => { f.desc = v; upd(); }, 'e.g. the dollar amount mentioned, digits only')));
+      b2.appendChild(labeled('What goes in it', textInput(f.desc, (v) => { f.desc = v; upd(); }, 'e.g. the dollar amount mentioned, digits only')));
       b2.appendChild(labeled('Type', selectFrom([{ v: 'string', l: 'Text' }, { v: 'number', l: 'Number' }], f.type || 'string', (v) => { f.type = v; upd(); })));
       box.appendChild(b2);
       list.appendChild(box);
     });
-    body.appendChild(labeled('Fields to return', list));
-    body.appendChild(el('button', { class: 'btn full', text: '+ Add output field', onclick: () => { c.fields.push({ name: 'field_' + (c.fields.length + 1), type: 'string', desc: '' }); upd(); } }));
+    host.appendChild(labeled('Fields to return', list));
+    host.appendChild(el('button', { class: 'btn full', text: '+ Add another output field', onclick: () => { c.fields.push({ name: 'field_' + (c.fields.length + 1), type: 'string', desc: '' }); upd(); } }));
   }
-
-  const notes = el('textarea', { placeholder: 'Optional. e.g. "Treat any spelling of ASU as Arizona State University."' });
-  notes.value = c.notes || '';
-  notes.addEventListener('input', debounce(() => { c.notes = notes.value; upd(); }, 500));
-  body.appendChild(labeled('Extra guidance (optional)', notes));
-
-  /* model and effort */
-  const m = modelInfo(c.model);
-  body.appendChild(labeled('Model', selectFrom(AI_MODELS.map((x) => ({ v: x.id, l: x.label + ' — $' + x.in + '/$' + x.out + ' per Mtok' })), c.model || 'claude-opus-5', (v) => { c.model = v; upd(); }), m.note));
-  body.appendChild(labeled('Effort', selectFrom(EFFORTS, c.effort || 'low', (v) => { c.effort = v; upd(); }),
-    'Low suits labelling and standardising. Raise it for judgement-heavy work.'));
-  body.appendChild(labeled('Values per request', numInput(c.batch || 25, (v) => { c.batch = v; upd(); }),
-    'Smaller batches are more reliable on long text; larger ones are cheaper.'));
-
-  /* run panel */
-  const res = resultOf(n.id);
-  const pending = c.pending || 0, total = c.total || 0;
-  const panel = el('div', { class: 'fieldset', style: 'border-top:1px solid var(--line);padding-top:.8rem' });
-  const stat = el('div', { class: 'hint' });
-  stat.innerHTML = res && res.table
-    ? '<b>' + fmtInt(total - pending) + ' of ' + fmtInt(total) + '</b> distinct values answered' +
-      (pending ? ' · <span style="color:var(--warn)">' + fmtInt(pending) + ' still to do</span>' : ' · up to date') +
-      (c.spend ? '<br>Spent on this step: ' + fmtCost(c.spend) + ' over ' + (c.calls || 0) + ' request' + ((c.calls || 0) === 1 ? '' : 's') : '')
-    : 'Connect an input and pick the fields to read.';
-  panel.appendChild(stat);
-
-  if (pending) {
-    const est = estimateAiCost(n);
-    panel.appendChild(el('div', { class: 'hint', text: 'Next run: about ' + fmtInt(est.requests) + ' request' + (est.requests === 1 ? '' : 's') + ', roughly ' + fmtCost(est.cost) + ' at current prices.' }));
-  }
-  const runRow = el('div', { class: 'row g2', style: 'margin-top:.5rem' });
-  runRow.appendChild(el('button', {
-    class: 'btn primary', text: aiRun ? 'Running…' : (pending ? 'Run Claude on ' + fmtInt(pending) + ' values' : 'Nothing to run'),
-    disabled: (aiRun || !pending) ? 'disabled' : null,
-    onclick: () => runAiNode(n.id)
-  }));
-  runRow.appendChild(el('button', {
-    class: 'btn', text: 'Clear answers', disabled: Object.keys(c.cache || {}).length ? null : 'disabled',
-    onclick: () => {
-      if (!confirm('Discard the answers cached for this step? They would have to be paid for again.')) return;
-      c.cache = {}; c.spend = 0; c.calls = 0; upd();
-    }
-  }));
-  panel.appendChild(runRow);
-  body.appendChild(panel);
-  body.appendChild(el('div', { class: 'hint', text: 'Answers are cached per distinct value and saved with the flow, so re-running the flow never re-bills. Changing the settings above clears the cache.' }));
 }
 
 function estimateAiCost(n) {
@@ -5952,6 +6347,7 @@ function openHelp(section) {
     '<h4>Choosing without knowing the codes</h4>' +
     '<p>Census, World Bank, Socrata and CKAN each open with a guided panel: pick a year and survey and search the variable list by name (&ldquo;median household income&rdquo; finds B19013_001E); pick a World Bank topic and then an indicator; search the Socrata catalogue for a dataset and tick the columns you want. The geography list, the parent geography a level requires, the country list and the column list all come with it.</p>' +
     '<p><b>Every option in those lists is fetched from the provider when you open the picker</b> &mdash; Census variables from api.census.gov, indicators and countries from api.worldbank.org, datasets from the Socrata catalogue, resources from the portal&rsquo;s own CKAN API. This tool ships no built-in list of codes, so nothing you pick can be an invented or out-of-date code. Each picker says where its list came from and when, with a refresh link; lists are cached here for a week. If a provider cannot be reached the picker says so and offers a retry, and <b>Advanced &mdash; enter codes directly</b> still takes typed codes for anyone who knows them.</p>' +
+    '<p><b>Finding something in a very large catalogue.</b> The pickers group what they fetch: Census variables can be filtered to estimates only (rather than margins of error) and browsed by topic; Socrata results filter by category and portal; World Bank indicators are already scoped to a topic. Search is ranked, so typing &ldquo;median household income&rdquo; puts the headline variable at the top rather than the first alphabetical match. Sources you have connected before appear under <b>Connect again</b> for one click reuse.</p>' +
     '<p>Whatever route you take, the request URL stays visible and editable, and <b>Test connection</b> fetches real rows and shows them before the source is added &mdash; so you see the actual data, from the actual endpoint, before it enters the flow.</p>' +
     '<p>A linked input shows a coloured dot in the source list. By default it re-pulls every time you press <b>Run flow</b>, and once when you reopen the flow; turn that off per source in the input step, or use <b>Refresh sources</b> to force a pull. Because the fetch happens in your browser, the source has to permit cross-origin reads &mdash; if it does not, the error says so, and you can either route the request through a CORS proxy (the connection screen warns you what that means) or download the file and add it directly.</p>' +
     '<p><b>Keys and tokens</b> typed into a connection\'s key field are kept in this browser only. They are never written into a saved flow or an exported flow file, so sharing a flow does not share your credentials &mdash; whoever opens it supplies their own. A key you paste directly into the URL is not protected this way.</p>' +
@@ -5967,6 +6363,7 @@ function openHelp(section) {
     '</ul>' +
     '<h4>Claude steps</h4>' +
     '<p>A <b>Claude</b> step reads the fields you choose and adds fields holding the model\'s answers. Six modes: <b>classify</b> into categories you define (the answer is constrained to exactly those values), <b>extract</b> named pieces out of free text, <b>standardise</b> messy values onto one canonical form, <b>score</b> on a scale you describe, <b>summarise</b>, and a <b>custom instruction</b> with output fields you name.</p>' +
+    '<p>The step walks through four numbered parts: which fields Claude reads, what it should do, the settings for that choice, and a check-then-run panel. Nothing starts blank &mdash; a likely field is selected when you add the step, and each mode has a <b>Suggest&hellip; from the data</b> button that reads up to 40 of your actual values and fills in the categories, fields, scale or instruction for you to edit. If something is still missing, the run panel lists exactly what. <b>Preview on 5 values</b> shows input and answer side by side before you commit to the full run, and those five are kept. The only thing you must supply yourself is the API key.</p>' +
     '<p>Three things keep it predictable and cheap:</p>' +
     '<ul>' +
     '<li><b>It never runs on its own.</b> Editing a step, or running the flow, does not call the API. Only the step\'s own Run button does, and it tells you how many values and roughly what it will cost first.</li>' +
