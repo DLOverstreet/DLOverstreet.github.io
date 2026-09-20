@@ -386,6 +386,19 @@ pre.promptview{
   white-space:pre-wrap;font-family:var(--mono);font-size:.6875rem;line-height:1.5;color:var(--body);
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xs);padding:.5rem;max-height:220px;overflow:auto;
 }
+.mini-chk{margin:.4rem .5rem 0;font-size:.75rem;color:var(--muted)}
+body.sampling .canvas{background-image:radial-gradient(circle,#e0d2b8 1px,transparent 1px)}
+body.sampling .topbar{box-shadow:inset 0 -3px 0 var(--warn)}
+.benford{display:flex;gap:3px;align-items:flex-end;height:64px;padding-top:.3rem}
+.benford-col{position:relative;flex:1;height:100%;background:var(--surface-2);border-radius:2px 2px 0 0}
+.benford-col i{position:absolute;bottom:0;left:0;right:0;background:var(--accent);opacity:.7;border-radius:2px 2px 0 0}
+.benford-col u{position:absolute;left:-1px;right:-1px;height:2px;background:var(--err);opacity:.8}
+.benford-col span{position:absolute;bottom:-15px;left:0;right:0;text-align:center;font-size:.5625rem;color:var(--muted)}
+.reconcile{display:flex;gap:.4rem}
+.rec-cell{flex:1;border:1px solid var(--line);border-radius:var(--r-sm);padding:.4rem;text-align:center;background:var(--surface-2)}
+.rec-cell b{display:block;font-size:1rem;font-variant-numeric:tabular-nums}
+.rec-cell span{display:block;font-size:.625rem;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+iframe.auditframe{width:100%;height:56vh;border:1px solid var(--line);border-radius:var(--r-sm);background:#fff}
 .facets{display:flex;gap:.4rem;margin-bottom:.35rem;flex-wrap:wrap}
 .facets .fieldset{flex:1 1 150px;margin-bottom:0}
 .facets label{font-size:.625rem;margin-bottom:.15rem}
@@ -653,7 +666,10 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
         <button class="btn sm mini" id="btnRun">Run flow</button>
         <button class="btn sm mini" id="btnRefresh" title="Re-pull every linked source">Refresh sources</button>
         <button class="btn sm mini" id="btnTidy">Tidy layout</button>
+        <button class="btn sm mini" id="btnAudit" title="Where every figure came from, and what was done to it">Audit report</button>
         <button class="btn sm mini" id="btnAiSettings" title="Claude API key and spend">Claude settings</button>
+        <label class="chk mini-chk" title="Work on the first N rows of each source while you design"><input type="checkbox" id="chkSample"><span>Sample mode</span></label>
+        <div class="ds-empty" id="sampleNote" style="display:none"></div>
         <div class="ds-empty" id="flowStats"></div>
       </div>
     </aside>
@@ -1927,6 +1943,9 @@ const ICONS = {
   union: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2.5" width="12" height="4.5" rx="1"/><rect x="2" y="9" width="12" height="4.5" rx="1"/></svg>',
   pivot: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 5.5h11M5.5 2.5v11"/><rect x="2.5" y="2.5" width="11" height="11" rx="1"/></svg>',
   output: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M5 7.5l3 3 3-3M2.5 11v2.5h11V11"/></svg>',
+  analyze: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5 6 7l3 3 5-6.5"/><path d="M2 14.2h12.5"/></svg>',
+  validate: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.8 13.5 4v4.2c0 3-2.3 5.2-5.5 6-3.2-.8-5.5-3-5.5-6V4z"/><path d="M5.8 8.1 7.4 9.7l3-3.4"/></svg>',
+  compare: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1.8" y="3" width="5.2" height="10" rx="1"/><rect x="9" y="3" width="5.2" height="10" rx="1"/><path d="M7 8h2"/></svg>',
   ai: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1.6l1.5 3.9 3.9 1.5-3.9 1.5L8 12.4 6.5 8.5 2.6 7l3.9-1.5z"/><path d="M12.8 11.2l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z"/></svg>'
 };
 const NODE_TYPES = {
@@ -1937,9 +1956,12 @@ const NODE_TYPES = {
   join:      { label: 'Join',       color: '#c2410c', inputs: 2,  desc: 'Match rows across two inputs' },
   union:     { label: 'Union',      color: '#0e7490', inputs: 99, desc: 'Stack inputs on top of each other' },
   ai:        { label: 'Claude',     color: '#b8560f', inputs: 1,  desc: 'Classify, extract, standardise with AI' },
+  analyze:   { label: 'Analyse',    color: '#0f766e', inputs: 1,  desc: 'Change, share, rank, running totals' },
+  validate:  { label: 'Validate',   color: '#9333ea', inputs: 1,  desc: 'Rules the data must satisfy' },
+  compare:   { label: 'Compare',    color: '#a16207', inputs: 2,  desc: 'Reconcile two versions of the data' },
   output:    { label: 'Output',     color: '#3d5a7a', inputs: 1,  desc: 'Preview and export the result' }
 };
-const PALETTE_ORDER = ['clean', 'aggregate', 'join', 'union', 'pivot', 'ai', 'output'];
+const PALETTE_ORDER = ['clean', 'aggregate', 'analyze', 'join', 'union', 'pivot', 'validate', 'compare', 'ai', 'output'];
 
 const MAX_PREVIEW_ROWS = 300;
 
@@ -1952,7 +1974,9 @@ const state = {
   savedId: null,
   tab: 'profile',
   openStep: null,
-  log: []
+  log: [],
+  sample: { on: false, n: 5000 },
+  memo: new Map()
 };
 
 function newFlow() {
@@ -2003,6 +2027,9 @@ function defaultConfig(type) {
       fields: [], instruction: '', notes: '', canon: '', rubric: '', min: 1, max: 5, words: 20,
       model: 'claude-opus-5', effort: 'low', batch: 25, cache: {}, cacheSig: '', spend: 0, calls: 0
     };
+    case 'validate': return { rules: [], onFail: 'warn', report: [] };
+    case 'analyze': return { partitionBy: [], orderBy: [{ column: '', dir: 'asc' }], calcs: [] };
+    case 'compare': return { keys: [], columns: [], mode: 'changes', showBefore: false, tolerance: 0 };
     case 'output': return { format: 'csv', filename: '' };
     default: return {};
   }
@@ -2047,11 +2074,25 @@ function disconnect(fromId, toId) {
 }
 
 /* ---------------------------- evaluation ------------------------------ */
+/** A signature for a step: identical signature means identical output. */
+function nodeSignature(n, inSigs) {
+  let extra = '';
+  if (n.type === 'input') {
+    const ds = state.flow.datasets[n.config.datasetId];
+    extra = ds ? (ds.name + '|' + (ds.loaded || 0) + '|' + (ds.rows ? ds.rows.length : -1) + '|' + (ds.error || '')) : 'none';
+  }
+  return hashStr(n.type + '\u0001' + JSON.stringify(n.config) + '\u0001' + inSigs.join(',') +
+    '\u0001' + extra + '\u0001' + (state.sample.on ? 's' + state.sample.n : 'full'));
+}
+
 function runFlow() {
   state.results = new Map();
   state.log = [];
   const t0 = performance.now();
   const visiting = {};
+  const sigs = new Map();
+  const memo = state.memo || (state.memo = new Map());
+  let reused = 0;
   const evalNode = (id) => {
     if (state.results.has(id)) return state.results.get(id);
     if (visiting[id]) { const r = { error: 'This step is part of a loop.' }; state.results.set(id, r); return r; }
@@ -2061,12 +2102,27 @@ function runFlow() {
     if (!n) res = { error: 'Step not found.' };
     else {
       const ins = (n.inputs || []).map(evalNode);
+      const sig = nodeSignature(n, (n.inputs || []).map((i) => sigs.get(i) || '?'));
+      sigs.set(id, sig);
+      const hit = memo.get(id);
+      if (hit && hit.sig === sig && !hit.res.upstream) {
+        // nothing this step depends on has changed, so keep the result
+        delete visiting[id];
+        state.results.set(id, hit.res);
+        reused++;
+        state.log.push({ node: n.name, ms: 0, cached: true,
+          rows: hit.res.table ? hit.res.table.rows.length : null,
+          cols: hit.res.table ? hit.res.table.fields.length : null,
+          error: hit.res.error || null });
+        return hit.res;
+      }
       const bad = ins.filter((i) => i.error)[0];
       const need = NODE_TYPES[n.type].inputs;
       if (bad) res = { error: 'An upstream step has an error.', upstream: true };
       else if (n.type !== 'input' && ins.length === 0) res = { error: 'Connect an input to this step.' };
       else if (n.type === 'join' && ins.length < 2) res = { error: 'A join needs two inputs.' };
       else if (n.type === 'union' && ins.length < 2) res = { error: 'A union needs at least two inputs.' };
+      else if (n.type === 'compare' && ins.length < 2) res = { error: 'A compare needs two inputs — before and after.' };
       else {
         const t1 = performance.now();
         try {
@@ -2080,10 +2136,14 @@ function runFlow() {
     }
     delete visiting[id];
     state.results.set(id, res);
+    if (n) memo.set(id, { sig: sigs.get(id), res: res });
     return res;
   };
   state.flow.nodes.forEach((n) => evalNode(n.id));
+  // forget steps that no longer exist
+  Array.from(memo.keys()).forEach((k) => { if (!getNode(k)) memo.delete(k); });
   state.lastRunMs = performance.now() - t0;
+  state.lastReused = reused;
 }
 
 function computeNode(n, ins) {
@@ -2092,6 +2152,9 @@ function computeNode(n, ins) {
       const ds = state.flow.datasets[n.config.datasetId];
       if (!ds) throw new Error('No data source is attached to this input.');
       if (ds.error) throw new Error(ds.error);
+      if (ds.rows && state.sample.on && ds.rows.length > state.sample.n) {
+        return { fields: cloneFields(ds.fields), rows: ds.rows.slice(0, state.sample.n) };
+      }
       if (!ds.rows) {
         throw new Error(ds.connection
           ? 'This source has not been pulled yet. Press "Run flow" or "Refresh now".'
@@ -2118,6 +2181,9 @@ function computeNode(n, ins) {
       return runUnion(ins, Object.assign({}, n.config, { names: names }));
     }
     case 'ai': return runAiStep(ins[0], n);
+    case 'validate': return runValidate(ins[0], n);
+    case 'analyze': return runAnalyze(ins[0], n);
+    case 'compare': return runCompare(ins[0], ins[1], n);
     case 'output': return { fields: cloneFields(ins[0].fields), rows: ins[0].rows };
     default: throw new Error('Unknown step type.');
   }
@@ -2206,6 +2272,21 @@ function nodeSummary(n) {
       const cols = (c.columns || []).length ? ' from ' + c.columns.slice(0, 2).join(', ') : '';
       const pend = c.pending || 0;
       return (m ? m.label : 'Claude') + cols + (pend ? ' · ' + fmtInt(pend) + ' to process' : (c.total ? ' · up to date' : ''));
+    }
+    case 'validate': {
+      const rules = (c.rules || []).filter((r) => !r.disabled).length;
+      const bad = (c.report || []).filter((r) => !r.ok).length;
+      return rules ? rules + ' rule' + (rules === 1 ? '' : 's') + (c.report && c.report.length ? (bad ? ' · ' + bad + ' failing' : ' · all pass') : '') : 'No rules yet';
+    }
+    case 'analyze': {
+      const k = (c.calcs || []).length;
+      return k ? k + ' calculation' + (k === 1 ? '' : 's') + ((c.partitionBy || []).length ? ' within ' + c.partitionBy.join(', ') : '') : 'No calculations yet';
+    }
+    case 'compare': {
+      const sm = c.summary;
+      const a = (getNode((n.inputs || [])[0]) || {}).name, b = (getNode((n.inputs || [])[1]) || {}).name;
+      const pair = (a && b) ? a + ' → ' + b : 'Connect before and after';
+      return sm ? pair + ' · ' + fmtInt(sm.added) + ' added, ' + fmtInt(sm.removed) + ' removed, ' + fmtInt(sm.changed) + ' changed' : pair;
     }
     case 'output': return 'Export as ' + String(c.format || 'csv').toUpperCase();
     default: return '';
@@ -2660,6 +2741,10 @@ function initPalette() {
         const guess = aiDefaultColumns(n);
         if (guess.length) { n.config.columns = guess; refresh(); }
       }
+      if (n.type === 'analyze') {
+        const guess = likelyTimeField(n);
+        if (guess) { n.config.orderBy = [{ column: guess, dir: 'asc' }]; refresh(); }
+      }
       if (isMobile()) setView('step');
     });
     pal.appendChild(b);
@@ -2823,6 +2908,9 @@ function renderInspector() {
     case 'union': inspUnion(body, n); break;
     case 'pivot': inspPivot(body, n); break;
     case 'ai': inspAi(body, n); break;
+    case 'validate': inspValidate(body, n); break;
+    case 'analyze': inspAnalyze(body, n); break;
+    case 'compare': inspCompare(body, n); break;
     case 'output': inspOutput(body, n); break;
   }
 }
@@ -3648,15 +3736,19 @@ function renderLog(body) {
     r.appendChild(el('td', { text: l.node }));
     r.appendChild(el('td', { class: 'num', text: l.error ? '—' : fmtInt(l.rows) }));
     r.appendChild(el('td', { class: 'num', text: l.error ? '—' : String(l.cols) }));
-    r.appendChild(el('td', { class: 'num', text: l.error ? '—' : (l.ms < 1 ? '<1 ms' : Math.round(l.ms) + ' ms') }));
-    r.appendChild(el('td', { text: l.error ? l.error : 'ok', style: l.error ? 'color:var(--err)' : 'color:var(--ok)' }));
+    r.appendChild(el('td', { class: 'num', text: l.error ? '—' : l.cached ? 'reused' : (l.ms < 1 ? '<1 ms' : Math.round(l.ms) + ' ms') }));
+    r.appendChild(el('td', { text: l.error ? l.error : l.cached ? 'unchanged' : 'recomputed',
+      style: l.error ? 'color:var(--err)' : l.cached ? 'color:var(--muted)' : 'color:var(--ok)' }));
     tb.appendChild(r);
   });
   table.appendChild(tb);
   scroll.appendChild(table);
   const wrap = el('div', { style: 'height:100%;display:flex;flex-direction:column' });
   wrap.appendChild(scroll);
-  wrap.appendChild(el('div', { class: 'grid-foot', text: 'Whole flow evaluated in ' + Math.round(state.lastRunMs || 0) + ' ms.' }));
+  wrap.appendChild(el('div', { class: 'grid-foot',
+    text: 'Whole flow evaluated in ' + Math.round(state.lastRunMs || 0) + ' ms' +
+      (state.lastReused ? ' · ' + state.lastReused + ' step' + (state.lastReused === 1 ? '' : 's') + ' reused unchanged' : '') +
+      (state.sample.on ? ' · running on a sample of ' + fmtInt(state.sample.n) + ' rows per source' : '') + '.' }));
   body.appendChild(wrap);
 }
 
@@ -6080,6 +6172,975 @@ async function askForExpression(want, fields) {
 }
 
 /* =====================================================================
+   Validate — data contracts
+   Rules that must hold for the data to be trusted. The step passes data
+   through and reports what failed, so a flow can be stopped, or the bad
+   rows flagged or dropped, rather than a wrong number reaching a report.
+   ===================================================================== */
+const RULE_TYPES = {
+  notnull:   { label: 'Must never be empty', row: true, needs: ['column'] },
+  unique:    { label: 'Must be unique', row: true, needs: ['columns'] },
+  inset:     { label: 'Must be one of a list', row: true, needs: ['column', 'values'] },
+  range:     { label: 'Must fall in a range', row: true, needs: ['column', 'min', 'max'] },
+  regex:     { label: 'Must match a pattern', row: true, needs: ['column', 'pattern'] },
+  expression:{ label: 'Expression must be true', row: true, needs: ['expr'] },
+  rowcount:  { label: 'Row count must be in range', row: false, needs: ['min', 'max'] },
+  freshness: { label: 'Dates must be recent enough', row: true, needs: ['column', 'days'] },
+  benford:   { label: 'First digits should look natural (Benford)', row: false, needs: ['column'] }
+};
+const RULE_ORDER = ['notnull', 'unique', 'inset', 'range', 'regex', 'expression', 'rowcount', 'freshness', 'benford'];
+
+const BENFORD = [0.30103, 0.17609, 0.12494, 0.09691, 0.07918, 0.06695, 0.05799, 0.05115, 0.04576];
+
+function ruleLabel(r) {
+  const t = RULE_TYPES[r.type];
+  if (!t) return r.type;
+  switch (r.type) {
+    case 'notnull': return (r.column || '?') + ' is never empty';
+    case 'unique': return ((r.columns || []).join(' + ') || '?') + ' is unique';
+    case 'inset': return (r.column || '?') + ' is one of ' + String(r.values || '').split('\n').filter(Boolean).length + ' allowed values';
+    case 'range': return (r.column || '?') + ' between ' + (r.min == null || r.min === '' ? '−∞' : r.min) + ' and ' + (r.max == null || r.max === '' ? '∞' : r.max);
+    case 'regex': return (r.column || '?') + ' matches /' + (r.pattern || '') + '/';
+    case 'expression': return String(r.expr || '').slice(0, 60) + ' is true';
+    case 'rowcount': return 'row count between ' + (r.min || 0) + ' and ' + (r.max == null || r.max === '' ? '∞' : r.max);
+    case 'freshness': return (r.column || '?') + ' within the last ' + (r.days || 30) + ' days';
+    case 'benford': return (r.column || '?') + ' follows Benford’s law';
+    default: return t.label;
+  }
+}
+
+/** Evaluate one rule. Returns { failed, total, bad:Set(rowIndex), detail }. */
+function checkRule(table, r) {
+  const rows = table.rows, n = rows.length;
+  const bad = new Set();
+  let detail = '';
+  switch (r.type) {
+    case 'notnull': {
+      if (!findField(table.fields, r.column)) throw new Error('Field "' + r.column + '" is not here.');
+      rows.forEach((row, i) => { if (isBlank(row[r.column])) bad.add(i); });
+      break;
+    }
+    case 'unique': {
+      const cols = (r.columns || []).filter((c) => findField(table.fields, c));
+      if (!cols.length) throw new Error('Choose at least one field.');
+      const seen = new Map();
+      rows.forEach((row, i) => {
+        const k = cols.map((c) => keyOf(row[c], typeOf(table.fields, c))).join('\u0001');
+        if (seen.has(k)) { bad.add(i); bad.add(seen.get(k)); } else seen.set(k, i);
+      });
+      detail = fmtInt(seen.size) + ' distinct keys';
+      break;
+    }
+    case 'inset': {
+      const type = typeOf(table.fields, r.column);
+      const set = Object.create(null);
+      String(r.values || '').split('\n').map((x) => x.trim()).filter(Boolean)
+        .forEach((v) => { set[keyOf(coerce(v, type), type)] = 1; });
+      rows.forEach((row, i) => { if (!isBlank(row[r.column]) && !set[keyOf(row[r.column], type)]) bad.add(i); });
+      break;
+    }
+    case 'range': {
+      const lo = r.min === '' || r.min == null ? -Infinity : Number(r.min);
+      const hi = r.max === '' || r.max == null ? Infinity : Number(r.max);
+      rows.forEach((row, i) => {
+        const v = row[r.column];
+        if (v == null) return;
+        const num = typeof v === 'number' ? v : parseNumber(v);
+        if (num == null || num < lo || num > hi) bad.add(i);
+      });
+      break;
+    }
+    case 'regex': {
+      let re;
+      try { re = new RegExp(r.pattern || '', 'i'); } catch (e) { throw new Error('Invalid pattern: ' + e.message); }
+      const type = typeOf(table.fields, r.column);
+      rows.forEach((row, i) => { if (row[r.column] != null && !re.test(String(display(row[r.column], type)))) bad.add(i); });
+      break;
+    }
+    case 'expression': {
+      const fn = compileExpr(r.expr || '', fieldNames(table.fields));
+      rows.forEach((row, i) => {
+        let v;
+        try { v = fn(row); } catch (e) { v = false; }
+        if (!(v === true || v === 1 || (typeof v === 'string' && v.toLowerCase() === 'true'))) bad.add(i);
+      });
+      break;
+    }
+    case 'freshness': {
+      const days = Number(r.days || 30);
+      const cutoff = Date.now() - days * 864e5;
+      rows.forEach((row, i) => {
+        const v = row[r.column];
+        const d = v == null ? null : (typeof v === 'number' ? v : (parseDate(v) ? parseDate(v).getTime() : null));
+        if (d == null || d < cutoff) bad.add(i);
+      });
+      break;
+    }
+    case 'rowcount': {
+      const lo = Number(r.min || 0);
+      const hi = r.max === '' || r.max == null ? Infinity : Number(r.max);
+      const ok = n >= lo && n <= hi;
+      detail = fmtInt(n) + ' rows';
+      return { failed: ok ? 0 : n, total: n, bad: new Set(), detail: detail, tableLevel: true, ok: ok };
+    }
+    case 'benford': {
+      const counts = new Array(9).fill(0);
+      let tot = 0;
+      rows.forEach((row) => {
+        const v = row[r.column];
+        const num = typeof v === 'number' ? v : parseNumber(v);
+        if (num == null || !isFinite(num)) return;
+        const a = Math.abs(num);
+        if (a < 1) return;
+        const d = Number(String(a).replace(/[^1-9]/, '').charAt(0) || String(Math.floor(a)).charAt(0));
+        if (d >= 1 && d <= 9) { counts[d - 1]++; tot++; }
+      });
+      if (tot < 50) return { failed: 0, total: n, bad: new Set(), detail: 'only ' + fmtInt(tot) + ' usable values — too few to judge', tableLevel: true, ok: true, skipped: true };
+      let chi = 0;
+      const obs = counts.map((c, i) => {
+        const exp = BENFORD[i] * tot;
+        chi += Math.pow(c - exp, 2) / exp;
+        return { d: i + 1, got: c / tot, want: BENFORD[i] };
+      });
+      const ok = chi < 20.09;    // chi-square, 8 d.f., p = 0.01
+      return {
+        failed: ok ? 0 : tot, total: n, bad: new Set(), tableLevel: true, ok: ok,
+        detail: 'chi-square ' + chi.toFixed(1) + ' over ' + fmtInt(tot) + ' values' + (ok ? ' — consistent with Benford' : ' — deviates from Benford (p < 0.01)'),
+        histogram: obs
+      };
+    }
+    default: throw new Error('Unknown rule type.');
+  }
+  return { failed: bad.size, total: n, bad: bad, detail: detail, ok: bad.size === 0 };
+}
+
+function runValidate(table, node) {
+  const rules = (node.config.rules || []).filter((r) => !r.disabled);
+  const report = [];
+  const failedRows = new Set();
+  rules.forEach((r) => {
+    let res;
+    try { res = checkRule(table, r); }
+    catch (e) { res = { failed: 0, total: table.rows.length, bad: new Set(), ok: false, error: e.message }; }
+    if (res.bad) res.bad.forEach((i) => failedRows.add(i));
+    report.push({
+      id: r.id, type: r.type, label: ruleLabel(r), ok: res.ok !== false && !res.error,
+      failed: res.failed || 0, total: res.total, detail: res.detail || '', error: res.error || null,
+      histogram: res.histogram || null, skipped: !!res.skipped
+    });
+  });
+  node.config.report = report;
+  const anyFail = report.some((r) => !r.ok);
+  node.config.failedRows = failedRows.size;
+  if (anyFail && node.config.onFail === 'stop') {
+    const first = report.filter((r) => !r.ok)[0];
+    throw new Error('Validation failed: ' + first.label + (first.error ? ' (' + first.error + ')' : ' — ' + fmtInt(first.failed) + ' rows'));
+  }
+  if (node.config.onFail === 'drop' && failedRows.size) {
+    return { fields: cloneFields(table.fields), rows: table.rows.filter((_, i) => !failedRows.has(i)) };
+  }
+  if (node.config.onFail === 'flag') {
+    const nm = dedupeName('Validation', fieldNames(table.fields));
+    return {
+      fields: cloneFields(table.fields).concat([{ name: nm, type: 'string' }]),
+      rows: table.rows.map((r, i) => {
+        const o = {}; for (const k in r) o[k] = r[k];
+        o[nm] = failedRows.has(i) ? 'fails a rule' : 'ok';
+        return o;
+      })
+    };
+  }
+  return { fields: cloneFields(table.fields), rows: table.rows };
+}
+
+/* =====================================================================
+   Analyse — window calculations
+   The things you reach for after grouping: change over time, share of a
+   total, rank within a group, running totals, moving averages. Each is
+   computed within a partition and an order you choose, so "change on
+   last year, per agency" is three clicks rather than a self-join.
+   ===================================================================== */
+const WINDOW_FNS = {
+  row_number:  { label: 'Row number in group', needsCol: false, out: 'number' },
+  rank:        { label: 'Rank (ties share a place)', needsCol: true, out: 'number' },
+  dense_rank:  { label: 'Dense rank', needsCol: true, out: 'number' },
+  running_sum: { label: 'Running total', needsCol: true, out: 'number' },
+  running_avg: { label: 'Running average', needsCol: true, out: 'number' },
+  lag:         { label: 'Previous value', needsCol: true, out: 'same' },
+  lead:        { label: 'Next value', needsCol: true, out: 'same' },
+  delta:       { label: 'Change from previous', needsCol: true, out: 'number' },
+  pct_change:  { label: 'Percent change from previous', needsCol: true, out: 'number' },
+  pct_of_group:{ label: 'Percent of group total', needsCol: true, out: 'number' },
+  pct_of_all:  { label: 'Percent of overall total', needsCol: true, out: 'number' },
+  cum_share:   { label: 'Cumulative share of group (%)', needsCol: true, out: 'number' },
+  moving_avg:  { label: 'Moving average over N', needsCol: true, out: 'number' },
+  group_sum:   { label: 'Group total (repeated on each row)', needsCol: true, out: 'number' },
+  group_avg:   { label: 'Group average', needsCol: true, out: 'number' },
+  group_min:   { label: 'Group minimum', needsCol: true, out: 'number' },
+  group_max:   { label: 'Group maximum', needsCol: true, out: 'number' },
+  zscore:      { label: 'Z-score within group', needsCol: true, out: 'number' },
+  index100:    { label: 'Index (first value = 100)', needsCol: true, out: 'number' },
+  first_value: { label: 'First value in group', needsCol: true, out: 'same' },
+  last_value:  { label: 'Last value in group', needsCol: true, out: 'same' }
+};
+const WINDOW_ORDER = ['delta', 'pct_change', 'index100', 'running_sum', 'moving_avg', 'pct_of_group', 'pct_of_all',
+  'cum_share', 'rank', 'dense_rank', 'row_number', 'lag', 'lead', 'group_sum', 'group_avg', 'group_min',
+  'group_max', 'running_avg', 'zscore', 'first_value', 'last_value'];
+
+function defaultWindowName(c) {
+  const f = WINDOW_FNS[c.fn];
+  if (!f) return 'window';
+  const base = c.column || 'rows';
+  switch (c.fn) {
+    case 'row_number': return 'row_number';
+    case 'rank': case 'dense_rank': return base + '_rank';
+    case 'delta': return base + '_change';
+    case 'pct_change': return base + '_pct_change';
+    case 'running_sum': return base + '_running';
+    case 'moving_avg': return base + '_ma' + (c.n || 3);
+    case 'pct_of_group': return base + '_pct_of_group';
+    case 'pct_of_all': return base + '_pct_of_total';
+    case 'cum_share': return base + '_cum_share';
+    case 'lag': return base + '_prev';
+    case 'lead': return base + '_next';
+    case 'index100': return base + '_index';
+    case 'zscore': return base + '_z';
+    default: return base + '_' + c.fn;
+  }
+}
+
+function runAnalyze(table, node) {
+  const cfg = node.config;
+  const calcs = (cfg.calcs || []).filter((c) => c.fn && (!WINDOW_FNS[c.fn].needsCol || c.column));
+  if (!calcs.length) throw new Error('Add at least one calculation.');
+  const part = (cfg.partitionBy || []).filter((c) => findField(table.fields, c));
+  const orderBy = (cfg.orderBy || []).filter((o) => o && o.column && findField(table.fields, o.column));
+
+  // index rows so the original order can be restored
+  const idx = table.rows.map((r, i) => i);
+  const groups = new Map();
+  idx.forEach((i) => {
+    const r = table.rows[i];
+    const k = part.map((c) => keyOf(r[c], typeOf(table.fields, c))).join('\u0001');
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(i);
+  });
+  if (orderBy.length) {
+    const cmp = (a, b) => {
+      for (let k = 0; k < orderBy.length; k++) {
+        const o = orderBy[k], t = typeOf(table.fields, o.column), dir = o.dir === 'desc' ? -1 : 1;
+        const x = table.rows[a][o.column], y = table.rows[b][o.column];
+        if (x == null && y == null) continue;
+        if (x == null) return 1;
+        if (y == null) return -1;
+        let c = 0;
+        if (t === 'string') c = String(x).localeCompare(String(y));
+        else c = x < y ? -1 : x > y ? 1 : 0;
+        if (c) return c * dir;
+      }
+      return a - b;
+    };
+    groups.forEach((list) => list.sort(cmp));
+  }
+
+  const names = [], existing = fieldNames(table.fields).slice();
+  const outFields = cloneFields(table.fields);
+  calcs.forEach((c) => {
+    const nm = dedupeName((c.as && c.as.trim()) || defaultWindowName(c), existing);
+    existing.push(nm); names.push(nm);
+    const srcType = c.column ? typeOf(table.fields, c.column) : 'number';
+    outFields.push({ name: nm, type: WINDOW_FNS[c.fn].out === 'same' ? srcType : 'number' });
+  });
+
+  const values = names.map(() => new Array(table.rows.length).fill(null));
+  const num = (i, col) => {
+    const v = table.rows[i][col];
+    return v == null ? null : (typeof v === 'number' ? v : parseNumber(v));
+  };
+  // overall totals for pct_of_all
+  const overall = {};
+  calcs.forEach((c) => {
+    if (c.fn === 'pct_of_all' && overall[c.column] == null) {
+      let s = 0;
+      for (let i = 0; i < table.rows.length; i++) { const v = num(i, c.column); if (v != null) s += v; }
+      overall[c.column] = s;
+    }
+  });
+
+  groups.forEach((list) => {
+    calcs.forEach((c, ci) => {
+      const out = values[ci], col = c.column;
+      const N = list.length;
+      const nums = col ? list.map((i) => num(i, col)) : [];
+      const clean = nums.filter((v) => v != null && isFinite(v));
+      const total = clean.reduce((a, b) => a + b, 0);
+      const mean = clean.length ? total / clean.length : null;
+      const sd = clean.length > 1
+        ? Math.sqrt(clean.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (clean.length - 1)) : null;
+      let run = 0, runN = 0, cum = 0;
+      let ranks = null;
+      if (c.fn === 'rank' || c.fn === 'dense_rank') {
+        const order = list.map((i, p) => [nums[p], p]).filter((x) => x[0] != null)
+          .sort((a, b) => (c.desc ? b[0] - a[0] : a[0] - b[0]));
+        ranks = new Array(N).fill(null);
+        let last = null, place = 0, dense = 0;
+        order.forEach((pair, k) => {
+          if (last === null || pair[0] !== last) { place = k + 1; dense++; last = pair[0]; }
+          ranks[pair[1]] = c.fn === 'rank' ? place : dense;
+        });
+      }
+      const firstVal = N ? table.rows[list[0]][col] : null;
+      const lastVal = N ? table.rows[list[N - 1]][col] : null;
+      const firstNum = N ? nums[0] : null;
+      for (let p = 0; p < N; p++) {
+        const i = list[p], v = nums[p];
+        let r = null;
+        switch (c.fn) {
+          case 'row_number': r = p + 1; break;
+          case 'rank': case 'dense_rank': r = ranks[p]; break;
+          case 'running_sum': if (v != null) run += v; r = run; break;
+          case 'running_avg': if (v != null) { run += v; runN++; } r = runN ? run / runN : null; break;
+          case 'lag': r = p - (c.n || 1) >= 0 ? table.rows[list[p - (c.n || 1)]][col] : null; break;
+          case 'lead': r = p + (c.n || 1) < N ? table.rows[list[p + (c.n || 1)]][col] : null; break;
+          case 'delta': { const prev = p > 0 ? nums[p - 1] : null; r = (v != null && prev != null) ? v - prev : null; break; }
+          case 'pct_change': { const prev = p > 0 ? nums[p - 1] : null; r = (v != null && prev) ? (v - prev) / Math.abs(prev) * 100 : null; break; }
+          case 'pct_of_group': r = (v != null && total) ? v / total * 100 : null; break;
+          case 'pct_of_all': r = (v != null && overall[col]) ? v / overall[col] * 100 : null; break;
+          case 'cum_share': if (v != null) cum += v; r = total ? cum / total * 100 : null; break;
+          case 'moving_avg': {
+            const w = Math.max(1, c.n || 3);
+            let s = 0, k = 0;
+            for (let q = Math.max(0, p - w + 1); q <= p; q++) { if (nums[q] != null) { s += nums[q]; k++; } }
+            r = k ? s / k : null; break;
+          }
+          case 'group_sum': r = clean.length ? total : null; break;
+          case 'group_avg': r = mean; break;
+          case 'group_min': r = clean.length ? Math.min.apply(null, clean) : null; break;
+          case 'group_max': r = clean.length ? Math.max.apply(null, clean) : null; break;
+          case 'zscore': r = (v != null && sd) ? (v - mean) / sd : null; break;
+          case 'index100': r = (v != null && firstNum) ? v / firstNum * 100 : null; break;
+          case 'first_value': r = firstVal; break;
+          case 'last_value': r = lastVal; break;
+        }
+        out[i] = r;
+      }
+    });
+  });
+
+  const rows = table.rows.map((r, i) => {
+    const o = {}; for (const k in r) o[k] = r[k];
+    names.forEach((nm, ci) => {
+      const f = outFields.filter((x) => x.name === nm)[0];
+      o[nm] = coerce(values[ci][i], f.type);
+    });
+    return o;
+  });
+  return { fields: outFields, rows: rows };
+}
+
+/* =====================================================================
+   Compare — reconcile two versions of the same data
+   Point it at last month and this month, or at a figure before and
+   after a change, and it says exactly which rows appeared, disappeared
+   or moved, and which cell changed from what to what.
+   ===================================================================== */
+function runCompare(before, after, node) {
+  const cfg = node.config;
+  const keys = (cfg.keys || []).filter((k) => findField(before.fields, k) && findField(after.fields, k));
+  if (!keys.length) throw new Error('Choose at least one field that identifies a row in both inputs.');
+  const common = before.fields.map((f) => f.name)
+    .filter((n) => keys.indexOf(n) < 0 && findField(after.fields, n));
+  const cols = (cfg.columns && cfg.columns.length)
+    ? cfg.columns.filter((c) => common.indexOf(c) >= 0) : common;
+
+  const keyOfRow = (row, fields) => keys.map((k) => keyOf(row[k], typeOf(fields, k))).join('\u0001');
+  const bIndex = new Map(), aIndex = new Map();
+  before.rows.forEach((r, i) => { const k = keyOfRow(r, before.fields); if (!bIndex.has(k)) bIndex.set(k, i); });
+  after.rows.forEach((r, i) => { const k = keyOfRow(r, after.fields); if (!aIndex.has(k)) aIndex.set(k, i); });
+
+  const same = (x, y) => {
+    if (x == null && y == null) return true;
+    if (x == null || y == null) return false;
+    if (typeof x === 'number' && typeof y === 'number') {
+      const tol = Number(cfg.tolerance || 0);
+      return tol > 0 ? Math.abs(x - y) <= tol : x === y;
+    }
+    return String(x) === String(y);
+  };
+
+  const summary = { added: 0, removed: 0, changed: 0, unchanged: 0, cells: 0 };
+  const cellRows = [], rowRows = [];
+
+  aIndex.forEach((ai, k) => {
+    const aRow = after.rows[ai];
+    if (!bIndex.has(k)) {
+      summary.added++;
+      rowRows.push({ status: 'added', k: k, row: aRow, changed: [] });
+      return;
+    }
+    const bRow = before.rows[bIndex.get(k)];
+    const diffs = cols.filter((c) => !same(bRow[c], aRow[c]));
+    if (diffs.length) {
+      summary.changed++; summary.cells += diffs.length;
+      rowRows.push({ status: 'changed', k: k, row: aRow, before: bRow, changed: diffs });
+      diffs.forEach((c) => cellRows.push({ k: k, row: aRow, field: c, before: bRow[c], after: aRow[c] }));
+    } else {
+      summary.unchanged++;
+      if (cfg.mode === 'all') rowRows.push({ status: 'unchanged', k: k, row: aRow, changed: [] });
+    }
+  });
+  bIndex.forEach((bi, k) => {
+    if (aIndex.has(k)) return;
+    summary.removed++;
+    rowRows.push({ status: 'removed', k: k, row: before.rows[bi], changed: [] });
+  });
+  node.config.summary = summary;
+
+  if (cfg.mode === 'cells') {
+    const fields = keys.map((k) => ({ name: k, type: typeOf(after.fields, k) }))
+      .concat([{ name: 'field', type: 'string' }, { name: 'before', type: 'string' },
+               { name: 'after', type: 'string' }, { name: 'difference', type: 'number' }]);
+    const rows = cellRows.map((c) => {
+      const o = {};
+      keys.forEach((k) => { o[k] = c.row[k]; });
+      o.field = c.field;
+      const t = typeOf(after.fields, c.field);
+      o.before = c.before == null ? null : String(display(c.before, t));
+      o.after = c.after == null ? null : String(display(c.after, t));
+      const nb = typeof c.before === 'number' ? c.before : parseNumber(c.before);
+      const na = typeof c.after === 'number' ? c.after : parseNumber(c.after);
+      o.difference = (nb != null && na != null) ? na - nb : null;
+      return o;
+    });
+    return { fields: fields, rows: rows };
+  }
+
+  // one row per key, with what changed
+  const outFields = [{ name: 'status', type: 'string' }, { name: 'changed fields', type: 'string' }]
+    .concat(after.fields.map((f) => ({ name: f.name, type: f.type })));
+  const used = outFields.map((f) => f.name);
+  const beforeCols = cfg.showBefore ? cols.map((c) => dedupeName(c + ' (before)', used.concat(cols.map((x) => x + ' (before)')))) : [];
+  if (cfg.showBefore) cols.forEach((c, i) => outFields.push({ name: beforeCols[i], type: typeOf(before.fields, c) }));
+  const wanted = (cfg.mode === 'all') ? null : { added: 1, removed: 1, changed: 1 };
+  const rows = rowRows.filter((r) => !wanted || wanted[r.status]).map((r) => {
+    const o = {};
+    outFields.forEach((f) => { o[f.name] = null; });
+    o.status = r.status;
+    o['changed fields'] = r.changed.join(', ');
+    after.fields.forEach((f) => { o[f.name] = r.row[f.name] === undefined ? null : r.row[f.name]; });
+    if (cfg.showBefore && r.before) cols.forEach((c, i) => { o[beforeCols[i]] = r.before[c]; });
+    return o;
+  });
+  return { fields: outFields, rows: rows };
+}
+
+/* =====================================================================
+   Audit report
+   A record of what was pulled, from where, when, what was done to it and
+   what came out — with a fingerprint of every source and every output so
+   a figure can be traced back and reproduced months later.
+   ===================================================================== */
+const TOOL_VERSION = 'Data Prep Studio, flow format 1';
+
+/** SHA-256 where the browser allows it; a labelled checksum where it does not. */
+async function fingerprint(text) {
+  try {
+    if (window.crypto && window.crypto.subtle && window.isSecureContext) {
+      const buf = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+      return { algo: 'SHA-256', hex: Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('') };
+    }
+  } catch (e) { /* fall through to the non-cryptographic checksum */ }
+  let h1 = 0x811c9dc5, h2 = 0x01000193;
+  for (let i = 0; i < text.length; i++) {
+    h1 ^= text.charCodeAt(i); h1 = Math.imul(h1, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 ^ text.charCodeAt(i), 0x85ebca6b) >>> 0;
+  }
+  return { algo: 'FNV-1a checksum (not cryptographic)', hex: (h1 >>> 0).toString(16).padStart(8, '0') + (h2 >>> 0).toString(16).padStart(8, '0') };
+}
+
+/** Plain-English account of what a step does. */
+function stepProse(n) {
+  const c = n.config || {};
+  switch (n.type) {
+    case 'input': {
+      const ds = state.flow.datasets[c.datasetId];
+      if (!ds) return 'No source attached.';
+      return ds.connection
+        ? 'Pulls from ' + buildConnectionUrl(ds.connection)
+        : 'Reads the uploaded file ' + (ds.source || ds.name) + '.';
+    }
+    case 'clean':
+      return (c.steps || []).filter((s) => !s.disabled).length
+        ? (c.steps || []).filter((s) => !s.disabled).map((s, i) => (i + 1) + '. ' + STEP_DEFS[s.op].label + ' — ' + stepSummary(s)).join('\n')
+        : 'Passes data through unchanged.';
+    case 'aggregate':
+      return 'Groups by ' + ((c.groupBy || []).join(', ') || 'nothing (whole table)') + ' and computes ' +
+        (c.aggs || []).map((a) => (a.as || defaultAggName(a))).join(', ') + '.';
+    case 'join':
+      return (c.type || 'inner') + ' join on ' + (c.keys || []).map((k) => k.left + ' = ' + k.right).join(' and ') + '.';
+    case 'union': return 'Stacks ' + (n.inputs || []).length + ' inputs.';
+    case 'pivot': return c.mode === 'toColumns'
+      ? 'Turns values of ' + c.keyColumn + ' into columns, filled with ' + c.valueColumn + '.'
+      : 'Turns the fields ' + (c.columns || []).join(', ') + ' into rows.';
+    case 'ai':
+      return 'Sends ' + ((c.columns || []).join(', ') || 'selected fields') + ' to ' + (c.model || 'claude-opus-5') +
+        ' (' + (AI_MODES[c.mode] ? AI_MODES[c.mode].label.toLowerCase() : c.mode) + ', effort ' + (c.effort || 'low') + '); ' +
+        fmtInt(Object.keys(c.cache || {}).length) + ' distinct values answered, ' + fmtCost(c.spend || 0) + ' spent.';
+    case 'validate':
+      return 'Checks: ' + (c.rules || []).filter((r) => !r.disabled).map(ruleLabel).join('; ') +
+        '. On failure: ' + (c.onFail || 'warn') + '.';
+    case 'analyze':
+      return 'Within ' + ((c.partitionBy || []).join(' + ') || 'the whole table') +
+        (((c.orderBy || []).length) ? ', ordered by ' + c.orderBy.map((o) => o.column + ' ' + (o.dir || 'asc')).join(', ') : '') +
+        ': ' + (c.calcs || []).map((x) => (WINDOW_FNS[x.fn] ? WINDOW_FNS[x.fn].label : x.fn) + (x.column ? ' of ' + x.column : '')).join('; ') + '.';
+    case 'compare':
+      return 'Compares two inputs on ' + ((c.keys || []).join(' + ') || 'no key yet') + '.';
+    case 'output': return 'Exports as ' + String(c.format || 'csv').toUpperCase() + '.';
+    default: return NODE_TYPES[n.type] ? NODE_TYPES[n.type].desc : '';
+  }
+}
+
+function topoOrder() {
+  const seen = {}, out = [];
+  const visit = (id, guard) => {
+    if (seen[id] || guard[id]) return;
+    guard[id] = 1;
+    const n = getNode(id);
+    if (!n) return;
+    (n.inputs || []).forEach((i) => visit(i, guard));
+    if (!seen[id]) { seen[id] = 1; out.push(n); }
+  };
+  state.flow.nodes.forEach((n) => visit(n.id, {}));
+  return out;
+}
+
+async function buildAuditReport() {
+  const generated = new Date();
+  const sources = [];
+  for (const id of Object.keys(state.flow.datasets)) {
+    const ds = state.flow.datasets[id];
+    const rec = {
+      name: ds.name,
+      kind: ds.connection ? 'Live connection' : 'Uploaded file',
+      location: ds.connection ? buildConnectionUrl(ds.connection) : (ds.source || '—'),
+      fetched: ds.loaded ? new Date(ds.loaded).toISOString() : null,
+      rows: ds.rows ? ds.rows.length : null,
+      fields: (ds.fields || []).length,
+      fieldNames: (ds.fields || []).map((f) => f.name + ' (' + f.type + ')')
+    };
+    if (ds.rows) {
+      const fp = await fingerprint(tableToCSV({ fields: ds.fields, rows: ds.rows }, ','));
+      rec.algo = fp.algo; rec.hash = fp.hex;
+    }
+    sources.push(rec);
+  }
+
+  const steps = [];
+  topoOrder().forEach((n) => {
+    const res = resultOf(n.id);
+    const inRows = (n.inputs || []).reduce((a, i) => {
+      const t = tableOf(i); return a + (t ? t.rows.length : 0);
+    }, 0);
+    const inFields = (n.inputs || []).length ? fieldNames((tableOf(n.inputs[0]) || { fields: [] }).fields) : [];
+    const outFields = res && res.table ? fieldNames(res.table.fields) : [];
+    steps.push({
+      name: n.name, type: NODE_TYPES[n.type].label, id: n.id,
+      inputs: (n.inputs || []).map((i) => (getNode(i) || {}).name || i),
+      prose: stepProse(n),
+      rowsIn: (n.inputs || []).length ? inRows : null,
+      rowsOut: res && res.table ? res.table.rows.length : null,
+      error: res && res.error ? res.error : null,
+      added: outFields.filter((f) => inFields.indexOf(f) < 0),
+      removed: inFields.filter((f) => outFields.indexOf(f) < 0),
+      validation: n.type === 'validate' ? (n.config.report || []) : null
+    });
+  });
+
+  const outputs = [];
+  for (const n of state.flow.nodes.filter((x) => x.type === 'output')) {
+    const t = tableOf(n.id);
+    const rec = { name: n.name, rows: t ? t.rows.length : null, fields: t ? t.fields.length : null };
+    if (t) {
+      const fp = await fingerprint(tableToCSV(t, ','));
+      rec.algo = fp.algo; rec.hash = fp.hex;
+      rec.fieldNames = t.fields.map((f) => f.name + ' (' + f.type + ')');
+      rec.provenance = t.fields.map((f) => {
+        const st = steps.filter((s) => s.added.indexOf(f.name) >= 0).slice(-1)[0];
+        return { field: f.name, origin: st ? st.name : 'a source table' };
+      });
+    }
+    outputs.push(rec);
+  }
+
+  return {
+    tool: TOOL_VERSION,
+    flow: state.flow.name,
+    generated: generated.toISOString(),
+    sampled: state.sample && state.sample.on ? state.sample.n : null,
+    sources: sources, steps: steps, outputs: outputs
+  };
+}
+
+function auditHTML(rep) {
+  const esc2 = (x) => esc(x == null ? '' : x);
+  const rows = (arr) => arr.join('');
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Audit report — ' + esc2(rep.flow) + '</title>' +
+    '<style>body{font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#3a4757;max-width:900px;margin:2rem auto;padding:0 1.25rem;line-height:1.6}' +
+    'h1{font-size:1.5rem;color:#16293f;margin-bottom:.2rem}h2{font-size:1.05rem;color:#16293f;margin:1.8rem 0 .5rem;border-bottom:1px solid #e3e7ed;padding-bottom:.3rem}' +
+    'table{width:100%;border-collapse:collapse;font-size:.8125rem;margin:.4rem 0}th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid #eef1f5;vertical-align:top}' +
+    'th{color:#16293f;font-weight:600;background:#fafbfc}code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.75rem;word-break:break-all}' +
+    '.meta{color:#6b7685;font-size:.8125rem}.fail{color:#b3261e;font-weight:600}.ok{color:#1a7f5a}pre{white-space:pre-wrap;font-size:.75rem;margin:.2rem 0;color:#3a4757}' +
+    '.note{background:#fdf3e0;border:1px solid #f0dcb4;padding:.5rem .7rem;border-radius:6px;font-size:.8125rem}</style></head><body>' +
+    '<h1>Audit report</h1><div class="meta">Flow <b>' + esc2(rep.flow) + '</b> · generated ' + esc2(rep.generated) + ' · ' + esc2(rep.tool) + '</div>' +
+    (rep.sampled ? '<p class="note">This flow was run on a sample of ' + fmtInt(rep.sampled) + ' rows per source, so the counts below are not the full data.</p>' : '') +
+    '<h2>Sources</h2><table><tr><th>Name</th><th>Where it came from</th><th>Fetched</th><th>Rows</th><th>Fingerprint</th></tr>' +
+    rows(rep.sources.map((s) => '<tr><td><b>' + esc2(s.name) + '</b><br><span class="meta">' + esc2(s.kind) + '</span></td>' +
+      '<td><code>' + esc2(s.location) + '</code></td><td class="meta">' + esc2(s.fetched || '—') + '</td>' +
+      '<td>' + (s.rows == null ? '—' : fmtInt(s.rows)) + '<br><span class="meta">' + s.fields + ' fields</span></td>' +
+      '<td><code>' + esc2(s.hash || '—') + '</code><br><span class="meta">' + esc2(s.algo || '') + '</span></td></tr>')) +
+    '</table>' +
+    '<h2>Steps, in the order they run</h2><table><tr><th>Step</th><th>What it does</th><th>Rows in → out</th><th>Fields</th></tr>' +
+    rows(rep.steps.map((s) => '<tr><td><b>' + esc2(s.name) + '</b><br><span class="meta">' + esc2(s.type) +
+      (s.inputs.length ? '<br>from ' + esc2(s.inputs.join(', ')) : '') + '</span></td>' +
+      '<td><pre>' + esc2(s.prose) + '</pre>' + (s.error ? '<div class="fail">Error: ' + esc2(s.error) + '</div>' : '') +
+      (s.validation ? '<table>' + rows(s.validation.map((v) => '<tr><td>' + esc2(v.label) + '</td><td class="' + (v.ok ? 'ok' : 'fail') + '">' +
+        (v.ok ? 'pass' : (v.error ? esc2(v.error) : fmtInt(v.failed) + ' of ' + fmtInt(v.total) + ' rows fail')) +
+        (v.detail ? '<br><span class="meta">' + esc2(v.detail) + '</span>' : '') + '</td></tr>')) + '</table>' : '') + '</td>' +
+      '<td>' + (s.rowsIn == null ? '—' : fmtInt(s.rowsIn)) + ' → ' + (s.rowsOut == null ? '—' : fmtInt(s.rowsOut)) +
+      (s.rowsIn != null && s.rowsOut != null && s.rowsIn !== s.rowsOut
+        ? '<br><span class="meta">' + (s.rowsOut > s.rowsIn ? '+' : '') + fmtInt(s.rowsOut - s.rowsIn) + '</span>' : '') + '</td>' +
+      '<td class="meta">' + (s.added.length ? 'added ' + esc2(s.added.join(', ')) : '') +
+      (s.removed.length ? '<br>removed ' + esc2(s.removed.join(', ')) : '') + '</td></tr>')) +
+    '</table>' +
+    '<h2>Outputs</h2>' +
+    (rep.outputs.length ? rows(rep.outputs.map((o) => '<h3 style="font-size:.9rem;margin:.8rem 0 .2rem">' + esc2(o.name) + '</h3>' +
+      '<div class="meta">' + fmtInt(o.rows) + ' rows · ' + o.fields + ' fields · fingerprint <code>' + esc2(o.hash || '—') + '</code> (' + esc2(o.algo || '') + ')</div>' +
+      '<table><tr><th>Field</th><th>First produced by</th></tr>' +
+      rows((o.provenance || []).map((p) => '<tr><td><code>' + esc2(p.field) + '</code></td><td>' + esc2(p.origin) + '</td></tr>')) + '</table>'))
+      : '<p class="meta">This flow has no Output step, so nothing is fingerprinted as a final result.</p>') +
+    '<h2>How to read this</h2><p class="meta">Fingerprints are computed over the data as CSV at the moment this report was generated. ' +
+    'Re-running the flow against unchanged sources reproduces the same fingerprints; a changed fingerprint means the data changed, ' +
+    'even when the row count did not. Field provenance names the last step that introduced each field.</p>' +
+    '</body></html>';
+}
+
+async function openAuditReport() {
+  const body = el('div');
+  body.appendChild(el('p', { class: 'hint', text: 'Building the report and fingerprinting every table…' }));
+  openModal({ title: 'Audit report', body: body, wide: true, buttons: [{ label: 'Close', fn: closeModal }] });
+  let rep;
+  try { rep = await buildAuditReport(); }
+  catch (e) { body.innerHTML = ''; body.appendChild(el('div', { class: 'err-msg', text: e.message })); return; }
+  state.lastAudit = rep;
+  body.innerHTML = '';
+  const frame = el('iframe', { class: 'auditframe', sandbox: 'allow-same-origin' });
+  body.appendChild(frame);
+  setTimeout(() => {
+    try {
+      frame.contentDocument.open();
+      frame.contentDocument.write(auditHTML(rep));
+      frame.contentDocument.close();
+    } catch (e) { body.appendChild(el('div', { class: 'err-msg', text: 'Could not render the preview: ' + e.message })); }
+  }, 10);
+  const f = $('.modal-f');
+  f.innerHTML = '';
+  f.appendChild(el('button', { class: 'btn', text: 'Download JSON', onclick: () => download(JSON.stringify(rep, null, 2), slug(rep.flow) + '-audit.json', 'application/json') }));
+  f.appendChild(el('button', { class: 'btn', text: 'Download HTML', onclick: () => download(auditHTML(rep), slug(rep.flow) + '-audit.html', 'text/html') }));
+  f.appendChild(el('button', { class: 'btn primary', text: 'Close', onclick: closeModal }));
+}
+
+/* ------------------------- Validate inspector ------------------------- */
+function inspValidate(body, n) {
+  const c = n.config, flds = inputFields(n);
+  const upd = () => { markDirty(); refresh(); };
+  body.appendChild(el('p', { class: 'hint', style: 'margin-top:0',
+    text: 'Rules the data must satisfy. The step passes data through and reports what failed, so problems surface here instead of in a report.' }));
+
+  const add = el('select');
+  add.appendChild(el('option', { value: '', text: '+ Add a rule…' }));
+  RULE_ORDER.forEach((k) => add.appendChild(el('option', { value: k, text: RULE_TYPES[k].label })));
+  add.addEventListener('change', () => {
+    if (!add.value) return;
+    const r = { id: uid('r'), type: add.value };
+    if (RULE_TYPES[add.value].needs.indexOf('column') >= 0 && flds.length) r.column = flds[0].name;
+    if (add.value === 'unique') r.columns = flds.length ? [flds[0].name] : [];
+    if (add.value === 'rowcount') { r.min = 1; r.max = ''; }
+    if (add.value === 'freshness') r.days = 30;
+    c.rules = (c.rules || []).concat([r]);
+    add.value = '';
+    upd();
+  });
+  body.appendChild(labeled('', add));
+
+  const report = c.report || [];
+  const list = el('div', { class: 'steps' });
+  (c.rules || []).forEach((r, i) => {
+    const rep = report.filter((x) => x.id === r.id)[0];
+    const box = el('div', { class: 'step open' + (rep && !rep.ok ? ' bad' : '') });
+    const b = el('div', { class: 'step-b', style: 'display:block;border-top:none' });
+    const head = el('div', { class: 'row', style: 'margin-bottom:.4rem' });
+    head.appendChild(el('span', { class: 'step-n', text: String(i + 1) }));
+    head.appendChild(el('span', { style: 'flex:1;font-size:.75rem;font-weight:600;color:var(--ink)', text: RULE_TYPES[r.type].label }));
+    head.appendChild(el('button', { class: 'icb danger', html: '&times;', title: 'Remove',
+      onclick: () => { c.rules.splice(i, 1); upd(); } }));
+    b.appendChild(head);
+    if (rep) {
+      b.appendChild(el('div', {
+        class: rep.ok ? 'ok-msg' : 'err-msg',
+        text: rep.error ? rep.error
+          : rep.ok ? ('Passes' + (rep.detail ? ' — ' + rep.detail : '') )
+          : (fmtInt(rep.failed) + ' of ' + fmtInt(rep.total) + ' rows fail' + (rep.detail ? ' — ' + rep.detail : ''))
+      }));
+      if (rep.histogram) {
+        const h = el('div', { class: 'benford' });
+        rep.histogram.forEach((d) => {
+          const col = el('div', { class: 'benford-col', title: d.d + ': ' + (d.got * 100).toFixed(1) + '% seen, ' + (d.want * 100).toFixed(1) + '% expected' });
+          col.appendChild(el('i', { style: 'height:' + Math.round(d.got / 0.35 * 100) + '%' }));
+          col.appendChild(el('u', { style: 'bottom:' + Math.round(d.want / 0.35 * 100) + '%' }));
+          col.appendChild(el('span', { text: String(d.d) }));
+          h.appendChild(col);
+        });
+        b.appendChild(labeled('First digit: seen (bar) against expected (line)', h));
+      }
+    }
+    const needs = RULE_TYPES[r.type].needs;
+    if (needs.indexOf('column') >= 0) b.appendChild(labeled('Field', fieldSelect(flds, r.column, (v) => { r.column = v; upd(); })));
+    if (needs.indexOf('columns') >= 0) b.appendChild(labeled('Fields that together identify a row', multiFieldBox(flds, r.columns, (v) => { r.columns = v; upd(); })));
+    if (needs.indexOf('values') >= 0) {
+      const ta = el('textarea', { placeholder: 'One allowed value per line' });
+      ta.value = r.values || '';
+      ta.addEventListener('input', debounce(() => { r.values = ta.value; upd(); }, 450));
+      b.appendChild(labeled('Allowed values', ta));
+    }
+    if (needs.indexOf('min') >= 0) {
+      const row = el('div', { class: 'row g2' });
+      row.appendChild(labeled('At least', numInput(r.min, (v) => { r.min = v; upd(); }, 'no minimum')));
+      row.appendChild(labeled('At most', numInput(r.max, (v) => { r.max = v; upd(); }, 'no maximum')));
+      b.appendChild(row);
+    }
+    if (needs.indexOf('pattern') >= 0) b.appendChild(labeled('Pattern', textInput(r.pattern, (v) => { r.pattern = v; upd(); }, 'e.g. ^[0-9]{5}$')));
+    if (needs.indexOf('expr') >= 0) {
+      const ta = el('textarea', { placeholder: 'e.g. [actual] <= [budgeted] * 1.1' });
+      ta.value = r.expr || '';
+      ta.addEventListener('input', debounce(() => { r.expr = ta.value; upd(); }, 450));
+      b.appendChild(labeled('Expression that must be true', ta, 'Same language as a calculated field.'));
+    }
+    if (needs.indexOf('days') >= 0) b.appendChild(labeled('Within the last (days)', numInput(r.days, (v) => { r.days = v; upd(); })));
+    box.appendChild(b);
+    list.appendChild(box);
+  });
+  if (!(c.rules || []).length) {
+    body.appendChild(el('div', { class: 'empty-steps', text: 'No rules yet. Add one above — a good first pair is "must never be empty" on a key field and "row count must be in range".' }));
+  } else body.appendChild(list);
+
+  body.appendChild(labeled('When a rule fails', selectFrom([
+    { v: 'warn', l: 'Report it here, pass every row through' },
+    { v: 'flag', l: 'Add a field marking the failing rows' },
+    { v: 'drop', l: 'Drop the failing rows' },
+    { v: 'stop', l: 'Stop the flow with an error' }
+  ], c.onFail || 'warn', (v) => { c.onFail = v; upd(); })));
+  const failed = (c.report || []).filter((r) => !r.ok).length;
+  if ((c.report || []).length) {
+    body.appendChild(el('div', { class: failed ? 'err-msg' : 'ok-msg',
+      text: failed ? failed + ' of ' + c.report.length + ' rules fail' + (c.failedRows ? ' · ' + fmtInt(c.failedRows) + ' rows affected' : '')
+        : 'All ' + c.report.length + ' rules pass.' }));
+  }
+}
+
+/* -------------------------- Analyse inspector ------------------------- */
+function inspAnalyze(body, n) {
+  const c = n.config, flds = inputFields(n);
+  const upd = () => { markDirty(); refresh(); };
+  body.appendChild(el('p', { class: 'hint', style: 'margin-top:0',
+    text: 'Calculations that look across rows: change on the previous period, share of a total, rank, running totals.' }));
+
+  body.appendChild(labeled('Calculate within each (optional)', multiFieldBox(flds, c.partitionBy, (v) => { c.partitionBy = v; upd(); }),
+    'Tick the fields that define a series — e.g. agency, so each agency is treated separately.'));
+
+  const ob = c.orderBy = (c.orderBy && c.orderBy.length) ? c.orderBy : [{ column: '', dir: 'asc' }];
+  const obBox = el('div');
+  ob.forEach((o, i) => {
+    const row = el('div', { class: 'row', style: 'margin-bottom:.3rem' });
+    const sel = fieldSelect(flds, o.column, (v) => { o.column = v; upd(); }, { placeholder: 'order by…' });
+    sel.style.flex = '2';
+    row.appendChild(sel);
+    row.appendChild(selectFrom([{ v: 'asc', l: 'ascending' }, { v: 'desc', l: 'descending' }], o.dir || 'asc', (v) => { o.dir = v; upd(); }));
+    if (ob.length > 1) row.appendChild(el('button', { class: 'icb danger', html: '&times;', onclick: () => { ob.splice(i, 1); upd(); } }));
+    obBox.appendChild(row);
+  });
+  obBox.appendChild(el('button', { class: 'btn sm', text: '+ Add ordering', onclick: () => { ob.push({ column: '', dir: 'asc' }); upd(); } }));
+  body.appendChild(labeled('In this order', obBox, 'Usually a date or year. Order decides what "previous" means.'));
+
+  const list = el('div', { class: 'steps' });
+  (c.calcs || []).forEach((x, i) => {
+    const box = el('div', { class: 'step open' });
+    const b = el('div', { class: 'step-b', style: 'display:block;border-top:none' });
+    const head = el('div', { class: 'row', style: 'margin-bottom:.35rem' });
+    head.appendChild(el('span', { class: 'step-n', text: String(i + 1) }));
+    head.appendChild(el('span', { style: 'flex:1;font-size:.75rem;font-weight:600;color:var(--ink)', text: 'Calculation' }));
+    head.appendChild(el('button', { class: 'icb danger', html: '&times;', onclick: () => { c.calcs.splice(i, 1); upd(); } }));
+    b.appendChild(head);
+    b.appendChild(labeled('What to work out', selectFrom(WINDOW_ORDER.map((k) => ({ v: k, l: WINDOW_FNS[k].label })), x.fn, (v) => { x.fn = v; upd(); })));
+    if (WINDOW_FNS[x.fn] && WINDOW_FNS[x.fn].needsCol) {
+      b.appendChild(labeled('Of which field', fieldSelect(flds, x.column, (v) => { x.column = v; upd(); })));
+    }
+    if (['lag', 'lead', 'moving_avg'].indexOf(x.fn) >= 0) {
+      b.appendChild(labeled(x.fn === 'moving_avg' ? 'Window size' : 'How many rows back/forward',
+        numInput(x.n || (x.fn === 'moving_avg' ? 3 : 1), (v) => { x.n = v; upd(); })));
+    }
+    if (['rank', 'dense_rank'].indexOf(x.fn) >= 0) {
+      const lab = el('label', { class: 'chk' });
+      const cb = el('input', { type: 'checkbox' }); cb.checked = !!x.desc;
+      cb.addEventListener('change', () => { x.desc = cb.checked; upd(); });
+      lab.appendChild(cb); lab.appendChild(el('span', { text: 'Rank largest first' }));
+      b.appendChild(el('div', { class: 'fieldset' }, [lab]));
+    }
+    b.appendChild(labeled('New field name', textInput(x.as, (v) => { x.as = v; upd(); }, defaultWindowName(x))));
+    box.appendChild(b);
+    list.appendChild(box);
+  });
+  if ((c.calcs || []).length) body.appendChild(labeled('Calculations', list));
+  else body.appendChild(el('div', { class: 'empty-steps', text: 'No calculations yet. "Percent change from previous" with a year ordering is the usual first one.' }));
+  body.appendChild(el('button', {
+    class: 'btn full', text: '+ Add a calculation',
+    onclick: () => {
+      c.calcs = (c.calcs || []).concat([{ fn: 'pct_change', column: defaultMeasureField(n, flds), as: '' }]);
+      upd();
+    }
+  }));
+}
+
+/** The field a series is most likely ordered by: a date, else something year-shaped. */
+function likelyTimeField(n) {
+  const src = (n.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  if (!table) return '';
+  const dates = table.fields.filter((f) => f.type === 'date');
+  if (dates.length) return dates[0].name;
+  const yearish = table.fields.filter((f) => {
+    if (f.type !== 'number') return false;
+    if (/\b(year|fy|yr|period)\b/i.test(f.name)) return true;
+    const vals = table.rows.slice(0, 200).map((r) => r[f.name]).filter((v) => v != null);
+    return vals.length > 0 && vals.every((v) => Number.isInteger(v) && v > 1800 && v < 2200);
+  });
+  return yearish.length ? yearish[0].name : '';
+}
+
+/** Fields that could identify a row in both tables — unique on each side. */
+function suggestCompareKeys(A, B) {
+  const common = A.fields.map((f) => f.name).filter((nm) => findField(B.fields, nm));
+  const uniqueIn = (t, nm) => {
+    const seen = new Set();
+    for (let i = 0; i < t.rows.length; i++) {
+      const k = keyOf(t.rows[i][nm], typeOf(t.fields, nm));
+      if (seen.has(k)) return false;
+      seen.add(k);
+    }
+    return t.rows.length > 0;
+  };
+  const named = common.filter((nm) => /\b(id|code|key|number|no)\b/i.test(nm));
+  const ordered = named.concat(common.filter((nm) => named.indexOf(nm) < 0));
+  for (let i = 0; i < ordered.length; i++) {
+    if (uniqueIn(A, ordered[i]) && uniqueIn(B, ordered[i])) return [ordered[i]];
+  }
+  return [];
+}
+
+/** The numeric field most likely to be the measure — not a year, id or grouping key. */
+function defaultMeasureField(n, flds) {
+  const c = n.config;
+  const used = {};
+  (c.partitionBy || []).forEach((x) => { used[x] = 1; });
+  (c.orderBy || []).forEach((o) => { if (o && o.column) used[o.column] = 1; });
+  const src = (n.inputs || [])[0];
+  const table = src ? tableOf(src) : null;
+  const nums = flds.filter((f) => f.type === 'number');
+  let best = null, bestScore = -Infinity;
+  nums.forEach((f) => {
+    let score = 0;
+    if (used[f.name]) score -= 50;
+    if (/\b(year|fy|yr|id|code|fips|zip|rank|month|day|quarter)\b/i.test(f.name)) score -= 30;
+    if (table) {
+      const vals = table.rows.slice(0, 200).map((r) => r[f.name]).filter((v) => v != null);
+      const yearish = vals.length && vals.every((v) => Number.isInteger(v) && v > 1800 && v < 2200);
+      if (yearish) score -= 40;
+      const allInt = vals.length && vals.every((v) => Number.isInteger(v));
+      if (!allInt) score += 8;                        // decimals suggest a measure
+      const spread = vals.length ? Math.max.apply(null, vals) - Math.min.apply(null, vals) : 0;
+      if (spread > 1000) score += 5;
+    }
+    if (score > bestScore) { bestScore = score; best = f; }
+  });
+  return best ? best.name : (nums[0] ? nums[0].name : '');
+}
+
+/* -------------------------- Compare inspector ------------------------- */
+function inspCompare(body, n) {
+  const c = n.config;
+  const upd = () => { markDirty(); refresh(); };
+  const aId = (n.inputs || [])[0], bId = (n.inputs || [])[1];
+  const A = aId ? tableOf(aId) : null, B = bId ? tableOf(bId) : null;
+  body.appendChild(el('p', { class: 'hint', style: 'margin-top:0',
+    text: 'Reconciles two versions of the same data — what was added, removed, or changed, and in which field.' }));
+
+  const wires = el('div', { class: 'hint' });
+  wires.innerHTML = '<b>Before:</b> ' + (aId ? esc(getNode(aId).name) : '<span style="color:var(--err)">not connected</span>') +
+    '<br><b>After:</b> ' + (bId ? esc(getNode(bId).name) : '<span style="color:var(--err)">not connected</span>');
+  const wrap = el('div');
+  wrap.appendChild(wires);
+  if (aId && bId) wrap.appendChild(el('button', { class: 'btn sm', style: 'margin-top:.4rem', text: 'Swap the two', onclick: () => { n.inputs.reverse(); upd(); } }));
+  body.appendChild(labeled('Inputs', wrap));
+  if (!A || !B) return;
+
+  const common = A.fields.map((f) => f.name).filter((nm) => findField(B.fields, nm));
+  if (!(c.keys || []).length) {
+    const guess = suggestCompareKeys(A, B);
+    if (guess.length) {
+      body.appendChild(el('button', {
+        class: 'btn full', style: 'margin-bottom:.6rem',
+        text: 'Use "' + guess[0] + '" as the key',
+        onclick: () => { c.keys = guess; upd(); }
+      }));
+      body.appendChild(el('div', { class: 'hint', style: 'margin:-.4rem 0 .7rem',
+        text: 'It identifies each row uniquely in both inputs.' }));
+    }
+  }
+  body.appendChild(labeled('Fields that identify a row', multiFieldBox(common.map((nm) => ({ name: nm, type: typeOf(A.fields, nm) })), c.keys, (v) => { c.keys = v; upd(); }),
+    'The key both sides share — an id, or a combination such as agency plus year.'));
+  const rest = common.filter((nm) => (c.keys || []).indexOf(nm) < 0);
+  body.appendChild(labeled('Fields to compare (none = all shared fields)',
+    multiFieldBox(rest.map((nm) => ({ name: nm, type: typeOf(A.fields, nm) })), c.columns, (v) => { c.columns = v; upd(); })));
+  body.appendChild(labeled('What to return', selectFrom([
+    { v: 'changes', l: 'One row per key that changed, was added or removed' },
+    { v: 'cells', l: 'One row per changed cell, with before and after' },
+    { v: 'all', l: 'Every key, including unchanged' }
+  ], c.mode || 'changes', (v) => { c.mode = v; upd(); })));
+  if (c.mode !== 'cells') {
+    const lab = el('label', { class: 'chk' });
+    const cb = el('input', { type: 'checkbox' }); cb.checked = !!c.showBefore;
+    cb.addEventListener('change', () => { c.showBefore = cb.checked; upd(); });
+    lab.appendChild(cb); lab.appendChild(el('span', { text: 'Include the before values alongside' }));
+    body.appendChild(el('div', { class: 'fieldset' }, [lab]));
+  }
+  body.appendChild(labeled('Numeric tolerance', numInput(c.tolerance || 0, (v) => { c.tolerance = v; upd(); }),
+    'Differences at or below this are treated as unchanged — useful for rounding.'));
+
+  const sum = c.summary;
+  if (sum) {
+    const box = el('div', { class: 'reconcile' });
+    [['added', sum.added, 'var(--ok)'], ['removed', sum.removed, 'var(--err)'],
+     ['changed', sum.changed, 'var(--warn)'], ['unchanged', sum.unchanged, 'var(--muted)']].forEach((x) => {
+      const cell = el('div', { class: 'rec-cell' });
+      cell.appendChild(el('b', { text: fmtInt(x[1]), style: 'color:' + x[2] }));
+      cell.appendChild(el('span', { text: x[0] }));
+      box.appendChild(cell);
+    });
+    body.appendChild(labeled('Reconciliation', box,
+      sum.cells ? fmtInt(sum.cells) + ' individual cells differ.' : 'No cell differences found.'));
+  }
+}
+
+/* =====================================================================
    Saving, loading, import / export
    ===================================================================== */
 const STORE_KEY = 'dps.flows.v1';
@@ -6358,6 +7419,9 @@ function openHelp(section) {
     '<li><b>Join</b> matches rows across two inputs on one or more key pairs, with inner, left, right, full outer, left-only, and semi-join options.</li>' +
     '<li><b>Union</b> stacks two or more inputs, aligning fields by name and filling gaps with nulls.</li>' +
     '<li><b>Pivot</b> reshapes between wide and long layouts in either direction.</li>' +
+    '<li><b>Analyse</b> adds calculations that look across rows: change on the previous period, percent of a group total, rank, running totals, moving averages, z-scores, index numbers. You choose what each series is (partition) and in what order, so &ldquo;change on last year, per agency&rdquo; is a few clicks rather than a self-join.</li>' +
+    '<li><b>Validate</b> holds rules the data must satisfy &mdash; never empty, unique, one of a list, within a range, matching a pattern, an expression that must hold, a row count in range, dates recent enough, or a Benford first-digit check. It reports what failed and can pass rows through, flag them, drop them, or stop the flow.</li>' +
+    '<li><b>Compare</b> reconciles two versions of the same data on a key you choose: what was added, removed or changed, either one row per key or one row per changed cell with before, after and the difference. A numeric tolerance lets rounding pass.</li>' +
     '<li><b>Claude</b> sends values to the Claude API and writes the answers back as new fields &mdash; see below.</li>' +
     '<li><b>Output</b> marks a result you want to export as CSV, TSV, or JSON.</li>' +
     '</ul>' +
@@ -6373,6 +7437,11 @@ function openHelp(section) {
     '<p>The model defaults to Claude Opus 5; Sonnet and Haiku are cheaper options in the picker, with prices shown. Effort defaults to low, which suits labelling and standardising &mdash; raise it for judgement-heavy extraction or summarising. The step reports what it actually spent, taken from the token counts the API returns.</p>' +
     '<p>Claude also helps you build the flow rather than transform it: <b>Suggest steps with Claude</b> in a Clean step proposes cleaning operations from the column profile (field names, types, null counts, commonest values &mdash; not the whole table), and <b>Write it with Claude</b> in a calculated field turns a plain-English description into an expression, which is compiled against your fields before it is inserted.</p>' +
     '<p><b>Your API key</b> is stored in this browser only and sent directly to api.anthropic.com. It is never written into a saved or exported flow, so sharing a flow shares the steps and the cached answers but not your key. Anyone who can use this browser profile can read it, and usage bills to your account &mdash; so do not paste a key into a shared machine. Set or remove it under <b>Claude settings</b>.</p>' +
+    '<h4>Auditing a flow</h4>' +
+    '<p><b>Audit report</b> in the left rail produces a record you can hand to someone who has to trust the numbers: every source with where it came from, when it was fetched, how many rows, and a SHA-256 fingerprint of the data; every step in the order it runs, described in plain English, with rows in versus rows out and the fields it added or removed; any validation results; and for each output a fingerprint plus which step first produced each field. Download it as HTML or JSON.</p>' +
+    '<p>Fingerprints make reproduction checkable: re-running against unchanged sources gives the same fingerprint, and a changed fingerprint means the data moved even if the row count did not. Where the browser will not provide SHA-256 (an insecure context, such as opening the file directly from disk), the report falls back to a plain checksum and says so rather than implying a cryptographic hash.</p>' +
+    '<h4>Working with a lot of data</h4>' +
+    '<p>Two things keep large flows responsive. Steps are <b>only recomputed when something they depend on changes</b> &mdash; the Log tab marks each step as recomputed or reused, so editing the last step of a long flow does not re-run the whole thing. And <b>Sample mode</b> in the left rail works on the first few thousand rows of each source while you build, tinting the canvas so the state is obvious; untick it for the real run, export or audit.</p>' +
     '<h4>Reading the panel below</h4>' +
     '<p><b>Profile</b> shows each field with its type, distinct and null counts, a distribution, and summary statistics. Clicking a value in a profile bar adds a filter for it. <b>Data</b> is the first few hundred rows of the selected step. <b>Log</b> shows what each step produced and how long it took.</p>' +
     '<h4>Saving your work</h4>' +
@@ -6444,6 +7513,15 @@ function initTopbar() {
   $('#btnRefresh').addEventListener('click', () => runFlowWithSources(true));
   $('#btnTidy').addEventListener('click', tidyLayout);
   $('#btnAiSettings').addEventListener('click', openAiSettings);
+  $('#btnAudit').addEventListener('click', openAuditReport);
+  $('#chkSample').addEventListener('change', function () {
+    state.sample.on = this.checked;
+    $('#sampleNote').style.display = this.checked ? 'block' : 'none';
+    $('#sampleNote').textContent = this.checked
+      ? 'Using the first ' + fmtInt(state.sample.n) + ' rows of each source. Untick before exporting or auditing.' : '';
+    document.body.classList.toggle('sampling', this.checked);
+    refresh();
+  });
 
   $('#filePicker').addEventListener('change', function () {
     if (this.files && this.files.length) handleFiles(this.files);
@@ -6482,6 +7560,7 @@ function initTopbar() {
       '-',
       { label: 'Load sample data', fn: () => { loadSampleData(); refresh(); toast('Sample tables added', 'ok'); } },
       { label: 'Claude settings…', fn: openAiSettings },
+      { label: 'Audit report…', fn: openAuditReport },
       { label: 'How this works', fn: () => openHelp() }
     ]);
   });
