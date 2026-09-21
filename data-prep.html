@@ -913,8 +913,12 @@ function isBoolLike(s) {
 const isBlank = (v) => v == null || v === '' || (typeof v === 'number' && isNaN(v));
 
 /** Infer a column type from a sample of raw values. */
+/** "01", "007", "02139" — a code that happens to be digits. Never a number. */
+function isPaddedCode(s) {
+  return typeof s === 'string' && /^-?0\d/.test(s.trim()) && !/^-?0\d*\.\d/.test(s.trim());
+}
 function inferType(values) {
-  let n = 0, num = 0, dt = 0, bool = 0;
+  let n = 0, num = 0, dt = 0, bool = 0, padded = 0;
   for (let i = 0; i < values.length; i++) {
     const v = values[i];
     if (isBlank(v)) continue;
@@ -923,11 +927,15 @@ function inferType(values) {
     if (typeof v === 'boolean') { bool++; num++; continue; }
     if (typeof v === 'number') { num++; continue; }
     const s = String(v);
+    if (isPaddedCode(s)) padded++;
     if (isBoolLike(s)) bool++;
     if (isNumberLike(s)) num++;
     else if (isDateLike(s)) dt++;
   }
   if (!n) return 'string';
+  // one zero-padded value is enough: these are identifiers, and turning them
+  // into numbers would drop the padding that makes them match
+  if (padded) return 'string';
   if (bool === n) return 'boolean';
   if (num / n >= 0.9) return 'number';
   if (dt / n >= 0.9) return 'date';
@@ -6326,7 +6334,7 @@ function runValidate(table, node) {
     report.push({
       id: r.id, type: r.type, label: ruleLabel(r), ok: res.ok !== false && !res.error,
       failed: res.failed || 0, total: res.total, detail: res.detail || '', error: res.error || null,
-      histogram: res.histogram || null, skipped: !!res.skipped
+      histogram: res.histogram || null, skipped: !!res.skipped, tableLevel: !!res.tableLevel
     });
   });
   node.config.report = report;
@@ -6334,7 +6342,8 @@ function runValidate(table, node) {
   node.config.failedRows = failedRows.size;
   if (anyFail && node.config.onFail === 'stop') {
     const first = report.filter((r) => !r.ok)[0];
-    throw new Error('Validation failed: ' + first.label + (first.error ? ' (' + first.error + ')' : ' — ' + fmtInt(first.failed) + ' rows'));
+    throw new Error('Validation failed: ' + first.label +
+      (first.error ? ' (' + first.error + ')' : first.tableLevel ? (first.detail ? ' — ' + first.detail : '') : ' — ' + fmtInt(first.failed) + ' rows'));
   }
   if (node.config.onFail === 'drop' && failedRows.size) {
     return { fields: cloneFields(table.fields), rows: table.rows.filter((_, i) => !failedRows.has(i)) };
@@ -6804,7 +6813,8 @@ function auditHTML(rep) {
       (s.inputs.length ? '<br>from ' + esc2(s.inputs.join(', ')) : '') + '</span></td>' +
       '<td><pre>' + esc2(s.prose) + '</pre>' + (s.error ? '<div class="fail">Error: ' + esc2(s.error) + '</div>' : '') +
       (s.validation ? '<table>' + rows(s.validation.map((v) => '<tr><td>' + esc2(v.label) + '</td><td class="' + (v.ok ? 'ok' : 'fail') + '">' +
-        (v.ok ? 'pass' : (v.error ? esc2(v.error) : fmtInt(v.failed) + ' of ' + fmtInt(v.total) + ' rows fail')) +
+        (v.ok ? 'pass' : v.error ? esc2(v.error) : v.tableLevel ? 'fail'
+          : fmtInt(v.failed) + ' of ' + fmtInt(v.total) + ' rows fail') +
         (v.detail ? '<br><span class="meta">' + esc2(v.detail) + '</span>' : '') + '</td></tr>')) + '</table>' : '') + '</td>' +
       '<td>' + (s.rowsIn == null ? '—' : fmtInt(s.rowsIn)) + ' → ' + (s.rowsOut == null ? '—' : fmtInt(s.rowsOut)) +
       (s.rowsIn != null && s.rowsOut != null && s.rowsIn !== s.rowsOut
@@ -6889,6 +6899,7 @@ function inspValidate(body, n) {
         class: rep.ok ? 'ok-msg' : 'err-msg',
         text: rep.error ? rep.error
           : rep.ok ? ('Passes' + (rep.detail ? ' — ' + rep.detail : '') )
+          : rep.tableLevel ? ('Fails' + (rep.detail ? ' — ' + rep.detail : ''))
           : (fmtInt(rep.failed) + ' of ' + fmtInt(rep.total) + ' rows fail' + (rep.detail ? ' — ' + rep.detail : ''))
       }));
       if (rep.histogram) {
