@@ -766,7 +766,7 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
 <div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
 <div class="toasts" id="toasts"></div>
 <div class="ctxmenu" id="ctxmenu"></div>
-<input type="file" id="filePicker" accept=".csv,.tsv,.txt,.json,.xlsx,.xls" multiple style="display:none">
+<input type="file" id="filePicker" accept=".csv,.tsv,.txt,.json,.xlsx,.xls,.zip" multiple style="display:none">
 <input type="file" id="flowPicker" accept=".json" style="display:none">
 <script>
 /* =====================================================================
@@ -3900,7 +3900,7 @@ function openAddData() {
   const drop = el('div', {
     class: 'drop', html:
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M8 8l4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>' +
-      '<b>Choose files or drop them here</b><span>CSV, TSV, JSON, or Excel (.xlsx / .xls) — up to a few hundred thousand rows</span>'
+      '<b>Choose files or drop them here</b><span>CSV, TSV, JSON, Excel, or a .zip of them — up to a few hundred thousand rows</span>'
   });
   drop.addEventListener('click', () => $('#filePicker').click());
   ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
@@ -3986,8 +3986,14 @@ function placeInput(datasetId) {
 
 function handleFiles(fileList, dropPoint) {
   const files = Array.from(fileList);
+  const zips = files.filter((f) => /\.zip$/i.test(f.name));
+  if (zips.length) {
+    zips.forEach((z) => openZipPicker(z));
+    if (zips.length === files.length) return;
+  }
+  const rest = files.filter((f) => !/\.zip$/i.test(f.name));
   let done = 0, added = [];
-  files.forEach((file) => {
+  rest.forEach((file) => {
     readFile(file, (err, table) => {
       done++;
       if (err) { toast(file.name + ': ' + err.message, 'err', 6000); }
@@ -3995,7 +4001,7 @@ function handleFiles(fileList, dropPoint) {
         const id = addDataset(file.name.replace(/\.[^.]+$/, ''), table, file.name + ' · ' + fmtBytes(file.size));
         added.push({ id: id, rows: table.rows.length });
       }
-      if (done === files.length) {
+      if (done === rest.length) {
         added.forEach((a, i) => {
           if (dropPoint) {
             const n = addNode('input', dropPoint.x - NODE_W / 2, dropPoint.y - 40 + i * NODE_GAP, { datasetId: a.id });
@@ -4045,10 +4051,15 @@ function readFile(file, cb) {
 }
 
 function relinkDataset(dsId) {
-  const input = el('input', { type: 'file', accept: '.csv,.tsv,.txt,.json,.xlsx,.xls' });
+  const input = el('input', { type: 'file', accept: '.csv,.tsv,.txt,.json,.xlsx,.xls,.zip' });
   input.addEventListener('change', () => {
     if (!input.files.length) return;
-    readFile(input.files[0], (err, table) => {
+    const f = input.files[0];
+    if (/\.zip$/i.test(f.name)) {
+      openZipPicker(f, { bind: dsId });
+      return;
+    }
+    readFile(f, (err, table) => {
       if (err) { toast(err.message, 'err'); return; }
       const ds = state.flow.datasets[dsId];
       ds.fields = table.fields; ds.rows = table.rows;
@@ -4059,6 +4070,196 @@ function relinkDataset(dsId) {
     });
   });
   input.click();
+}
+
+/* =====================================================================
+   ZIP archives
+   Statistical agencies ship data as zipped folders of CSVs. This reads
+   the archive in the browser using the platform's own decompressor, so
+   a downloaded bundle can be opened whole instead of unpacked by hand.
+   ===================================================================== */
+const ZIP_EOCD = 0x06054b50, ZIP_CEN = 0x02014b50;
+const DATA_EXT = /\.(csv|tsv|txt|json|xlsx|xls)$/i;
+
+/** "govfin/2022/state_revenue.csv" -> "2022 / state_revenue", so per-year folders stay apart. */
+function zipEntryName(path) {
+  const parts = String(path).split('/').filter(Boolean);
+  const base = parts.pop().replace(/\.[^.]+$/, '');
+  const parent = parts.length ? parts[parts.length - 1] : '';
+  return parent ? parent + ' / ' + base : base;
+}
+
+function zipEntries(buf) {
+  const dv = new DataView(buf), n = buf.byteLength;
+  // the end-of-central-directory record sits in the last 64KB, after any comment
+  let eocd = -1;
+  for (let i = n - 22; i >= Math.max(0, n - 65557); i--) {
+    if (dv.getUint32(i, true) === ZIP_EOCD) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('That does not look like a ZIP archive.');
+  const total = dv.getUint16(eocd + 10, true);
+  const cdSize = dv.getUint32(eocd + 12, true);
+  const cdOff = dv.getUint32(eocd + 16, true);
+  if (total === 0xFFFF || cdOff === 0xFFFFFFFF || cdSize === 0xFFFFFFFF) {
+    throw new Error('This archive uses the ZIP64 extension, which this reader does not handle. Unzip it and add the files directly.');
+  }
+  const out = [];
+  let p = cdOff;
+  for (let i = 0; i < total && p + 46 <= n; i++) {
+    if (dv.getUint32(p, true) !== ZIP_CEN) break;
+    const flags = dv.getUint16(p + 8, true);
+    const method = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const size = dv.getUint32(p + 24, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const commentLen = dv.getUint16(p + 32, true);
+    const local = dv.getUint32(p + 42, true);
+    const nameBytes = new Uint8Array(buf, p + 46, nameLen);
+    let name;
+    try { name = new TextDecoder(flags & 0x800 ? 'utf-8' : 'utf-8', { fatal: false }).decode(nameBytes); }
+    catch (e) { name = String.fromCharCode.apply(null, Array.from(nameBytes)); }
+    p += 46 + nameLen + extraLen + commentLen;
+    if (/\/$/.test(name)) continue;                             // a directory
+    if (/(^|\/)(__MACOSX\/|\._|\.DS_Store$)/.test(name)) continue;  // macOS noise
+    out.push({ name: name, method: method, compSize: compSize, size: size, local: local, encrypted: !!(flags & 0x1) });
+  }
+  if (!out.length) throw new Error('That archive contains no files this tool can read.');
+  return out;
+}
+
+async function zipExtract(buf, entry) {
+  if (entry.encrypted) throw new Error('"' + entry.name + '" is password protected.');
+  const dv = new DataView(buf);
+  if (dv.getUint32(entry.local, true) !== 0x04034b50) throw new Error('"' + entry.name + '" could not be located in the archive.');
+  const nameLen = dv.getUint16(entry.local + 26, true);
+  const extraLen = dv.getUint16(entry.local + 28, true);
+  const start = entry.local + 30 + nameLen + extraLen;
+  const raw = new Uint8Array(buf, start, entry.compSize);
+  if (entry.method === 0) return raw;
+  if (entry.method !== 8) throw new Error('"' + entry.name + '" uses an unsupported compression method (' + entry.method + ').');
+  if (typeof DecompressionStream === 'undefined') {
+    throw new Error('This browser cannot decompress ZIP entries. Unzip the archive and add the files directly.');
+  }
+  const stream = new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+/** Turn bytes that came out of an archive into a table, by file extension. */
+function tableFromBytes(name, bytes) {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (ext === 'xlsx' || ext === 'xls') {
+    if (typeof XLSX === 'undefined') throw new Error('The Excel reader has not loaded, so "' + name + '" cannot be opened.');
+    const wb = XLSX.read(bytes, { type: 'array' });
+    const first = wb.SheetNames[0];
+    const matrix = XLSX.utils.sheet_to_json(wb.Sheets[first], { header: 1, raw: true, defval: null, blankrows: false });
+    if (!matrix.length) throw new Error('"' + name + '" is empty.');
+    return tableFromMatrix(matrix.map((r) => r.map((c) => (c && c.getTime) ? isoDate(c) : c)));
+  }
+  const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+  if (ext === 'json' || /^\s*[\[{]/.test(text.slice(0, 200))) return tableFromJSON(JSON.parse(text));
+  const rows = parseDelimited(text, ext === 'tsv' ? '\t' : null);
+  if (!rows.length) throw new Error('"' + name + '" has no rows.');
+  return tableFromMatrix(rows);
+}
+
+/** Show what is inside an archive and let the analyst choose. */
+async function openZipPicker(file, opts) {
+  opts = opts || {};
+  let buf, entries;
+  try {
+    buf = await file.arrayBuffer();
+    entries = zipEntries(buf);
+  } catch (e) {
+    toast(e.message, 'err', 8000);
+    return;
+  }
+  const readable = entries.filter((e) => DATA_EXT.test(e.name));
+  const others = entries.filter((e) => !DATA_EXT.test(e.name));
+  const chosen = Object.create(null);
+  readable.forEach((e) => { chosen[e.name] = !/\.txt$/i.test(e.name); });
+
+  const bindTo = opts.bind ? state.flow.datasets[opts.bind] : null;
+  if (bindTo) readable.forEach((e) => { chosen[e.name] = false; });
+  const body = el('div');
+  body.appendChild(el('p', { class: 'hint',
+    text: bindTo
+      ? file.name + ' — choose the one file inside that should fill "' + bindTo.name + '".'
+      : file.name + ' — ' + fmtInt(entries.length) + ' file' + (entries.length === 1 ? '' : 's') + ' inside, ' +
+        fmtInt(readable.length) + ' this tool can read. Each one you tick becomes its own data source.' }));
+  const box = el('div', { class: 'scrollbox', style: 'max-height:300px' });
+  readable.forEach((e) => {
+    const lab = el('label', { class: 'chk' });
+    const cb = el('input', { type: 'checkbox' });
+    cb.checked = !!chosen[e.name];
+    cb.addEventListener('change', () => {
+      if (bindTo && cb.checked) {                 // binding takes exactly one
+        Object.keys(chosen).forEach((k) => { chosen[k] = false; });
+        $$('input', box).forEach((other) => { if (other !== cb) other.checked = false; });
+      }
+      chosen[e.name] = cb.checked;
+    });
+    lab.appendChild(cb);
+    lab.appendChild(el('span', { style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis', text: e.name }));
+    lab.appendChild(el('span', { class: 'sz', style: 'font-size:.6875rem;color:var(--muted)', text: fmtBytes(e.size) }));
+    box.appendChild(lab);
+  });
+  if (!readable.length) box.appendChild(el('div', { class: 'hint', text: 'Nothing inside has a .csv, .tsv, .json or .xlsx extension.' }));
+  body.appendChild(box);
+  const row = el('div', { class: 'row', style: 'margin-top:.4rem' });
+  row.appendChild(el('button', { class: 'btn sm', text: 'All', onclick: () => { $$('input', box).forEach((c) => { c.checked = true; }); readable.forEach((e) => { chosen[e.name] = true; }); } }));
+  row.appendChild(el('button', { class: 'btn sm', text: 'None', onclick: () => { $$('input', box).forEach((c) => { c.checked = false; }); readable.forEach((e) => { chosen[e.name] = false; }); } }));
+  body.appendChild(row);
+  if (others.length) {
+    body.appendChild(el('div', { class: 'hint', style: 'margin-top:.6rem',
+      text: others.length + ' other file' + (others.length === 1 ? '' : 's') + ' skipped (' +
+        others.slice(0, 4).map((e) => e.name.split('/').pop()).join(', ') + (others.length > 4 ? '…' : '') + ').' }));
+  }
+  const status = el('div', { class: 'hint' });
+  body.appendChild(status);
+
+  openModal({
+    title: 'Open archive', body: body, wide: true, buttons: [
+      { label: 'Cancel', fn: closeModal },
+      { label: bindTo ? 'Use the ticked file' : 'Add the ticked files', primary: true, fn: async () => {
+        const want = readable.filter((e) => chosen[e.name]);
+        if (!want.length) { toast('Tick ' + (bindTo ? 'the file to use' : 'at least one file'), 'err'); return; }
+        if (bindTo) {
+          const e = want[0];
+          try {
+            const bytes = await zipExtract(buf, e);
+            const table = tableFromBytes(e.name, bytes);
+            bindTo.fields = table.fields; bindTo.rows = table.rows;
+            bindTo.source = file.name + ' → ' + e.name + ' · ' + fmtBytes(e.size);
+            bindTo.loaded = Date.now(); bindTo.error = null; bindTo.status = 'ok';
+            closeModal(); markDirty(); refresh();
+            toast('Linked ' + fmtInt(table.rows.length) + ' rows from ' + e.name, 'ok', 4000);
+          } catch (err) { toast(err.message, 'err', 9000); }
+          return;
+        }
+        const btn = $$('.modal-f .btn')[1];
+        btn.disabled = true;
+        const added = [], failed = [];
+        for (let i = 0; i < want.length; i++) {
+          const e = want[i];
+          btn.textContent = 'Reading ' + (i + 1) + ' of ' + want.length + '…';
+          status.textContent = e.name;
+          try {
+            const bytes = await zipExtract(buf, e);
+            const table = tableFromBytes(e.name, bytes);
+            added.push(addDataset(zipEntryName(e.name), table, file.name + ' → ' + e.name + ' · ' + fmtBytes(e.size)));
+          } catch (err) {
+            failed.push(e.name + ': ' + err.message);
+          }
+        }
+        closeModal();
+        added.forEach((id) => placeInput(id));
+        refresh();
+        if (added.length) toast('Added ' + added.length + ' table' + (added.length === 1 ? '' : 's') + ' from the archive', 'ok', 4000);
+        if (failed.length) toast(failed.length + ' could not be read — ' + failed[0], 'err', 9000);
+      } }
+    ]
+  });
 }
 
 /* =====================================================================
@@ -7394,7 +7595,7 @@ function openHelp(section) {
     '<p>A visual data preparation tool that runs entirely in your browser. Load files, wire together steps that clean, join, aggregate, and reshape the data, then export the result. Nothing is uploaded — the files never leave this page.</p>' +
     '<h4>Building a flow</h4>' +
     '<ul>' +
-    '<li><b>Add data</b> to create an input. CSV, TSV, JSON, and Excel files all work, as does pasted text or a live link to a URL or API.</li>' +
+    '<li><b>Add data</b> to create an input. CSV, TSV, JSON, and Excel files all work, as does pasted text or a live link to a URL or API. A <b>.zip</b> is opened in place: it lists what is inside and each file you tick becomes its own source, which suits the zipped folders of CSVs that statistical agencies publish.</li>' +
     '<li><b>Drag a step</b> from the left rail onto the canvas, or click it to drop it next to the selected step.</li>' +
     '<li><b>Connect steps</b> by dragging from the blue dot on a step\'s right edge to the dot on another step\'s left edge. Click a connection to remove it.</li>' +
     '<li><b>Select a step</b> to configure it on the right and preview its output below.</li>' +
