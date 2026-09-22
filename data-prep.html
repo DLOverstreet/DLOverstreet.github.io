@@ -247,6 +247,45 @@ table.grid tbody tr:hover{background:var(--accent-soft)}
 .t-date{color:var(--t-date)} .t-boolean{color:var(--t-boolean)}
 .grid-foot{padding:.4rem .75rem;font-size:.75rem;color:var(--muted);border-top:1px solid var(--line);background:var(--surface-2)}
 
+/* ---------- Chart ---------- */
+.chartbar{
+  display:flex;flex-wrap:wrap;gap:.5rem .7rem;align-items:flex-end;padding:.55rem .75rem;
+  border-bottom:1px solid var(--line-2);background:var(--surface-2);
+}
+.chartbar .fld{display:flex;flex-direction:column;gap:.15rem;min-width:0;flex:1 1 140px;max-width:220px}
+.chartbar .fld > label{font-size:.6875rem;color:var(--muted);font-weight:600}
+.chartbar select{font-size:.75rem;padding:.28rem .4rem;padding-right:1.3rem}
+.chartplot{padding-top:.2rem}
+.chartwrap{position:relative;padding:.4rem .75rem 0}
+svg.chart{display:block;max-width:100%}
+svg.chart .grid{stroke:var(--line);stroke-width:1}
+svg.chart text{font-family:inherit}
+svg.chart text.axis{fill:var(--muted);font-size:11px}
+svg.chart text.cat{fill:var(--body)}
+svg.chart text.val,svg.chart text.lbl{fill:var(--ink-soft);font-weight:600;font-variant-numeric:tabular-nums}
+svg.chart text.axis-title{fill:var(--muted);font-size:11px;font-weight:600}
+svg.chart .bar:hover,svg.chart .dot:hover{opacity:.8}
+.charttip{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--ink);color:#fff;
+  font-size:.75rem;line-height:1.45;padding:.35rem .5rem;border-radius:var(--r-sm);white-space:nowrap;
+  z-index:5;box-shadow:0 4px 14px rgba(22,41,63,.24);
+}
+.charttip.show{opacity:1}
+.chartlegend{display:flex;flex-wrap:wrap;gap:.35rem .9rem;padding:.15rem .75rem .1rem;font-size:.75rem;color:var(--body)}
+.legitem{display:inline-flex;align-items:center;gap:.35rem}
+.legitem i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:0 0 auto}
+.stattile{padding:1.1rem .95rem .3rem}
+.stat-k{font-size:.75rem;color:var(--muted);font-weight:600}
+.stat-v{font-size:2.5rem;line-height:1.1;font-weight:650;color:var(--ink);letter-spacing:-.02em;margin:.15rem 0 .1rem}
+.stat-s{font-size:.75rem;color:var(--muted)}
+svg.chart .hit{cursor:default}
+svg.chart .hit:focus{outline:none}
+svg.chart .hit:focus-visible{outline:2px solid var(--accent);outline-offset:1px;border-radius:3px}
+svg.chart .mark.on{stroke:var(--ink);stroke-width:2}
+.chartsum{padding:.2rem .75rem .9rem;font-size:.75rem;color:var(--muted);line-height:1.55;max-width:74ch}
+.chartsum h4{font-size:.6875rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin:0 0 .2rem}
+.chartsum p{margin:0 0 .25rem}
+
 /* ---------- Profile ---------- */
 .profile{display:flex;gap:.6rem;padding:.7rem;flex-wrap:wrap;align-items:flex-start}
 .pcard{
@@ -468,6 +507,22 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
 .help table{width:100%;border-collapse:collapse;font-size:.75rem;margin-top:.3rem}
 .help table td{border-bottom:1px solid var(--line-2);padding:.25rem .4rem;vertical-align:top}
 .help table td:first-child{font-family:var(--mono);color:var(--ink);white-space:nowrap;width:1%}
+.help ol.startlist{padding-left:1.2rem;margin:.3rem 0}
+.help ol.startlist li{margin-bottom:.45rem}
+.helpshell{display:flex;gap:1rem;align-items:flex-start;min-height:0}
+.helpnav{
+  flex:0 0 186px;display:flex;flex-direction:column;gap:1px;max-height:60vh;overflow:auto;
+  border-right:1px solid var(--line);padding-right:.6rem;
+}
+.helpnav button{
+  text-align:left;background:none;border:none;padding:.32rem .5rem;border-radius:var(--r-sm);
+  font-size:.75rem;color:var(--body);cursor:pointer;line-height:1.35;
+}
+.helpnav button:hover{background:var(--surface-2);color:var(--ink)}
+.helpnav button.active{background:var(--accent-soft);color:var(--accent-dk);font-weight:600}
+.helppane{flex:1;min-width:0;max-height:60vh;overflow:auto;padding-right:.3rem}
+.helppane:focus{outline:none}
+.helppane:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-sm)}
 
 /* ---------- Toast ---------- */
 .toasts{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:.4rem;align-items:center;pointer-events:none}
@@ -591,6 +646,11 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
   .overlay{padding:0;align-items:flex-end}
   .modal{max-width:none;max-height:92vh;border-radius:14px 14px 0 0}
   .modal.wide{max-width:none}
+  .helpshell{flex-direction:column;gap:.5rem}
+  .helpnav{flex:0 0 auto;flex-direction:row;flex-wrap:wrap;max-height:none;border-right:none;
+    border-bottom:1px solid var(--line);padding:0 0 .5rem;gap:.25rem}
+  .helpnav button{border:1px solid var(--line);border-radius:20px;padding:.25rem .55rem}
+  .helppane{max-height:none}
   .modal-f{position:sticky;bottom:0}
   .modal-f .btn{flex:1;justify-content:center}
 
@@ -623,9 +683,13 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
 </style>
 </head>
 <body>
+<a class="skip-link" href="#canvas">Skip to the flow canvas</a>
+<p id="srStatus" class="sr-only" role="status" aria-live="polite"></p>
+<p id="srAlert" class="sr-only" role="alert" aria-live="assertive"></p>
 <div class="app">
 
-  <div class="topbar">
+  <h1 class="sr-only">Data Prep Studio — build, clean and analyse a data flow</h1>
+  <div class="topbar" role="banner">
     <a class="home" href="index.html#applications" title="Back to dloverstreet.github.io">&larr; Site</a>
     <div class="brand"><span class="dot"></span>Data Prep Studio</div>
     <span class="divider"></span>
@@ -674,9 +738,10 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
       </div>
     </aside>
 
-    <div class="center">
+    <main class="center" id="main">
       <div class="canvas-wrap">
-        <div class="canvas" id="canvas">
+        <div class="canvas" id="canvas" tabindex="-1" role="application"
+             aria-label="Flow canvas. Press Tab to move through the steps, Enter to edit one, C to connect two, Alt with the arrow keys to move one.">
           <div class="canvas-inner" id="canvasInner">
             <svg id="edgeLayer"><g id="edgeGroup"></g></svg>
             <div id="nodeLayer"></div>
@@ -684,8 +749,9 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
         </div>
         <div class="canvas-empty" id="canvasEmpty">
           <div class="box">
-            <h3>Build a data flow</h3>
-            <p>Start by adding data &mdash; a CSV, TSV, JSON, or Excel file from your computer, pasted text, or the built-in sample. Then drag steps onto the canvas and wire them together.</p>
+            <h3>Start with data</h3>
+            <p>Every flow begins with a source: a CSV, Excel, JSON or zipped file from your computer, pasted text, or a live link to an API. Steps come after &mdash; each one takes the step before it as its input.</p>
+            <p class="empty-hint">New here? <b>Try the sample flow</b> builds a complete working example you can pick apart.</p>
             <button class="btn primary" id="btnEmptyAdd">Add data</button>
             <button class="btn" id="btnEmptySample">Try the sample flow</button>
           </div>
@@ -714,6 +780,7 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
           <div class="res-tabs" role="tablist">
             <button class="res-tab active" data-tab="profile" role="tab">Profile</button>
             <button class="res-tab" data-tab="data" role="tab">Data</button>
+            <button class="res-tab" data-tab="chart" role="tab">Chart</button>
             <button class="res-tab" data-tab="log" role="tab">Log</button>
           </div>
           <div class="ctx" id="resCtx">Select a step to preview its output</div>
@@ -723,7 +790,7 @@ details.adv .fieldset:last-child{margin-bottom:.2rem}
         </div>
         <div class="res-body" id="resBody"></div>
       </section>
-    </div>
+    </main>
 
     <aside class="inspector" aria-label="Step settings">
       <div class="insp-head" id="inspHead" style="display:none">
@@ -827,6 +894,7 @@ function debounce(fn, ms) {
 
 /* ------------------------------ toasts ------------------------------- */
 function toast(msg, kind, ms) {
+  announce(msg, kind === 'err');
   const t = el('div', { class: 'toast' + (kind ? ' ' + kind : ''), text: msg });
   $('#toasts').appendChild(t);
   setTimeout(() => { t.style.transition = 'opacity .25s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 260); }, ms || 3000);
@@ -2236,6 +2304,7 @@ function renderCanvas() {
   state.flow.nodes.forEach((n) => layer.appendChild(renderNode(n)));
   renderEdges();
   applyPendingLink();
+  restoreCanvasFocus();
   $('#canvasEmpty').style.display = state.flow.nodes.length ? 'none' : 'grid';
   const nds = state.flow.nodes.length;
   const errs = state.flow.nodes.filter((n) => { const r = resultOf(n.id); return r && r.error && !r.upstream; }).length;
@@ -2304,10 +2373,16 @@ function nodeSummary(n) {
 function renderNode(n) {
   const t = NODE_TYPES[n.type];
   const res = resultOf(n.id);
+  const order = flowOrderNodes();
   const d = el('div', {
     class: 'node' + (state.selected === n.id ? ' sel' : '') + (res && res.error && !res.upstream ? ' err' : ''),
-    'data-id': n.id, style: 'left:' + n.x + 'px;top:' + n.y + 'px'
+    'data-id': n.id, style: 'left:' + n.x + 'px;top:' + n.y + 'px',
+    tabindex: '0', role: 'button',
+    'aria-label': nodeAriaLabel(n, order.findIndex((x) => x.id === n.id) + 1, order.length),
+    'aria-pressed': state.selected === n.id ? 'true' : 'false'
   });
+  d.addEventListener('keydown', onNodeKey);
+  d.addEventListener('focus', () => { state.focusNode = n.id; });
   const head = el('div', { class: 'node-head' });
   head.appendChild(el('div', { class: 'node-ico', style: 'background:' + t.color, html: ICONS[n.type] }));
   const ti = el('div', { class: 'node-title' });
@@ -2724,7 +2799,11 @@ function initPalette() {
   const pal = $('#palette');
   PALETTE_ORDER.forEach((type) => {
     const t = NODE_TYPES[type];
-    const b = el('button', { class: 'pal-item', draggable: 'true', 'data-type': type, title: 'Click or drag onto the canvas' });
+    const b = el('button', {
+      class: 'pal-item', draggable: 'true', 'data-type': type,
+      title: t.label + ' — ' + t.desc + '. Click or drag onto the canvas.',
+      'aria-label': 'Add a ' + t.label + ' step: ' + t.desc
+    });
     b.appendChild(el('div', { class: 'pal-ico', style: 'background:' + t.color, html: ICONS[type] }));
     const tx = el('div', { class: 'pal-txt' });
     tx.appendChild(el('strong', { text: t.label }));
@@ -2742,9 +2821,13 @@ function initPalette() {
         const pt = screenToFlow(r.left + r.width / 2, r.top + r.height / 2);
         spot = freeSpot(pt.x - NODE_W / 2, pt.y - 40);
       }
+      const hadData = Object.keys(state.flow.datasets).length > 0;
       const n = addNode(type, spot.x, spot.y);
       if (state.selected && canConnect(state.selected, n.id) === null) connect(state.selected, n.id);
       select(n.id); refresh(); ensureVisible(n);
+      if (!hadData && NODE_TYPES[type].inputs > 0) {
+        toast('Added ' + NODE_TYPES[type].label + '. It needs data to work on — add a source first.', '', 5000);
+      }
       if (n.type === 'ai' && !(n.config.columns || []).length) {
         const guess = aiDefaultColumns(n);
         if (guess.length) { n.config.columns = guess; refresh(); }
@@ -2799,10 +2882,21 @@ function select(id) {
   if (state.selected === id) return;
   state.selected = id;
   state.openStep = null;
-  $$('.node').forEach((n) => n.classList.toggle('sel', n.dataset.id === id));
+  $$('.node').forEach((n) => {
+    const on = n.dataset.id === id;
+    n.classList.toggle('sel', on);
+    n.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
   renderInspector();
   renderResults();
   updateMobBadge();
+  const n = id ? getNode(id) : null;
+  if (n) {
+    const res = resultOf(n.id);
+    announce(n.name + ' selected. ' + (res && res.table
+      ? fmtInt(res.table.rows.length) + ' rows, ' + res.table.fields.length + ' fields.'
+      : res && res.error ? 'Problem: ' + res.error : ''));
+  }
 }
 
 /* =====================================================================
@@ -3578,6 +3672,7 @@ function renderResults() {
     return;
   }
   if (state.tab === 'profile') renderProfile(body, res.table, n);
+  else if (state.tab === 'chart') renderChartTab(body, res.table, n);
   else renderGrid(body, res.table);
 }
 
@@ -4609,7 +4704,7 @@ async function runFlowWithSources(force) {
     if (!ds.connection) return false;
     return force || ds.autoRefresh !== false || !ds.rows;
   });
-  if (!ids.length) { refresh(); toast('Flow re-run', 'ok', 1400); return; }
+  if (!ids.length) { refresh(); setTimeout(reportRun, 60); return; }
   fetching = true;
   setFetchingUI(true, ids.length);
   try {
@@ -4619,6 +4714,7 @@ async function runFlowWithSources(force) {
     setFetchingUI(false);
   }
   refresh();
+  setTimeout(reportRun, 60);
   const failed = ids.filter((id) => state.flow.datasets[id].status === 'error');
   const okRows = ids.filter((id) => state.flow.datasets[id].status === 'ok')
     .reduce((a, id) => a + (state.flow.datasets[id].rows || []).length, 0);
@@ -4628,6 +4724,29 @@ async function runFlowWithSources(force) {
     toast('Pulled ' + fmtInt(okRows) + ' rows from ' + ids.length + ' source' + (ids.length === 1 ? '' : 's'), 'ok');
   }
 }
+/** Say plainly whether the flow actually worked. */
+function reportRun() {
+  const nodes = state.flow.nodes;
+  if (!nodes.length) { toast('There is nothing on the canvas yet — add a data source to begin.', '', 4500); return; }
+  const broken = nodes.filter((n) => { const r = resultOf(n.id); return r && r.error && !r.upstream; });
+  const outputs = nodes.filter((n) => n.type === 'output');
+  if (broken.length) {
+    const first = broken[0];
+    const why = (resultOf(first.id) || {}).error || 'it could not run';
+    toast(broken.length === 1
+      ? '"' + first.name + '" needs attention: ' + why
+      : broken.length + ' steps need attention. First: "' + first.name + '" \u2014 ' + why,
+      'err', 7000);
+    select(first.id);
+    return;
+  }
+  const rows = outputs.length
+    ? outputs.reduce((a, n) => a + ((tableOf(n.id) || { rows: [] }).rows.length), 0)
+    : (tableOf(nodes[nodes.length - 1].id) || { rows: [] }).rows.length;
+  toast('Flow ran cleanly · ' + fmtInt(rows) + ' rows at the ' + (outputs.length ? 'output' : 'last step') +
+    (state.sample && state.sample.on ? ' (sample mode)' : ''), 'ok', 3500);
+}
+
 function setFetchingUI(on, n) {
   const b = $('#btnRun');
   if (b) { b.disabled = !!on; b.textContent = on ? 'Fetching…' : 'Run flow'; }
@@ -4866,6 +4985,131 @@ function openConnectionEditor(dsId, startPreset) {
       { label: existing ? 'Save connection' : 'Add source', primary: true, fn: doSave }
     ]
   });
+}
+
+/* =====================================================================
+   Announcements
+   The canvas is visual, so everything it conveys by colour or position
+   is also said out loud here for anyone using a screen reader.
+   ===================================================================== */
+function announce(msg, urgent) {
+  const el2 = document.getElementById(urgent ? 'srAlert' : 'srStatus');
+  if (!el2) return;
+  el2.textContent = '';                 // re-announce even when the text repeats
+  window.setTimeout(() => { el2.textContent = msg; }, 30);
+}
+
+/** What a screen reader should hear about one step. */
+function nodeAriaLabel(n, index, total) {
+  const t = NODE_TYPES[n.type];
+  const res = resultOf(n.id);
+  const ins = (n.inputs || []).map((i) => (getNode(i) || {}).name).filter(Boolean);
+  const bits = [
+    n.name, t.label + ' step', 'step ' + index + ' of ' + total,
+    ins.length ? 'takes input from ' + ins.join(' and ') : (t.inputs ? 'no input connected' : 'a data source'),
+    nodeSummary(n)
+  ];
+  if (res && res.table) bits.push(fmtInt(res.table.rows.length) + ' rows, ' + res.table.fields.length + ' fields');
+  else if (res && res.error) bits.push('has a problem: ' + res.error);
+  return bits.join('. ') + '.';
+}
+
+/* --------------------------- keyboard on canvas ----------------------- */
+function flowOrderNodes() {
+  return typeof topoOrder === 'function' ? topoOrder() : state.flow.nodes;
+}
+
+function focusNode(id, quiet) {
+  const el2 = $('.node[data-id="' + id + '"]');
+  if (!el2) return;
+  state.focusNode = id;
+  el2.focus({ preventScroll: true });
+  const n = getNode(id);
+  if (n) ensureVisible(n);
+  if (!quiet) select(id);
+}
+
+function moveFocusBy(delta) {
+  const order = flowOrderNodes();
+  if (!order.length) return;
+  const cur = order.findIndex((n) => n.id === state.focusNode);
+  const next = order[clamp((cur < 0 ? 0 : cur + delta), 0, order.length - 1)];
+  if (next) {
+    focusNode(next.id);
+    announce(nodeAriaLabel(next, order.indexOf(next) + 1, order.length));
+  }
+}
+
+function onNodeKey(e) {
+  const el2 = e.target.closest('.node');
+  if (!el2) return;
+  const id = el2.dataset.id, n = getNode(id);
+  if (!n) return;
+  const step = e.shiftKey ? 60 : 20;
+  switch (e.key) {
+    case 'Enter': case ' ':
+      e.preventDefault();
+      select(id);
+      if (isMobile()) setView('step');
+      focusInspector();
+      announce('Editing ' + n.name + '. Settings are now in focus.');
+      return;
+    case 'ArrowRight': case 'ArrowDown':
+      if (e.altKey) { e.preventDefault(); n[e.key === 'ArrowRight' ? 'x' : 'y'] += step; markDirty(); renderCanvas(); focusNode(id, true); announce(n.name + ' moved.'); return; }
+      e.preventDefault(); moveFocusBy(1); return;
+    case 'ArrowLeft': case 'ArrowUp':
+      if (e.altKey) { e.preventDefault(); n[e.key === 'ArrowLeft' ? 'x' : 'y'] -= step; markDirty(); renderCanvas(); focusNode(id, true); announce(n.name + ' moved.'); return; }
+      e.preventDefault(); moveFocusBy(-1); return;
+    case 'Delete': case 'Backspace': {
+      e.preventDefault();
+      const order = flowOrderNodes();
+      const idx = order.findIndex((x) => x.id === id);
+      const nextId = (order[idx + 1] || order[idx - 1] || {}).id;
+      const nm = n.name;
+      removeNode(id); refresh();
+      announce(nm + ' deleted.', true);
+      if (nextId) setTimeout(() => focusNode(nextId), 60);
+      return;
+    }
+    case 'c': case 'C': {
+      if (e.ctrlKey || e.metaKey) return;
+      e.preventDefault();
+      if (state.pendingLink) {
+        const pl = state.pendingLink;
+        clearPendingLink();
+        if (pl.id !== id) {
+          const ok = pl.dir === 'out' ? connect(pl.id, id) : connect(id, pl.id);
+          if (ok) { refresh(); announce('Connected ' + (getNode(pl.id) || {}).name + ' into ' + n.name + '.', true); }
+          else announce('Those two steps cannot be connected.', true);
+        } else announce('Connection cancelled.');
+      } else {
+        setPendingLink(id, 'out');
+        announce('Connecting from ' + n.name + '. Move to another step and press C again to join them, or press Escape to cancel.');
+      }
+      setTimeout(() => focusNode(id, true), 40);
+      return;
+    }
+    case 'Escape':
+      if (state.pendingLink) { e.preventDefault(); clearPendingLink(); announce('Connection cancelled.'); }
+      return;
+    default: return;
+  }
+}
+
+function focusInspector() {
+  const first = $('#inspBody').querySelector('input,select,textarea,button');
+  if (first) first.focus();
+  else $('#inspName').focus();
+}
+
+/** Put focus back after a re-render, so editing does not throw the user out. */
+function restoreCanvasFocus() {
+  if (!state.focusNode) return;
+  const el2 = $('.node[data-id="' + state.focusNode + '"]');
+  if (el2 && document.activeElement && document.activeElement.classList &&
+      document.activeElement.classList.contains('node')) {
+    el2.focus({ preventScroll: true });
+  }
 }
 
 /* =====================================================================
@@ -7352,6 +7596,611 @@ function inspCompare(body, n) {
   }
 }
 
+
+/* =====================================================================
+   Chart — visual analysis of whatever step is selected.
+   Inline SVG, no dependency. Categorical hues are assigned in a fixed
+   order and never cycled; a ninth category folds into "Other". Every
+   chart carries a text label, a legend once there are two series, and
+   points at the Data tab, which is the table view of the same numbers.
+   ===================================================================== */
+const SERIES_HUES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
+const SCATTER_SERIES_CAP = 3;   // the first three slots are the ones that clear all-pairs
+const CAT_CAP = 8;
+const DIRECT_LABEL_CAP = 4;     // at most four series get named on the marks themselves
+const FOCUSABLE_MARK_CAP = 40;  // past this, tabbing through every mark is worse than the table
+
+/**
+ * Hues go out in the palette's fixed order, and the chart remembers who got
+ * what. So the first series is always slot 1, and when a filter upstream drops
+ * a fund the survivors keep the colour the reader already learned.
+ */
+function hueMap(cfg, names) {
+  const wanted = names.filter((n) => n !== '');
+  let map = cfg.hues && typeof cfg.hues === 'object' ? cfg.hues : {};
+  const free = () => {
+    const used = {};
+    Object.keys(map).forEach((k) => { used[map[k]] = true; });
+    for (let i = 0; i < SERIES_HUES.length; i++) if (!used[i]) return i;
+    return -1;
+  };
+  wanted.forEach((nm) => {
+    if (map[nm] != null) return;
+    let slot = free();
+    if (slot < 0) {                       // out of slots: keep only who is on screen
+      const keep = {};
+      wanted.forEach((w) => { if (map[w] != null) keep[w] = map[w]; });
+      map = keep;
+      slot = free();
+      if (slot < 0) slot = 0;
+    }
+    map[nm] = slot;
+  });
+  cfg.hues = map;
+  return (nm) => (nm === '' || map[nm] == null) ? 0 : map[nm];
+}
+
+const CHART_TYPES = [
+  { v: 'bar', l: 'Bars — compare categories' },
+  { v: 'line', l: 'Line — follow a trend' },
+  { v: 'scatter', l: 'Scatter — compare two numbers' }
+];
+const CHART_AGGS = [
+  { v: 'sum', l: 'Total' }, { v: 'avg', l: 'Average' }, { v: 'median', l: 'Median' },
+  { v: 'count', l: 'Number of rows' }, { v: 'min', l: 'Smallest' }, { v: 'max', l: 'Largest' }
+];
+
+function niceTicks(lo, hi, want) {
+  if (!(isFinite(lo) && isFinite(hi))) return { lo: 0, hi: 1, ticks: [0, 1] };
+  if (lo === hi) { const pad = Math.abs(lo) || 1; lo -= pad * 0.5; hi += pad * 0.5; }
+  const span = hi - lo;
+  const raw = span / Math.max(2, want || 5);
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const norm = raw / mag;
+  const stepN = norm >= 7.5 ? 10 : norm >= 3.5 ? 5 : norm >= 1.5 ? 2 : 1;
+  const step = stepN * mag;
+  const start = Math.floor(lo / step) * step;
+  const end = Math.ceil(hi / step) * step;
+  const ticks = [];
+  for (let v = start; v <= end + step * 0.001; v += step) ticks.push(Math.abs(v) < step * 1e-9 ? 0 : v);
+  return { lo: start, hi: end, ticks: ticks };
+}
+
+function aggValues(vals, how) {
+  const nums = vals.filter((v) => v != null && isFinite(v));
+  if (how === 'count') return vals.length;
+  if (!nums.length) return null;
+  switch (how) {
+    case 'avg': return nums.reduce((a, b) => a + b, 0) / nums.length;
+    case 'median': { const s = nums.slice().sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+    case 'min': return Math.min.apply(null, nums);
+    case 'max': return Math.max.apply(null, nums);
+    default: return nums.reduce((a, b) => a + b, 0);
+  }
+}
+
+/** True when a numeric column is really a label (a year, an id, a code). */
+function chartIsLabelNumber(f, table) {
+  if (/\b(year|yr|fy|fips|id|code|zip|rank)\b/i.test(f.name)) return true;
+  const vals = table.rows.slice(0, 200).map((r) => r[f.name]).filter((v) => typeof v === 'number');
+  if (!vals.length) return false;
+  return vals.every((v) => Number.isInteger(v) && v >= 1900 && v <= 2200);
+}
+
+/** Sensible first chart for a table, so the tab is never blank. */
+function suggestChart(table) {
+  const nums = table.fields.filter((f) => f.type === 'number');
+  const cats = table.fields.filter((f) => f.type === 'string');
+  const times = table.fields.filter((f) => f.type === 'date');
+  const yearish = nums.filter((f) => chartIsLabelNumber(f, table));
+  const measures = nums.filter((f) => yearish.indexOf(f) < 0);
+  if ((times.length || yearish.length) && measures.length) {
+    const x = times[0] || yearish[0];
+    return { type: 'line', x: x.name, y: measures[0].name, agg: 'sum', series: '' };
+  }
+  if (cats.length && measures.length) return { type: 'bar', x: cats[0].name, y: measures[0].name, agg: 'sum', series: '' };
+  if (measures.length >= 2) return { type: 'scatter', x: measures[0].name, y: measures[1].name, agg: 'sum', series: '' };
+  if (cats.length) return { type: 'bar', x: cats[0].name, y: '', agg: 'count', series: '' };
+  if (nums.length) return { type: 'bar', x: nums[0].name, y: '', agg: 'count', series: '' };
+  return null;
+}
+
+/** Roll the table up into the points a chart needs. */
+function chartData(table, cfg) {
+  const xt = typeOf(table.fields, cfg.x);
+  const numOf = (r, f) => { const v = r[f]; return v == null ? null : (typeof v === 'number' ? v : parseNumber(v)); };
+  const keyLabel = (v) => v == null ? '(blank)' : String(display(v, xt));
+
+  if (cfg.type === 'scatter') {
+    const pts = [];
+    table.rows.forEach((r) => {
+      const x = numOf(r, cfg.x), y = numOf(r, cfg.y);
+      if (x == null || y == null || !isFinite(x) || !isFinite(y)) return;
+      pts.push({ x: x, y: y, s: cfg.series ? (r[cfg.series] == null ? '(blank)' : String(display(r[cfg.series], typeOf(table.fields, cfg.series)))) : '' });
+    });
+    let names = cfg.series ? Array.from(new Set(pts.map((p) => p.s))) : [''];
+    let capped = false;
+    if (names.length > SCATTER_SERIES_CAP) { names = ['']; capped = true; pts.forEach((p) => { p.s = ''; }); }
+    return { kind: 'xy', points: pts, series: names, capped: capped };
+  }
+
+  const groups = new Map();
+  const seriesNames = [];
+  table.rows.forEach((r) => {
+    const k = keyLabel(r[cfg.x]);
+    const sName = cfg.series ? (r[cfg.series] == null ? '(blank)' : String(display(r[cfg.series], typeOf(table.fields, cfg.series)))) : '';
+    if (!groups.has(k)) groups.set(k, { key: k, raw: r[cfg.x], by: new Map() });
+    const g = groups.get(k);
+    if (!g.by.has(sName)) g.by.set(sName, []);
+    g.by.get(sName).push(cfg.agg === 'count' ? 1 : numOf(r, cfg.y));
+    if (seriesNames.indexOf(sName) < 0) seriesNames.push(sName);
+  });
+  let names = seriesNames;
+  let seriesCapped = 0;
+  if (names.length > CAT_CAP) { seriesCapped = names.length - CAT_CAP; names = names.slice(0, CAT_CAP); }
+
+  let rows = Array.from(groups.values()).map((g) => {
+    const vals = {};
+    g.by.forEach((arr, k) => { if (names.indexOf(k) >= 0) vals[k] = aggValues(arr, cfg.agg); });
+    const total = names.reduce((a, k) => a + (vals[k] || 0), 0);
+    return { key: g.key, raw: g.raw, vals: vals, total: total };
+  });
+
+  let folded = false;
+  if (cfg.type === 'line') {
+    rows.sort((a, b) => {
+      if (xt === 'string') return String(a.key).localeCompare(String(b.key));
+      const av = a.raw instanceof Date ? a.raw.getTime() : Number(a.raw);
+      const bv = b.raw instanceof Date ? b.raw.getTime() : Number(b.raw);
+      if (isFinite(av) && isFinite(bv)) return av - bv;
+      return String(a.key).localeCompare(String(b.key));
+    });
+  } else {
+    rows.sort((a, b) => b.total - a.total);
+    if (rows.length > CAT_CAP) {
+      const keep = rows.slice(0, CAT_CAP - 1);
+      const rest = rows.slice(CAT_CAP - 1);
+      const merged = { key: 'Other (' + rest.length + ')', raw: null, vals: {}, total: 0, isOther: true };
+      names.forEach((sn) => { merged.vals[sn] = rest.reduce((a, r) => a + (r.vals[sn] || 0), 0); });
+      merged.total = rest.reduce((a, r) => a + r.total, 0);
+      rows = keep.concat([merged]);
+      folded = rest.length;
+    }
+  }
+  return { kind: 'cat', rows: rows, series: names, folded: folded, seriesCapped: seriesCapped };
+}
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function sv(tag, attrs, text) {
+  const e = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) if (attrs[k] != null) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  return e;
+}
+function ellip(s, n) { s = String(s); return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+/** One unit for a whole axis, so ticks never mix 8000 with 10K. */
+function axisFormatter(ticks, counting) {
+  const max = ticks.reduce((m, t) => Math.max(m, Math.abs(t)), 0);
+  const step = ticks.length > 1 ? Math.abs(ticks[1] - ticks[0]) : max;
+  let d = 1, suf = '';
+  if (max >= 1e12) { d = 1e12; suf = 'T'; }
+  else if (max >= 1e9) { d = 1e9; suf = 'B'; }
+  else if (max >= 1e6) { d = 1e6; suf = 'M'; }
+  else if (max >= 1e4) { d = 1e3; suf = 'K'; }
+  if (d === 1) return (v) => counting ? fmtInt(v) : fmtNum(v);
+  const dec = step / d >= 1 ? 0 : step / d >= 0.1 ? 1 : 2;
+  return (v) => {
+    if (v === 0) return '0';
+    const x = v / d;
+    return (dec ? x.toFixed(dec).replace(/\.?0+$/, '') : Math.round(x).toLocaleString()) + suf;
+  };
+}
+/** Roughly how wide an 11px label will be, so padding can make room for it. */
+function textW(s) { return String(s).length * 6.2; }
+function axisPad(labels, hasTitle, W) {
+  const w = labels.reduce((m, s) => Math.max(m, textW(s)), 0);
+  return Math.round(clamp(w + 14 + (hasTitle ? 20 : 0), 46, W * 0.42));
+}
+
+/** Nudge a set of {y,...} labels apart so none collide. */
+function spreadLabels(items, minGap, lo, hi) {
+  items.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < items.length; i++) {
+    if (items[i].y - items[i - 1].y < minGap) items[i].y = items[i - 1].y + minGap;
+  }
+  const over = items.length ? items[items.length - 1].y - hi : 0;
+  if (over > 0) items.forEach((it) => { it.y = Math.max(lo, it.y - over); });
+  return items;
+}
+
+function renderChart(host, table, cfg) {
+  const data = chartData(table, cfg);
+  const W = Math.max(380, (host.clientWidth || 640) - 24);
+
+  // One category and one series is a number, not a chart — say the number.
+  if (data.kind === 'cat' && data.rows.length === 1 && data.series.length === 1) {
+    const only = data.rows[0], v = only.vals[data.series[0]];
+    const tile = el('div', { class: 'stattile' });
+    tile.appendChild(el('div', { class: 'stat-k', text: chartHeadline(cfg) }));
+    tile.appendChild(el('div', { class: 'stat-v', text: cfg.agg === 'count' ? fmtInt(v) : fmtNum(v) }));
+    tile.appendChild(el('div', { class: 'stat-s', text: 'for ' + only.key + ' \u00b7 ' + fmtInt(table.rows.length) + ' row' + (table.rows.length === 1 ? '' : 's') + ' behind it' }));
+    host.appendChild(tile);
+    host.appendChild(el('div', { class: 'hint', style: 'padding:.1rem .75rem .5rem',
+      text: 'There is only one group here, so a bar would say nothing a number does not. Group by something else to compare.' }));
+    return null;
+  }
+  const wrap = el('div', { class: 'chartwrap' });
+  const tip = el('div', { class: 'charttip' });
+  const label = chartHeadline(cfg) + '. The figures are written out just below the chart.';
+  const svg = sv('svg', { role: 'img', class: 'chart', 'aria-label': label });
+  svg.appendChild(sv('title', {}, chartHeadline(cfg)));
+
+  const showTip = (e, html) => {
+    tip.innerHTML = html;
+    tip.classList.add('show');
+    const r = wrap.getBoundingClientRect();
+    tip.style.left = clamp(e.clientX - r.left + 12, 4, Math.max(4, r.width - tip.offsetWidth - 4)) + 'px';
+    tip.style.top = clamp(e.clientY - r.top - 12, 4, Math.max(4, r.height - tip.offsetHeight - 4)) + 'px';
+  };
+  const hideTip = () => tip.classList.remove('show');
+  // Marks are drawn into a fragment so the oversized hit areas can sit on top.
+  const frag = document.createDocumentFragment();
+  const totalMarks = data.kind === 'xy' ? data.points.length : data.rows.length * data.series.length;
+  const keyboardOK = totalMarks <= FOCUSABLE_MARK_CAP;
+  /** Draw a mark, give it a hit area big enough to hit, and make it reachable. */
+  const mark = (node, html, spoken, cx, cy, box) => {
+    svg.appendChild(node);
+    const hit = box
+      ? sv('rect', { x: box.x, y: box.y, width: box.w, height: box.h, fill: 'transparent', class: 'hit' })
+      : sv('circle', { cx: cx, cy: cy, r: 12, fill: 'transparent', class: 'hit' });
+    hit.addEventListener('mousemove', (e) => showTip(e, html));
+    hit.addEventListener('mouseleave', hideTip);
+    if (keyboardOK) {
+      hit.setAttribute('tabindex', '0');
+      hit.setAttribute('role', 'img');
+      hit.setAttribute('aria-label', spoken);
+      hit.addEventListener('focus', () => {
+        const r = node.getBoundingClientRect(), w2 = wrap.getBoundingClientRect();
+        tip.innerHTML = html;
+        tip.classList.add('show');
+        tip.style.left = clamp(r.right - w2.left + 8, 4, Math.max(4, w2.width - tip.offsetWidth - 4)) + 'px';
+        tip.style.top = clamp(r.top - w2.top - 4, 4, Math.max(4, w2.height - tip.offsetHeight - 4)) + 'px';
+        node.classList.add('on');
+      });
+      hit.addEventListener('blur', () => { hideTip(); node.classList.remove('on'); });
+    }
+    frag.appendChild(hit);
+    return node;
+  };
+
+  const counting = cfg.agg === 'count' && cfg.type !== 'scatter';
+  const fmtY = (v) => counting ? fmtInt(v) : fmtNum(v);          // tooltips and prose: the exact figure
+  const measureName = counting ? 'Number of rows'
+    : (CHART_AGGS.filter((a) => a.v === cfg.agg)[0] || { l: cfg.agg }).l + ' of ' + cfg.y;
+  const series = data.series;
+  const slotOf = hueMap(cfg, series);
+  const hue = (name) => SERIES_HUES[slotOf(name)];
+  const named = series.filter((s) => s !== '');
+  const direct = named.length >= 1 && named.length <= DIRECT_LABEL_CAP;
+  let H = 340;
+
+  if (data.kind === 'xy') {
+    if (!data.points.length) { host.appendChild(el('div', { class: 'res-empty', text: 'No rows have a number in both ' + cfg.x + ' and ' + cfg.y + '.' })); return null; }
+    const xs = data.points.map((p) => p.x), ys = data.points.map((p) => p.y);
+    const xa = niceTicks(Math.min.apply(null, xs), Math.max.apply(null, xs), 6);
+    const ya = niceTicks(Math.min.apply(null, ys), Math.max.apply(null, ys), 5);
+    const fx = axisFormatter(xa.ticks, false), fy = axisFormatter(ya.ticks, false);
+    const pad = { l: axisPad(ya.ticks.map(fy), true, W), r: 18, t: 16, b: 48 };
+    const px = (v) => pad.l + (v - xa.lo) / (xa.hi - xa.lo) * (W - pad.l - pad.r);
+    const py = (v) => H - pad.b - (v - ya.lo) / (ya.hi - ya.lo) * (H - pad.t - pad.b);
+    ya.ticks.forEach((t) => {
+      svg.appendChild(sv('line', { x1: pad.l, x2: W - pad.r, y1: py(t), y2: py(t), class: 'grid' }));
+      svg.appendChild(sv('text', { x: pad.l - 8, y: py(t) + 4, class: 'axis', 'text-anchor': 'end' }, fy(t)));
+    });
+    xa.ticks.forEach((t) => svg.appendChild(sv('text', { x: px(t), y: H - pad.b + 18, class: 'axis', 'text-anchor': 'middle' }, fx(t))));
+    data.points.forEach((p) => {
+      const txt = cfg.x + ' ' + fmtNum(p.x) + ', ' + cfg.y + ' ' + fmtNum(p.y) + (p.s ? ', ' + cfg.series + ' ' + p.s : '');
+      mark(sv('circle', {
+        cx: px(p.x), cy: py(p.y), r: 4.5, fill: hue(p.s),
+        stroke: 'var(--surface)', 'stroke-width': 2, class: 'mark dot'
+      }), '<b>' + esc(cfg.x) + '</b> ' + fmtNum(p.x) + '<br><b>' + esc(cfg.y) + '</b> ' + fmtNum(p.y) +
+        (p.s ? '<br><b>' + esc(cfg.series) + '</b> ' + esc(p.s) : ''), txt, px(p.x), py(p.y));
+    });
+    svg.appendChild(frag);
+    svg.appendChild(sv('text', { x: pad.l + (W - pad.l - pad.r) / 2, y: H - 8, class: 'axis-title', 'text-anchor': 'middle' }, cfg.x));
+    svg.appendChild(sv('text', { x: 14, y: pad.t + (H - pad.t - pad.b) / 2, class: 'axis-title', 'text-anchor': 'middle',
+      transform: 'rotate(-90 14 ' + (pad.t + (H - pad.t - pad.b) / 2) + ')' }, ellip(cfg.y, 34)));
+
+  } else if (cfg.type === 'line') {
+    let lo = Infinity, hi = -Infinity;
+    data.rows.forEach((r) => series.forEach((s) => {
+      const v = r.vals[s]; if (v == null || !isFinite(v)) return; lo = Math.min(lo, v); hi = Math.max(hi, v);
+    }));
+    if (!isFinite(lo)) { lo = 0; hi = 1; }
+    const ya = niceTicks(Math.min(0, lo), hi, 5);
+    const fy = axisFormatter(ya.ticks, counting);
+    const pad = { l: axisPad(ya.ticks.map(fy), true, W), r: direct ? 96 : 18, t: 16, b: 52 };
+    const n = data.rows.length;
+    const px = (i) => pad.l + (n <= 1 ? (W - pad.l - pad.r) / 2 : i / (n - 1) * (W - pad.l - pad.r));
+    const py = (v) => H - pad.b - (v - ya.lo) / (ya.hi - ya.lo) * (H - pad.t - pad.b);
+    ya.ticks.forEach((t) => {
+      svg.appendChild(sv('line', { x1: pad.l, x2: W - pad.r, y1: py(t), y2: py(t), class: 'grid' }));
+      svg.appendChild(sv('text', { x: pad.l - 8, y: py(t) + 4, class: 'axis', 'text-anchor': 'end' }, fy(t)));
+    });
+    const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - pad.l - pad.r) / 72))));
+    data.rows.forEach((r, i) => {
+      if (i % every) return;
+      svg.appendChild(sv('text', { x: px(i), y: H - pad.b + 18, class: 'axis', 'text-anchor': 'middle' }, ellip(r.key, 12)));
+    });
+    const ends = [];
+    series.forEach((s) => {
+      const pts = [];
+      data.rows.forEach((r, i) => { const v = r.vals[s]; if (v != null && isFinite(v)) pts.push({ x: px(i), y: py(v), row: r, v: v }); });
+      if (pts.length > 1) {
+        svg.appendChild(sv('path', {
+          d: 'M' + pts.map((p) => p.x + ',' + p.y).join(' L'), fill: 'none', stroke: hue(s),
+          'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', class: 'mark'
+        }));
+      }
+      if (pts.length && pts.length <= 24) pts.forEach((p) => {
+        mark(sv('circle', {
+          cx: p.x, cy: p.y, r: 4, fill: hue(s), stroke: 'var(--surface)', 'stroke-width': 2, class: 'mark dot'
+        }), '<b>' + esc(p.row.key) + '</b><br>' + (s ? esc(s) + ': ' : '') + fmtY(p.v),
+          p.row.key + (s ? ', ' + s : '') + ', ' + fmtY(p.v), p.x, p.y);
+      });
+      if (direct && s && pts.length) ends.push({ y: pts[pts.length - 1].y, x: pts[pts.length - 1].x, name: s });
+    });
+    spreadLabels(ends, 15, pad.t, H - pad.b).forEach((e2) => {
+      svg.appendChild(sv('text', { x: Math.min(e2.x + 8, W - pad.r + 6), y: e2.y + 4, class: 'axis lbl' }, ellip(e2.name, 13)));
+    });
+    svg.appendChild(frag);
+    svg.appendChild(sv('text', { x: pad.l + (W - pad.l - pad.r) / 2, y: H - 10, class: 'axis-title', 'text-anchor': 'middle' }, cfg.x));
+    svg.appendChild(sv('text', { x: 14, y: pad.t + (H - pad.t - pad.b) / 2, class: 'axis-title', 'text-anchor': 'middle',
+      transform: 'rotate(-90 14 ' + (pad.t + (H - pad.t - pad.b) / 2) + ')' }, ellip(measureName, 34)));
+
+  } else {
+    // Horizontal bars: however long a department or agency name is, it stays readable.
+    const multi = series.length > 1;
+    const rowH = multi ? Math.max(26, 12 + series.length * 12) : 26;
+    let hi = 0;
+    data.rows.forEach((r) => series.forEach((s) => { const v = r.vals[s]; if (v != null && isFinite(v)) hi = Math.max(hi, v); }));
+    const xa = niceTicks(0, hi, 5);
+    const fv = axisFormatter(xa.ticks, counting);
+    const widestVal = data.rows.reduce((m, r) => series.reduce((m2, s) => Math.max(m2, textW(fv(r.vals[s] || 0))), m), 0);
+    const pad = {
+      l: clamp(Math.round(W * 0.3), 110, 230),
+      r: Math.round(multi ? (direct ? 108 : 40) : Math.min(140, widestVal + 14)),
+      t: 10, b: 44
+    };
+    const bodyH = Math.max(110, data.rows.length * rowH);
+    H = pad.t + bodyH + pad.b;
+    const px = (v) => pad.l + (v / (xa.hi || 1)) * (W - pad.l - pad.r);
+    xa.ticks.forEach((t) => {
+      svg.appendChild(sv('line', { x1: px(t), x2: px(t), y1: pad.t, y2: pad.t + bodyH, class: 'grid' }));
+      svg.appendChild(sv('text', { x: px(t), y: pad.t + bodyH + 17, class: 'axis', 'text-anchor': 'middle' }, fv(t)));
+    });
+    const catChars = Math.max(8, Math.floor((pad.l - 14) / 6.2));
+    data.rows.forEach((r, i) => {
+      const y0 = pad.t + i * rowH;
+      const t2 = sv('text', { x: pad.l - 10, y: y0 + rowH / 2 + 4, class: 'axis cat', 'text-anchor': 'end' }, ellip(r.key, catChars));
+      t2.appendChild(sv('title', {}, r.key));
+      svg.appendChild(t2);
+      const each = (rowH - 8) / series.length;
+      series.forEach((s, si) => {
+        const v = r.vals[s];
+        if (v == null || !isFinite(v)) return;
+        const w = Math.max(1, px(v) - pad.l);
+        const bh = Math.max(3, each - 2);          // the 2px gap keeps adjacent fills apart
+        const by = y0 + 4 + si * each;
+        mark(sv('rect', {
+          x: pad.l, y: by, width: w, height: bh, rx: Math.min(4, bh / 2), fill: hue(s), class: 'mark bar'
+        }), '<b>' + esc(r.key) + '</b><br>' + (s ? esc(s) + ': ' : '') + fmtY(v),
+          r.key + (s ? ', ' + s : '') + ', ' + fmtY(v), null, null, { x: pad.l, y: y0 + 2, w: Math.max(w, 24), h: rowH - 4 });
+        if (!multi) {
+          svg.appendChild(sv('text', { x: pad.l + w + 6, y: by + bh / 2 + 4, class: 'axis val' }, fv(v)));
+        } else if (direct && i === 0) {
+          // name the series once, on the longest row, so colour is never the only cue
+          svg.appendChild(sv('text', { x: pad.l + w + 6, y: by + bh / 2 + 3.5, class: 'axis lbl' }, ellip(s, 14)));
+        }
+      });
+    });
+    svg.appendChild(frag);
+    svg.appendChild(sv('text', { x: pad.l + (W - pad.l - pad.r) / 2, y: H - 8, class: 'axis-title', 'text-anchor': 'middle' }, ellip(measureName, 48)));
+  }
+
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+  wrap.appendChild(svg);
+  wrap.appendChild(tip);
+  host.appendChild(wrap);
+
+  if (series.length > 1) {
+    const leg = el('div', { class: 'chartlegend' });
+    leg.appendChild(el('span', { class: 'sr-only', text: 'Colour key:' }));
+    series.forEach((s) => {
+      const item = el('span', { class: 'legitem' });
+      item.appendChild(el('i', { style: 'background:' + hue(s) }));
+      item.appendChild(document.createTextNode(s || '(all rows)'));
+      leg.appendChild(item);
+    });
+    host.appendChild(leg);
+  }
+  const notes = [];
+  if (data.capped) notes.push('More than ' + SCATTER_SERIES_CAP + ' groups cannot be told apart by colour, so every point shares one colour here — group the data first, or split by something with fewer values.');
+  if (data.folded) notes.push('The ' + data.folded + ' smallest categories are added together as "Other".');
+  if (data.seriesCapped) notes.push(data.seriesCapped + ' further colour group' + (data.seriesCapped === 1 ? ' is' : 's are') + ' left out — only the first ' + CAT_CAP + ' are drawn.');
+  if (notes.length) host.appendChild(el('div', { class: 'hint', style: 'padding:.1rem .75rem .5rem', text: notes.join(' ') }));
+  return svg;
+}
+
+/** The one-line name of a chart — what the SVG itself announces. */
+function chartHeadline(cfg) {
+  const aggL = (CHART_AGGS.filter((a) => a.v === cfg.agg)[0] || { l: cfg.agg }).l.toLowerCase();
+  const measure = cfg.agg === 'count' ? 'the number of rows' : aggL + ' of ' + cfg.y;
+  const what = cfg.type === 'scatter' ? 'Scatter plot of ' + cfg.y + ' against ' + cfg.x
+    : cfg.type === 'line' ? 'Line chart of ' + measure + ' over ' + cfg.x
+      : 'Bar chart of ' + measure + ' by ' + cfg.x;
+  return what + (cfg.series ? ', split by ' + cfg.series : '');
+}
+
+/** What the chart says in words — shown under it, and read aloud from there. */
+function chartAriaLabel(table, cfg, data) {
+  const parts = [chartHeadline(cfg) + '.'];
+  if (data.kind === 'cat' && data.rows.length) {
+    const top = data.rows.slice().sort((a, b) => b.total - a.total)[0];
+    const bottom = data.rows.slice().sort((a, b) => a.total - b.total)[0];
+    parts.push(data.rows.length + ' categor' + (data.rows.length === 1 ? 'y' : 'ies') + ' shown.');
+    parts.push((cfg.series ? 'Adding every colour together, highest' : 'Highest') + ' is ' + top.key + ' at ' + fmtNum(top.total) +
+      '; lowest is ' + bottom.key + ' at ' + fmtNum(bottom.total) + '.');
+    if (cfg.type === 'line' && data.rows.length > 1) {
+      const named2 = data.series.filter((x) => x !== '');
+      if (named2.length) {
+        named2.slice(0, 5).forEach((sn) => {
+          const seen = data.rows.filter((r) => r.vals[sn] != null && isFinite(r.vals[sn]));
+          if (seen.length < 2) return;
+          const a = seen[0], b = seen[seen.length - 1];
+          const dir = b.vals[sn] > a.vals[sn] ? 'up' : b.vals[sn] < a.vals[sn] ? 'down' : 'level';
+          parts.push(sn + ' goes ' + dir + ' from ' + fmtNum(a.vals[sn]) + ' at ' + a.key + ' to ' + fmtNum(b.vals[sn]) + ' at ' + b.key + '.');
+        });
+        if (named2.length > 5) parts.push('There are ' + (named2.length - 5) + ' more lines; the Data tab lists them all.');
+      } else {
+        const first = data.rows[0], last = data.rows[data.rows.length - 1];
+        parts.push('It runs from ' + fmtNum(first.total) + ' at ' + first.key + ' to ' + fmtNum(last.total) + ' at ' + last.key + '.');
+      }
+    }
+  } else if (data.kind === 'xy') {
+    parts.push(fmtInt(data.points.length) + ' points plotted.');
+    if (data.points.length > 1) {
+      const xs = data.points.map((p) => p.x), ys = data.points.map((p) => p.y);
+      parts.push(cfg.x + ' runs from ' + fmtNum(Math.min.apply(null, xs)) + ' to ' + fmtNum(Math.max.apply(null, xs)) +
+        ' and ' + cfg.y + ' from ' + fmtNum(Math.min.apply(null, ys)) + ' to ' + fmtNum(Math.max.apply(null, ys)) + '.');
+    }
+  }
+  return parts.join(' ');
+}
+
+/* ---------- the Chart tab ---------- */
+
+/** Keep a stored chart honest when the step's fields change underneath it. */
+function chartConfigFor(n, table) {
+  const has = (name) => !!name && table.fields.some((f) => f.name === name);
+  let cfg = n.chart ? Object.assign({}, n.chart) : null;
+  if (cfg) {
+    if (!has(cfg.x)) cfg = null;
+    else if (cfg.agg !== 'count' && !has(cfg.y)) cfg = null;
+    else if (cfg.type === 'scatter' && !has(cfg.y)) cfg = null;
+    else if (cfg.series && !has(cfg.series)) { cfg.series = ''; cfg.hues = null; }
+  }
+  if (!cfg) cfg = suggestChart(table);
+  return cfg;
+}
+
+function chartControl(labelText, node, id, hintText) {
+  const box = el('div', { class: 'fld' });
+  node.id = id;
+  box.appendChild(el('label', { for: id, text: labelText }));
+  box.appendChild(node);
+  if (hintText) box.appendChild(el('span', { class: 'sr-only', text: hintText }));
+  return box;
+}
+
+function renderChartTab(body, table, n) {
+  if (!table.rows.length) {
+    body.appendChild(el('div', { class: 'res-empty', text: 'This step has no rows yet, so there is nothing to chart. Check the steps feeding into it.' }));
+    return;
+  }
+  const cfg = chartConfigFor(n, table);
+  if (!cfg) {
+    body.appendChild(el('div', { class: 'res-empty', text: 'This step has no field that can be charted. A chart needs at least one column to group by.' }));
+    return;
+  }
+  n.chart = cfg;
+
+  const numFields = table.fields.filter((f) => f.type === 'number');
+  const allOpts = table.fields.map((f) => ({ v: f.name, l: f.name }));
+  const numOpts = numFields.map((f) => ({ v: f.name, l: f.name }));
+  const splitOpts = [{ v: '', l: 'Nothing — one colour' }].concat(
+    table.fields.filter((f) => f.type !== 'number' || chartIsLabelNumber(f, table)).map((f) => ({ v: f.name, l: f.name }))
+  );
+
+  const redraw = (focusId) => {
+    n.chart = cfg;
+    markDirty();
+    renderResults();
+    const back = document.getElementById(focusId || 'chartType');
+    if (back) back.focus();
+    announce(chartAriaLabel(table, cfg, chartData(table, cfg)));
+  };
+
+  const bar = el('div', { class: 'chartbar' });
+  bar.appendChild(chartControl('Chart', selectFrom(CHART_TYPES, cfg.type, (v) => {
+    cfg.type = v;
+    if (v === 'scatter') {
+      cfg.agg = 'sum';
+      if (!numFields.some((f) => f.name === cfg.x)) cfg.x = numFields.length ? numFields[0].name : cfg.x;
+      if (!numFields.some((f) => f.name === cfg.y) || cfg.y === cfg.x) {
+        const other = numFields.filter((f) => f.name !== cfg.x)[0];
+        cfg.y = other ? other.name : cfg.y;
+      }
+    }
+    redraw('chartType');
+  }), 'chartType'));
+
+  if (cfg.type === 'scatter') {
+    if (numFields.length < 2) {
+      body.appendChild(bar);
+      body.appendChild(el('div', { class: 'res-empty', text: 'A scatter plot needs two number columns and this step has ' + numFields.length + '. Try Bars instead.' }));
+      return;
+    }
+    bar.appendChild(chartControl('Across the bottom', selectFrom(numOpts, cfg.x, (v) => { cfg.x = v; redraw('chartX'); }), 'chartX'));
+    bar.appendChild(chartControl('Up the side', selectFrom(numOpts, cfg.y, (v) => { cfg.y = v; redraw('chartY'); }), 'chartY'));
+  } else {
+    bar.appendChild(chartControl(cfg.type === 'line' ? 'Along the bottom' : 'One bar per', selectFrom(allOpts, cfg.x, (v) => { cfg.x = v; redraw('chartX'); }), 'chartX'));
+    bar.appendChild(chartControl('Measure', selectFrom(CHART_AGGS, cfg.agg, (v) => {
+      cfg.agg = v;
+      if (v !== 'count' && !table.fields.some((f) => f.name === cfg.y) && numFields.length) cfg.y = numFields[0].name;
+      redraw('chartAgg');
+    }), 'chartAgg'));
+    if (cfg.agg !== 'count') {
+      if (!numFields.length) {
+        cfg.agg = 'count';
+      } else {
+        if (!numFields.some((f) => f.name === cfg.y)) cfg.y = numFields[0].name;
+        bar.appendChild(chartControl('of', selectFrom(numOpts, cfg.y, (v) => { cfg.y = v; redraw('chartYf'); }), 'chartYf'));
+      }
+    }
+  }
+  bar.appendChild(chartControl('Split by colour', selectFrom(splitOpts, cfg.series || '', (v) => { cfg.series = v; cfg.hues = null; redraw('chartSeries'); }), 'chartSeries'));
+
+  const dl = el('button', { class: 'btn sm', text: 'Save image', title: 'Download this chart as an SVG file' });
+  bar.appendChild(el('div', { class: 'fld', style: 'justify-content:flex-end' }, [dl]));
+  body.appendChild(bar);
+
+  const plot = el('div', { class: 'chartplot' });
+  body.appendChild(plot);
+  const svg = renderChart(plot, table, cfg);
+
+  if (!svg) dl.disabled = true;
+  dl.addEventListener('click', () => {
+    if (!svg) return;
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', SVGNS);
+    clone.querySelectorAll('[stroke="var(--surface)"]').forEach((e2) => e2.setAttribute('stroke', '#ffffff'));
+    const css = '<style>text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}' +
+      '.axis{fill:#6b7685;font-size:11px}.cat{fill:#3a4757}.val{fill:#3d5a7a;font-weight:600}' +
+      '.lbl{fill:#3d5a7a;font-weight:600}.axis-title{fill:#6b7685;font-size:11px;font-weight:600}' +
+      '.grid{stroke:#e3e7ed;stroke-width:1}</style>';
+    download(css + clone.outerHTML, slug(state.flow.name + '-' + n.name) + '.svg', 'image/svg+xml');
+  });
+
+  const sum = el('div', { class: 'chartsum' });
+  sum.appendChild(el('h4', { text: 'What the chart shows' }));
+  sum.appendChild(el('p', { text: chartAriaLabel(table, cfg, chartData(table, cfg)) }));
+  sum.appendChild(el('p', { text: 'The Data tab lists every figure behind it as a table.' }));
+  body.appendChild(sum);
+}
+
 /* =====================================================================
    Saving, loading, import / export
    ===================================================================== */
@@ -7373,7 +8222,7 @@ function serialize(flow, includeData) {
   const out = {
     app: 'data-prep-studio', version: 1, id: flow.id, name: flow.name,
     saved: Date.now(), created: flow.created,
-    nodes: flow.nodes.map((n) => ({ id: n.id, type: n.type, name: n.name, x: n.x, y: n.y, inputs: (n.inputs || []).slice(), config: n.config })),
+    nodes: flow.nodes.map((n) => ({ id: n.id, type: n.type, name: n.name, x: n.x, y: n.y, inputs: (n.inputs || []).slice(), config: n.config, chart: n.chart || undefined })),
     datasets: {}
   };
   Object.keys(flow.datasets).forEach((id) => {
@@ -7405,7 +8254,8 @@ function deserialize(obj) {
   });
   flow.nodes = (obj.nodes || []).map((n) => ({
     id: n.id, type: n.type, name: n.name, x: n.x || 40, y: n.y || 40,
-    inputs: (n.inputs || []).slice(), config: Object.assign(defaultConfig(n.type), n.config || {})
+    inputs: (n.inputs || []).slice(), config: Object.assign(defaultConfig(n.type), n.config || {}),
+    chart: n.chart || null
   }));
   return flow;
 }
@@ -7573,6 +8423,35 @@ function funcTableHTML() {
   ];
   return groups.map((g) => '<p><b>' + g[0] + '</b><br><code>' + g[1].join('</code> <code>') + '</code></p>').join('');
 }
+/** Break the help text into its <h4> sections so it can be read a piece at a time. */
+function helpSections(html) {
+  return html.split(/(?=<h4>)/).filter((x) => x.trim()).map((part) => {
+    const m = /<h4>(.*?)<\/h4>/.exec(part);
+    return { title: m ? m[1] : 'Overview', html: part };
+  });
+}
+
+const HELP_START =
+  '<h4>Start here</h4>' +
+  '<p>Four steps get you from a file to a cleaned, charted result. Nothing is uploaded anywhere &mdash; every calculation happens in this browser.</p>' +
+  '<ol class="startlist">' +
+  '<li><b>Load some data.</b> Press <b>Add data</b> in the top bar and pick a CSV, Excel, JSON or zip file &mdash; or paste text, or point at a live URL. It appears on the canvas as the first step.</li>' +
+  '<li><b>Add a step.</b> Click a step in the left rail (start with <b>Clean</b>) and it drops in beside whatever is selected, already wired up. Configure it in the panel on the right.</li>' +
+  '<li><b>Look at what came out.</b> The panel along the bottom has four tabs for whichever step is selected: <b>Profile</b> (what each column contains), <b>Data</b> (the rows), <b>Chart</b> (a picture of it), and <b>Log</b> (what ran).</li>' +
+  '<li><b>Keep it.</b> <b>Save</b> stores the flow in this browser; <b>Export</b> writes a file you can share or reopen later. <b>Audit report</b> in the left rail writes up every source and transformation for someone who has to trust the numbers.</li>' +
+  '</ol>' +
+  '<p class="hint">Never done this before? <b>Try the sample flow</b> on the empty canvas builds a complete working example you can take apart.</p>' +
+  '<h4>Using it without a mouse</h4>' +
+  '<p>Every step on the canvas is a stop on the Tab key. With one focused:</p>' +
+  '<table>' +
+  '<tr><td>Enter</td><td>Open its settings</td></tr>' +
+  '<tr><td>Left / Right arrow</td><td>Move to the previous or next step in run order</td></tr>' +
+  '<tr><td>Alt + arrow</td><td>Move the step around the canvas</td></tr>' +
+  '<tr><td>C</td><td>Start a connection; C again on another step completes it</td></tr>' +
+  '<tr><td>Delete</td><td>Remove the step</td></tr>' +
+  '</table>' +
+  '<p>Charts carry their own description: the shape is drawn for sighted readers and written out in words underneath, and when a chart has few enough marks each bar or point is a Tab stop that announces its own value. The <b>Data</b> tab is the same figures as a plain table.</p>';
+
 function openHelp(section) {
   const body = el('div', { class: 'help' });
   body.innerHTML = section === 'calc' ? (
@@ -7672,7 +8551,42 @@ function openHelp(section) {
     '<h4>Limits worth knowing</h4>' +
     '<p>Everything is held in memory, so very large files (past roughly a few hundred thousand rows) will feel slow, and browser storage caps a saved flow at a few megabytes of embedded data. Field types are inferred from the first few hundred rows; a Clean step can override any of them.</p>'
   );
-  openModal({ title: section === 'calc' ? 'Calculation reference' : 'How Data Prep Studio works', body: body, wide: true, buttons: [{ label: 'Close', primary: true, fn: closeModal }] });
+  if (section === 'calc') {
+    openModal({ title: 'Calculation reference', body: body, wide: true, buttons: [{ label: 'Close', primary: true, fn: closeModal }] });
+    return;
+  }
+
+  const secs = helpSections(HELP_START + body.innerHTML);
+  const shell = el('div', { class: 'helpshell' });
+  const nav = el('div', { class: 'helpnav', role: 'tablist', 'aria-label': 'Help contents' });
+  const pane = el('div', { class: 'help helppane', role: 'tabpanel', tabindex: '0', 'aria-label': 'Help' });
+  const btns = [];
+  const show = (i) => {
+    btns.forEach((b, j) => {
+      b.classList.toggle('active', i === j);
+      b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+    });
+    pane.innerHTML = secs[i].html;
+    pane.scrollTop = 0;
+    pane.setAttribute('aria-label', secs[i].title);
+  };
+  secs.forEach((sec, i) => {
+    const b = el('button', { type: 'button', role: 'tab', text: sec.title });
+    b.addEventListener('click', () => { show(i); pane.focus(); });
+    b.addEventListener('keydown', (e) => {
+      const d = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const j = (i + d + btns.length) % btns.length;
+      btns[j].focus(); show(j);
+    });
+    btns.push(b);
+    nav.appendChild(b);
+  });
+  shell.appendChild(nav);
+  shell.appendChild(pane);
+  show(0);
+  openModal({ title: 'How Data Prep Studio works', body: shell, wide: true, buttons: [{ label: 'Close', primary: true, fn: closeModal }] });
 }
 
 /* =====================================================================
@@ -7909,6 +8823,14 @@ function init() {
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
 else init();
+
+/* A read-only handle on the engine, for automated checks and for anyone who
+   wants to audit what a step actually computed from the browser console. */
+window.dataPrepStudio = {
+  get state() { return state; },
+  getNode: getNode, tableOf: tableOf, serialize: serialize, deserialize: deserialize,
+  compileExpr: compileExpr, chartData: chartData, hueMap: hueMap, renderChart: renderChart, suggestChart: suggestChart
+};
 
 })();
 </script>
