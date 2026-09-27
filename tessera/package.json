@@ -1,0 +1,32 @@
+{
+  "name": "tessera",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An open work exchange where an LLM breaks large jobs into small, fairly paid tiles. Static prototype that runs entirely in the browser.",
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/serve.js",
+    "test": "node --test \"tests/unit/*.test.js\" \"tests/integration/*.test.js\"",
+    "e2e": "playwright test",
+    "lint": "eslint src tests scripts",
+    "typecheck": "tsc -p jsconfig.json",
+    "eval:decomposer": "node scripts/eval-decomposer.js",
+    "vendor": "node scripts/build-vendor.js",
+    "verify:record": "node scripts/verify-reputation.js"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^22.20.4",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "htm": "^3.1.1",
+    "preact": "^10.29.8",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

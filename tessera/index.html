@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tessera — an open, LLM-coordinated work exchange</title>
+  <meta name="description" content="A working prototype of Tessera: an LLM breaks large jobs into small, fairly paid tiles that anyone can pick up, and each contributor's own model turns their tile into instructions they can follow. Runs entirely in your browser with simulated money.">
+  <meta name="author" content="Dallin Overstreet">
+  <link rel="canonical" href="https://dloverstreet.github.io/tessera/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Tessera — big jobs, cut into small, fairly paid tiles">
+  <meta property="og:description" content="A working prototype of an open, LLM-coordinated work exchange. Pick a persona and run the whole loop with simulated money.">
+  <meta property="og:url" content="https://dloverstreet.github.io/tessera/">
+  <meta name="twitter:card" content="summary">
+  <meta name="theme-color" content="#16293f">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='13' height='13' rx='3' fill='%234aa3df'/%3E%3Crect x='17' y='2' width='13' height='13' rx='3' fill='%2313a07a'/%3E%3Crect x='2' y='17' width='13' height='13' rx='3' fill='%23e0a100'/%3E%3Crect x='17' y='17' width='13' height='13' rx='3' fill='%239b59d0'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="src/app/styles.css">
+  <link rel="modulepreload" href="vendor/preact.js">
+  <style>
+    #boot { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; color: var(--muted); font-size: .95rem; }
+    #boot .tiles { display: grid; grid-template-columns: repeat(2, 22px); gap: 5px; }
+    #boot .tiles span { width: 22px; height: 22px; border-radius: 5px; animation: bootpulse 1.2s ease-in-out infinite; }
+    #boot .tiles span:nth-child(1) { background: #4aa3df; } #boot .tiles span:nth-child(2) { background: #13a07a; animation-delay: .15s; }
+    #boot .tiles span:nth-child(3) { background: #e0a100; animation-delay: .45s; } #boot .tiles span:nth-child(4) { background: #9b59d0; animation-delay: .3s; }
+    @keyframes bootpulse { 50% { opacity: .35; transform: scale(.85); } }
+    html.fast *, html.fast *::before, html.fast *::after { animation: none !important; transition: none !important; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="boot" role="status">
+      <div class="tiles" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div id="boot-status">Loading Tessera…</div>
+    </div>
+  </div>
+  <noscript><p style="padding:2rem;text-align:center">Tessera is an interactive prototype and needs JavaScript. You can still read <a href="https://github.com/DLOverstreet/DLOverstreet.github.io/blob/main/tessera/docs/BLUEPRINT.md">the blueprint</a>.</p></noscript>
+  <script type="module" src="src/app/main.js"></script>
+</body>
+</html>
