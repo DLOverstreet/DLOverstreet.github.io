@@ -61,6 +61,8 @@ export function setPersona(T, id) {
     if (id) human.add(id);
     tx.setMeta({ activePersonaId: id, humanPersonaIds: [...human] });
   });
+  // Save now rather than after the usual short delay, so a reload right after switching keeps it.
+  T.flush?.();
 }
 
 // ---- toasts ----

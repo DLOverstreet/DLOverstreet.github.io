@@ -11,6 +11,12 @@ export async function becomePersona(page, name) {
   await page.locator('.persona-btn').click();
   await page.getByRole('menuitem', { name: new RegExp(name) }).click();
   await expect(page.locator('.persona-btn')).toContainText(name.split(' ')[0]);
+  await saved(page);
+}
+
+/** Waits for the world to be written to IndexedDB. A page.goto to a new hash reloads the page (the boot URL has a query string), so tests save first. */
+export async function saved(page) {
+  await page.evaluate(() => window.tessera.flush());
 }
 
 export async function waitIdle(page) {
@@ -18,6 +24,7 @@ export async function waitIdle(page) {
     const T = window.tessera;
     return T && !T.db.filter('Job', (j) => j.status === 'PENDING' || j.status === 'RUNNING').length;
   }, null, { timeout: 60000 });
+  await saved(page);
 }
 
 export async function postExampleAndFund(page, example = 'flyer') {
