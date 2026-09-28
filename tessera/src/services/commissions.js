@@ -13,6 +13,7 @@ import { fundingEntry } from '../domain/ledger.js';
 import { checkFileLimits, rateLimitCheck } from '../domain/limits.js';
 import { ENUMS } from '../db/schema.js';
 import { fmtMoney, HOUR } from '../lib/util.js';
+import { analyzeJob, disaggregate, assessQuality, repairGraph, applyFix, jobOf, compactAnalysis, compactPlan, compactQuality } from '../decompose/index.js';
 
 function requireOwner(tx, commissionId, actorId) {
   const c = must(tx.get('Commission', commissionId), 'Commission not found.');
@@ -20,7 +21,8 @@ function requireOwner(tx, commissionId, actorId) {
   return c;
 }
 
-export async function postCommission(T, actorId, input) {
+/** Checks a new commission's fields and stores its files. */
+async function preparePost(T, actorId, input) {
   const user = getUser(T.db, actorId);
   if (!user.isRequester) throw new UserError('Switch to a requester persona to post a commission.');
   const now = T.clock.now();
@@ -49,7 +51,12 @@ export async function postCommission(T, actorId, input) {
     const bytes = f.bytes || new TextEncoder().encode(f.text || '');
     r.summary = summarizeUpload(r.name, bytes, { restricted: privacy === 'RESTRICTED' });
   });
+  return { title, goal, budgetCents, deadline, privacy, language: input.language || 'en', refs };
+}
 
+export async function postCommission(T, actorId, input) {
+  if (input.plan) return postCommissionWithPlan(T, actorId, input);
+  const { title, goal, budgetCents, deadline, privacy, refs } = await preparePost(T, actorId, input);
   return T.db.tx((tx) => {
     const c = tx.insert('Commission', {
       requesterId: actorId, title, goal, budgetCents, deadline, privacy, language: input.language || 'en',
@@ -106,29 +113,101 @@ function calibrationFor(tx) {
   return calibrationRatios(samples);
 }
 
+/**
+ * The Decomposer's input: the commission plus the engine's reading of it and, for a real
+ * model, the engine's own split to start from.
+ */
+export function decomposerInput(c, { instruction = null, ratios = {}, rush = false, reference = true } = {}) {
+  const analysis = analyzeJob(jobOf(c, { instruction }));
+  /** @type {any} */
+  const input = {
+    commission: commissionForPrompt(c),
+    clarifications: { questions: c.clarifications?.questions || [], answers: c.clarifications?.answers || {} },
+    files: (c.files || []).map((f) => ({ name: f.name, summary: f.summary })),
+    estimateCalibration: Object.fromEntries(Object.entries(ratios).map(([k, v]) => [k, v.ratio])),
+    ...(instruction ? { requesterInstruction: instruction } : {}),
+    analysis: compactAnalysis(analysis),
+  };
+  if (reference) {
+    const ref = disaggregate(jobOf(c, { instruction }), { maxTotalCents: c.budgetCents, rush, maxTiles: 60 });
+    input.referencePlan = compactPlan(ref.tiles);
+  }
+  return { input, analysis };
+}
+
+/**
+ * Makes any plan valid, grades it, and for a model-made plan that grades below C asks the
+ * model once to fix what the report found.
+ */
+/** @param {any} T @param {any[]} tiles @param {any} analysis @param {{ route?: any, meta?: object, commission?: any }} [opts] */
+export async function finishPlan(T, tiles, analysis, opts = {}) {
+  const { route = null, meta = {}, commission = null } = opts;
+  const repaired = repairGraph(tiles);
+  let out = repaired.tiles;
+  let quality = assessQuality(out, analysis);
+  const changes = [...repaired.changes];
+  let refined = false;
+  if (route && route.providerName !== 'mock' && quality.score < 70) {
+    try {
+      const res = await runAgent({ agent: AGENTS.decomposerRefine, input: { commission, analysis: compactAnalysis(analysis), tiles: out, quality: compactQuality(quality) }, route, log: T.log, meta });
+      const again = repairGraph(res.output.tiles);
+      const q2 = assessQuality(again.tiles, analysis);
+      if (q2.score >= quality.score) { out = again.tiles; quality = q2; changes.push(res.output.rationale, ...again.changes); refined = true; }
+    } catch (e) {
+      changes.push(`The refine pass failed (${e.message}); kept the first plan.`);
+    }
+  }
+  return { tiles: out, quality, changes, refined };
+}
+
+const PLAN_FIELDS = ['inputs', 'outputs', 'stream', 'phase', 'partOf', 'part', 'covers', 'priority'];
+
+function insertPlanTiles(tx, commissionId, tiles, rush) {
+  const idByKey = new Map();
+  for (const t of tiles) {
+    const extra = Object.fromEntries(PLAN_FIELDS.filter((f) => t[f] !== undefined).map((f) => [f, t[f]]));
+    const row = tx.insert('Tile', {
+      commissionId, key: t.key, kind: t.kind, title: t.title, spec: t.spec, deliverableFormat: t.deliverableFormat,
+      acceptanceCriteria: t.acceptanceCriteria, skillTags: t.skillTags, tier: t.tier, estMinutes: t.estMinutes,
+      originalEstMinutes: t.originalEstMinutes ?? t.estMinutes, calibration: t.calibration || null, payCents: tilePayCents(t, { rush }),
+      sensitiveInputs: t.sensitiveInputs || [], languages: t.languages || [], status: 'DRAFT', claimedById: null,
+      claimExpiresAt: null, revisionCount: 0, highStakes: !!t.highStakes, dynamic: false, reviewOf: null, excludedUserIds: [], ...extra,
+    });
+    idByKey.set(t.key, row.id);
+  }
+  for (const t of tiles) {
+    for (const d of t.dependsOn || []) if (idByKey.has(d)) tx.insert('TileEdge', { id: `edg_${idByKey.get(d)}_${idByKey.get(t.key)}`, fromTileId: idByKey.get(d), toTileId: idByKey.get(t.key) });
+  }
+  return idByKey;
+}
+
+function clearDraftTiles(tx, commissionId) {
+  for (const old of tilesOf(tx, commissionId)) {
+    for (const e of tx.filter('TileEdge', (x) => x.toTileId === old.id || x.fromTileId === old.id)) tx.remove('TileEdge', e.id);
+    tx.remove('Tile', old.id);
+  }
+}
+
 export async function runDecomposeJob(T, { commissionId, instruction = null }) {
   const c = T.db.get('Commission', commissionId);
   if (!c || c.status !== 'SCOPING') return;
   const now = T.clock.now();
   const rush = isRush(c.deadline, now);
   const ratios = calibrationFor(T.db);
-  const base = {
-    commission: commissionForPrompt(c),
-    clarifications: { questions: c.clarifications.questions, answers: c.clarifications.answers },
-    files: c.files.map((f) => ({ name: f.name, summary: f.summary })),
-    estimateCalibration: Object.fromEntries(Object.entries(ratios).map(([k, v]) => [k, v.ratio])),
-    ...(instruction ? { requesterInstruction: instruction } : {}),
-  };
+  const route = T.llm.platform('heavy');
+  const { input: base, analysis } = decomposerInput(c, { instruction, ratios, rush, reference: route.providerName !== 'mock' });
   /** @type {any} */
   let input = base;
   let attempt = 0;
   let graph;
   let tiles;
   let priced;
+  let finished;
   for (;;) {
-    const res = await runAgent({ agent: AGENTS.decomposer, input: { ...input, skillVocabulary }, route: T.llm.platform('heavy'), log: T.log, meta: { commissionId } });
+    const res = await runAgent({ agent: AGENTS.decomposer, input: { ...input, skillVocabulary }, route, log: T.log, meta: { commissionId } });
     graph = res.output;
-    tiles = graph.tiles.map((t) => {
+    finished = await finishPlan(T, graph.tiles, analysis, { route, meta: { commissionId }, commission: base.commission });
+    tiles = finished.tiles.map((t) => {
       const cal = calibrateEstimate(t.estMinutes, t.skillTags, ratios);
       const changed = cal.tagsUsed.length && cal.estMinutes !== t.estMinutes;
       return { ...t, originalEstMinutes: t.estMinutes, estMinutes: cal.estMinutes, calibration: changed ? { ratio: cal.ratio, tags: cal.tagsUsed } : null };
@@ -147,31 +226,17 @@ export async function runDecomposeJob(T, { commissionId, instruction = null }) {
   T.db.tx((tx) => {
     const cur = tx.get('Commission', commissionId);
     if (cur.status !== 'SCOPING') return;
-    for (const old of tilesOf(tx, commissionId)) {
-      for (const e of tx.filter('TileEdge', (x) => x.toTileId === old.id || x.fromTileId === old.id)) tx.remove('TileEdge', e.id);
-      tx.remove('Tile', old.id);
-    }
-    const idByKey = new Map();
-    for (const t of tiles) {
-      const row = tx.insert('Tile', {
-        commissionId, key: t.key, kind: t.kind, title: t.title, spec: t.spec, deliverableFormat: t.deliverableFormat,
-        acceptanceCriteria: t.acceptanceCriteria, skillTags: t.skillTags, tier: t.tier, estMinutes: t.estMinutes,
-        originalEstMinutes: t.originalEstMinutes, calibration: t.calibration, payCents: tilePayCents(t, { rush }),
-        sensitiveInputs: t.sensitiveInputs || [], languages: t.languages || [], status: 'DRAFT', claimedById: null,
-        claimExpiresAt: null, revisionCount: 0, highStakes: false, dynamic: false, reviewOf: null, excludedUserIds: [],
-      });
-      idByKey.set(t.key, row.id);
-    }
-    for (const t of tiles) {
-      for (const d of t.dependsOn) tx.insert('TileEdge', { id: `edg_${idByKey.get(d)}_${idByKey.get(t.key)}`, fromTileId: idByKey.get(d), toTileId: idByKey.get(t.key) });
-    }
+    clearDraftTiles(tx, commissionId);
+    insertPlanTiles(tx, commissionId, tiles, rush);
     tx.update('Commission', commissionId, {
       planState: null,
       planError: null,
       plan: {
         rationale: graph.rationale, attempts: attempt + 1, overBudget: priced.total > cur.budgetCents,
         pricing: { total: priced.total, payTotal: priced.payTotal, feeTotal: priced.feeTotal, reserveTotal: priced.reserveTotal, rush },
-        decomposedAt: tx.now(), instruction,
+        decomposedAt: tx.now(), instruction, source: route.providerName === 'mock' ? 'engine' : 'model',
+        analysis: compactAnalysis(analysis), quality: compactQuality(finished.quality),
+        repairs: finished.changes.filter(Boolean).slice(0, 20), refined: finished.refined,
       },
     });
     transitionCommission(tx, commissionId, 'PLANNED', 'decomposer', { note: `${tiles.length} tiles` });
@@ -337,4 +402,81 @@ export function cancelCommission(T, actorId, commissionId) {
     }
     transitionCommission(tx, commissionId, 'CANCELLED', actorId, { note: 'Cancelled by the requester' });
   }, { actor: actorId });
+}
+
+/** Posts a commission with a plan made in the breakdown tool, skipping scoping and the Decomposer. */
+export async function postCommissionWithPlan(T, actorId, input) {
+  const { title, goal, budgetCents, deadline, privacy, language, refs } = await preparePost(T, actorId, input);
+  const plan = input.plan;
+  const draft = repairGraph(plan.tiles || []).tiles;
+  const bad = draft.map((t) => TileDraft.safeParse(t)).find((p) => !p.success);
+  if (bad) throw new UserError(`The plan has a tile that doesn’t check out: ${bad.error.message}`);
+  const issues = validateGraph(draft).filter((i) => i.code !== 'no-work');
+  if (issues.length) throw new UserError(issues.map((i) => i.message).join(' '));
+  const now = T.clock.now();
+  const rush = isRush(deadline, now);
+  const analysis = analyzeJob({ title, goal, files: refs, privacy, language });
+  const quality = assessQuality(draft, analysis);
+  const priced = priceGraph(draft, { rush });
+  return T.db.tx((tx) => {
+    const c = tx.insert('Commission', {
+      requesterId: actorId, title, goal, budgetCents, deadline, privacy, language,
+      clarifications: { questions: [], answers: {}, scopedAt: now, answeredAt: now }, status: 'DRAFT', files: refs, plan: null, delivery: null,
+    });
+    transitionCommission(tx, c.id, 'SCOPING', actorId, { note: 'Posted with a plan from the breakdown tool' });
+    insertPlanTiles(tx, c.id, draft, rush);
+    tx.update('Commission', c.id, {
+      planState: null, planError: null,
+      plan: {
+        rationale: plan.rationale || 'Planned in the breakdown tool.', attempts: 0, overBudget: priced.total > budgetCents,
+        pricing: { total: priced.total, payTotal: priced.payTotal, feeTotal: priced.feeTotal, reserveTotal: priced.reserveTotal, rush },
+        decomposedAt: now, instruction: null, source: plan.source || 'breakdown', analysis: compactAnalysis(analysis), quality: compactQuality(quality), repairs: [],
+      },
+    });
+    transitionCommission(tx, c.id, 'PLANNED', actorId, { note: `${draft.length} tiles from the breakdown tool` });
+    return tx.get('Commission', c.id);
+  }, { actor: actorId });
+}
+
+/** Replaces a planned commission's draft tiles with an edited plan (split, merge, fix). */
+export function replacePlan(T, actorId, commissionId, tiles, note = 'Edited the plan') {
+  return T.db.tx((tx) => {
+    const c = requireOwner(tx, commissionId, actorId);
+    if (c.status !== 'PLANNED') throw new UserError('The plan can only be changed while it waits for approval.');
+    const bad = tiles.map((t) => TileDraft.safeParse(t)).find((p) => !p.success);
+    if (bad) throw new UserError(`Check the tile: ${bad.error.message}`);
+    const blocking = validateGraph(tiles).filter((i) => ['cycle', 'missing-dependency', 'self-dependency', 'duplicate-key', 'duplicate-criterion'].includes(i.code));
+    if (blocking.length) throw new UserError(blocking.map((i) => i.message).join(' '));
+    const rush = isRush(c.deadline, tx.now());
+    const high = new Map(tilesOf(tx, commissionId).map((t) => [t.key, t.highStakes]));
+    clearDraftTiles(tx, commissionId);
+    insertPlanTiles(tx, commissionId, tiles.map((t) => ({ ...t, highStakes: high.get(t.key) || false, editedByRequester: true })), rush);
+    const analysis = c.plan?.analysis ? { requirements: c.plan.analysis.requirements || [] } : null;
+    tx.update('Commission', commissionId, { plan: { ...c.plan, quality: compactQuality(assessQuality(tiles, analysis)), edits: [...(c.plan?.edits || []), { at: tx.now(), note }].slice(-30) } });
+    return tx.get('Commission', commissionId);
+  }, { actor: actorId });
+}
+
+/** Applies one fix (split, merge, add a wait, add an assembly tile, repair) to a planned commission. */
+export function applyPlanFix(T, actorId, commissionId, fix) {
+  const current = draftGraph(T.db, commissionId).filter((t) => t.status !== 'CANCELLED');
+  let next;
+  try { next = applyFix(current, fix); } catch (e) { throw new UserError(e.message); }
+  const note = { split: 'Split a tile', merge: 'Merged tiles', addEdge: 'Added a missing wait', addIntegration: 'Added a final assembly tile', repair: 'Repaired the plan', drop: 'Removed a tile', cover: 'Covered a requirement' }[fix.op] || 'Edited the plan';
+  return replacePlan(T, actorId, commissionId, next, note);
+}
+
+/**
+ * The breakdown tool: splits any job without posting it. With a real platform model and
+ * useModel, the Decomposer starts from the engine's reading and reference plan.
+ */
+export async function breakdown(T, job, { useModel = false, budgetCents = null, rush = false } = {}) {
+  const base = disaggregate(job, { maxTotalCents: budgetCents, rush });
+  const route = T.llm.platform('heavy');
+  if (!useModel || route.providerName === 'mock') return { ...base, source: 'engine', model: null };
+  const c = { title: job.title || 'Untitled job', goal: job.goal || '', budgetCents: budgetCents || 1000000, deadline: T.clock.now() + 14 * 24 * HOUR, privacy: job.privacy || 'PUBLIC', language: job.language || 'en', clarifications: { questions: [], answers: job.answers || {} }, files: job.files || [] };
+  const { input } = decomposerInput(c, { rush });
+  const res = await runAgent({ agent: AGENTS.decomposer, input: { ...input, skillVocabulary }, route, log: T.log, meta: { breakdown: true } });
+  const finished = await finishPlan(T, res.output.tiles, base.analysis, { route, meta: { breakdown: true }, commission: input.commission });
+  return { ...base, tiles: finished.tiles, quality: finished.quality, rationale: res.output.rationale, repairs: finished.changes, source: 'model', model: route.label, pricing: priceGraph(finished.tiles, { rush }) };
 }

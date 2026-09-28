@@ -134,6 +134,8 @@ function Eval() {
         <div class="stat"><span class="v">${state.summary.valid}/${state.summary.total}</span><span class="l">Valid graphs</span></div>
         <div class="stat"><span class="v">${state.summary.medianTiles}</span><span class="l">Median tiles</span></div>
         <div class="stat"><span class="v">${Math.round(state.summary.autoShare * 100)}%</span><span class="l">Criteria marked AUTO</span></div>
+        <div class="stat"><span class="v">${state.summary.medianScore ?? '—'}</span><span class="l">Median separability score</span></div>
+        <div class="stat"><span class="v">${Math.round((state.summary.coverage || 0) * 100)}%</span><span class="l">Requirements covered</span></div>
         <div class="stat"><span class="v">$${state.summary.costUsd.toFixed(3)}</span><span class="l">Cost (shadow $${state.summary.shadowCostUsd.toFixed(3)})</span></div>
       </div></div>
       <div class="table-wrap"><table><thead><tr><th>Fixture</th><th>Valid</th><th class="right">Tiles</th><th class="right">Size (min / median / max)</th><th class="right">AUTO</th><th class="right">Price</th><th class="right">Tries</th></tr></thead><tbody>

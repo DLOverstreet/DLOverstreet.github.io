@@ -65,5 +65,7 @@ export const skillVocabulary = Object.freeze([
   'geocoding', 'gis', 'statistics', 'econometrics', 'survey-coding', 'data-viz', 'figma', 'svg',
   'technical-writing', 'copywriting', 'editing', 'methodology', 'translation-es', 'translation-fr',
   'legal-research', 'literature-review', 'research', 'citation-management', 'qa-review', 'testing',
-  'accessibility', 'web-dev', 'project-integration',
+  'accessibility', 'web-dev', 'project-integration', 'graphic-design', 'ux-design', 'mobile-dev', 'grant-writing',
+  'instructional-design', 'event-planning', 'project-management', 'outreach', 'bookkeeping', 'transcription',
+  'audio-editing', 'video-editing',
 ]);

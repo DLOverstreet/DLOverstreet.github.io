@@ -24,6 +24,15 @@ export const TileDraft = s.object({
   dependsOn: s.array(s.string()).describe('keys of upstream tiles'),
   sensitiveInputs: s.array(s.string()).default([]),
   languages: s.array(s.string()).default([]).describe('Working languages the tile needs, e.g. ["en","es"]; empty means the commission language'),
+  // The interface: what the tile reads and what it makes, by file name. Optional so older plans still parse.
+  inputs: s.array(s.string()).optional().describe('Files this tile reads: outputs of upstream tiles, or "the source file the requester attached"'),
+  outputs: s.array(s.string()).optional().describe('Exact file names this tile delivers; each file has one maker'),
+  stream: s.string().optional().describe('Short name of the workstream this tile belongs to, e.g. "Setup", "Code responses", "Checks"'),
+  phase: s.enum(['prep', 'conventions', 'work', 'layer', 'check', 'integrate']).optional(),
+  partOf: s.string().optional().describe('Shared id of a batch group: tiles that split one piece of work by range'),
+  part: s.object({ index: s.int().min(1), of: s.int().min(1), from: s.int(), to: s.int(), label: s.string() }).optional(),
+  covers: s.array(s.string()).optional().describe('Ids of the requester requirements this tile answers for'),
+  priority: s.int().min(1).max(3).optional().describe('1 essential, 2 important, 3 nice to have; cut from 3 up when over budget'),
 });
 
 export const TileGraph = s.object({
