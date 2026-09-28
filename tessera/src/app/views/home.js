@@ -41,7 +41,7 @@ export function Welcome() {
         <p class="lead muted" style=${{ fontSize: '.95rem' }}>Then it prices the tiles, offers each to people with the right skills, and assembles the results. A working prototype that runs in your browser with simulated money.</p>
         <div class="row hero-actions" style=${{ marginTop: '1.1rem' }}>
           <a class="btn primary" href="#/breakdown">Break down a job</a>
-          <button class="btn" onClick=${() => startGuidedDemo(T)}>Run the full loop (guided, 5 minutes)</button>
+          <button class="btn" onClick=${() => startGuidedDemo(T)}>Start the guided demo (the full loop, 5 minutes)</button>
           <a class="btn ghost" href="#/how">How it works</a>
         </div>
         <div class="row small" style=${{ marginTop: '.7rem', gap: '.35rem' }}><span class="muted">See a split:</span>

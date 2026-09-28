@@ -68,6 +68,7 @@ export function PostCommission({ example }) {
   return html`<form onSubmit=${submit}>
     <div class="page-head"><div><h1>Post a commission</h1><p class="sub">Describe the whole job in plain language. Tessera will ask a few questions, then split it into tiles and price them.</p></div></div>
     <div class="card" style=${{ marginBottom: '1rem' }}>
+      <div class="callout" style=${{ marginBottom: '.8rem' }}>Want to see how the job splits before you post it? <a href="#/breakdown">Break it down first</a>: you can edit the split and post it from there.</div>
       <div class="row"><span class="small muted">Start from an example:</span>${Object.entries(EXAMPLES).map(([k, e]) => html`<button type="button" class="btn small" onClick=${() => useExample(k)}>${e.label}</button>`)}</div>
     </div>
     <div class="split">
