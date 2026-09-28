@@ -226,7 +226,7 @@ export function splitList(text, frame = 'generic') {
         else acc.push(piece);
         return acc;
       }, []));
-    for (const b of bits.map((x) => x.trim()).filter(Boolean)) {
+    for (const b of bits.map((x) => x.trim().replace(/^(?:and|or)\s+/i, '')).filter(Boolean)) {
       // "maps and recommendations": two short noun phrases that are different kinds of work.
       const pair = /^((?:[\w'-]+\s+){0,3}?[\w'-]+)\s+and\s+((?:[\w'-]+\s+){0,3}?[\w'-]+)((?:\s+(?:for|on|about|of)\s+.*)?)$/i.exec(b);
       if (pair && !FIXED_PAIRS.test(b) && !leadVerbOf(pair[1]) && classify(pair[1], frame).archetype !== classify(pair[2], frame).archetype) out.push(pair[1] + pair[3], pair[2] + pair[3]);

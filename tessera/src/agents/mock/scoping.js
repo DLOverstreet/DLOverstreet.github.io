@@ -1,6 +1,40 @@
 // Mock Scoping: picks up to five questions from a bank per kind of job, skipping any the
-// goal already answers, each with a suggested answer the requester can accept.
+// goal already answers, each with a suggested answer the requester can accept. The kind of
+// job comes from the disaggregation engine's reading, and a job that names no parts is
+// asked for them first, since the parts are what the Decomposer splits.
 import { detectDomain, commissionContext } from './context.js';
+import { analyzeJob } from '../../decompose/analyze.js';
+import { FRAME_DEFAULTS } from '../../decompose/lexicon.js';
+
+/** Questions for kinds of job the older bank doesn't cover, keyed by the engine's frame. */
+const FRAME_BANK = {
+  event: [
+    ['event-budget', 'What is the budget ceiling for the venue and catering, and is the date fixed?', 'Goes into the event brief every vendor and volunteer tile works from.', 'Up to $8,000 for venue and catering; the date is fixed.', /\$\d|budget|date is/i],
+    ['event-look', 'Is there a look the invitations and registration page should follow?', 'Sets colors, fonts and tone once, so separate designers match.', 'Use our logo colors, navy and gold, and a warm, formal tone.', /colors?|brand|logo/i],
+  ],
+  software: [
+    ['platforms', 'Which platforms, and is there an existing back end or database?', 'Decides the API contract that front-end and back-end tiles build against in parallel.', 'iOS and Android from one codebase; there is no existing back end.', /react native|flutter|existing (?:api|back ?end)/i],
+    ['accounts', 'Who signs in, and how?', 'Adds or removes a sign-in feature and its tests.', 'Volunteers sign in with email; staff have a separate admin login.', /sign[- ]in|login|account/i],
+  ],
+  media: [
+    ['length', 'How long should each episode run, and are guests lined up?', 'Sets the edit length and whether the research tiles also book guests.', 'About 30 minutes each; we have a list of possible guests.', /\d+[- ]minute|guests? (?:are|is) (?:lined|booked)/i],
+  ],
+  course: [
+    ['lesson-length', 'How long is each lesson, and who will teach it?', 'Sets lesson length and how detailed the facilitator guide must be.', 'About 45 minutes each, taught by a volunteer facilitator.', /\d+[- ]minute|facilitat/i],
+  ],
+  campaign: [
+    ['channels', 'When does it launch, and which channels matter most?', 'Orders the send calendar and decides which copy tiles come first.', 'Launches December 1; email first, then Instagram and Facebook.', /launch|instagram|facebook|linkedin|email first/i],
+  ],
+  bulk: [
+    ['format', 'What format is the source file, and does it have an id column?', 'The batch spec keys every batch on one id column, so batches can be merged back without guesswork.', 'A CSV export with a product_id column.', /csv|xlsx|export|_id|id column/i],
+  ],
+  finance: [
+    ['software', 'Which accounting software do you use, and how many bank accounts?', 'Sets the chart of accounts and how many reconciliation tiles are needed.', 'QuickBooks Online, with two bank accounts and one credit card.', /quickbooks|xero|wave|accounts?\b.*\d/i],
+  ],
+  research: [
+    ['decision', 'What decision will this research inform?', 'Every piece is written to answer it, and the summary ends with a recommendation.', 'Whether to open in the spring, and where.', /decide|decision|go\/no-go/i],
+  ],
+};
 
 const BANK = {
   common: [
@@ -38,7 +72,13 @@ export function mockScoping(input) {
   const domain = detectDomain(input.commission || {});
   const x = commissionContext(input);
   const text = `${x.title} ${x.goal}`;
-  const pool = [...(BANK[domain] || []), ...BANK.common];
+  const a = analyzeJob({ title: x.title, goal: x.goal, privacy: input.commission?.privacy });
+  const gaps = [];
+  if (a.vague) {
+    const defaults = (FRAME_DEFAULTS[a.frame] || []).slice(0, 4);
+    gaps.push(['pieces', 'What are the separate pieces of work you need?', 'Each piece becomes one or more tiles that different people can do at the same time. List them with counts where you know them.', defaults.length ? `We need ${defaults.join(', ')}.` : 'We need a plan, a first draft of each part, and a final edited version.', null]);
+  }
+  const pool = [...gaps, ...(BANK[domain] || []), ...(domain === 'generic' || !BANK[domain]?.length ? FRAME_BANK[a.frame] || [] : []), ...BANK.common];
   const questions = [];
   for (const [id, question, why, suggestedAnswer, answered] of pool) {
     if (answered && answered.test(text)) continue;

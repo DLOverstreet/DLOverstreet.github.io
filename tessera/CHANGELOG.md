@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-09-28
+- Made disaggregation the center of the product: a rule-based engine in `src/decompose` reads
+  any job and splits it into tiles separate people can do at the same time. It finds the kind of
+  job, the pieces it names and their counts, languages, audiences, formats and sensitive data;
+  puts a shared-conventions tile first; splits counts into range batches and assets into
+  per-item pipelines; adds de-identification, translation, editing, testing and checks; wires
+  tiles by the files they read and make; fits a budget by leaving later batches for phase two;
+  and grades separability with one-click fixes (split, merge, add a wait, add an assembly, repair).
+- New **Break down a job** page (also the home page's first action): any job, twelve examples,
+  how the job reads, requirement coverage, the separability check, a who-works-when timeline,
+  tiles by workstream with split, merge and remove, and posting the plan as a commission.
+- The mock Decomposer is now the engine (the seven templates are gone). The Claude Decomposer
+  uses prompt `decomposer.v2`, which starts from the engine's reading and reference plan, and a
+  new `decomposer-refine.v1` pass fixes model plans that grade below C.
+- Tiles carry optional `inputs`, `outputs`, `stream`, `phase`, `partOf`, `part`, `covers` and
+  `priority`. Plans store the analysis and the quality report; the Plan tab shows both, with
+  fixes that re-price the draft in place (`applyPlanFix`, `replacePlan`).
+- Commissions can be posted with a ready plan (`postCommission` with `plan`), skipping scoping.
+- Skill vocabulary and seeded contributors gained design, UX, mobile, grant writing, instructional
+  design, event planning, project management, outreach, bookkeeping, transcription and audio and
+  video editing, so the crowd can take any kind of job. Simulated contributors can now deliver
+  JavaScript and TypeScript files.
+- Decomposer eval grew to fifteen fixtures and scores separability and requirement coverage.
+- Tests: 100 unit and integration tests (a 30-job corpus property test among them) and a
+  breakdown end-to-end test.
+
 ## 2026-09-27
 - Built the full prototype (M0–M6) as a static site at /tessera/ on dloverstreet.github.io.
 - Domain core: pricing, both state machines, append-only ledger with overdraw protection,

@@ -35,7 +35,7 @@ function wordsProduced(p) {
   const m = p.totalMinutes || 60;
   if (p.archetype === 'write' || p.archetype === 'teach') return Math.round(m * 7);
   if (p.archetype === 'visualize') return 80;
-  if (p.archetype === 'design') return 60;
+  if (p.archetype === 'design') return /\b(flyer|poster|brochure|invitations?|leaflet|handout|menu|slides?)\b/i.test(p.phrase) ? 220 : 60;
   return 100;
 }
 

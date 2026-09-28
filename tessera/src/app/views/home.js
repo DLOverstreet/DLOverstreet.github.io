@@ -22,7 +22,7 @@ function HeroArt() {
     ${cells}</svg>`;
 }
 
-const FLOW = ['Post the job', 'Scope', 'Decompose', 'Approve & fund', 'Match & offer', 'Translate brief', 'Do the work', 'Verify', 'Release pay', 'Assemble', 'Sign off'];
+const FLOW = ['Post the job', 'Scope', 'Break it down', 'Approve & fund', 'Match & offer', 'Translate brief', 'Do the work', 'Verify', 'Release pay', 'Assemble', 'Sign off'];
 
 export function startGuidedDemo(T) {
   setPersona(T, 'usr_tom');
@@ -36,13 +36,16 @@ export function Welcome() {
   return html`<div>
     <section class="hero">
       <div>
-        <h1>Big jobs, cut into small, fairly paid tiles.</h1>
-        <p class="lead">Tessera is an open work exchange. An LLM breaks a large job into small, well-specified <b>tiles</b>, offers each one to people with the skills, time and pay floor to do it, and each contributor’s own model turns their tile into instructions they can follow on their own computer.</p>
-        <p class="lead muted" style=${{ fontSize: '.95rem' }}>This is a working prototype. It runs entirely in your browser with simulated money. Pick a persona and run the whole loop.</p>
-        <div class="row" style=${{ marginTop: '1.1rem' }}>
-          <button class="btn primary" onClick=${() => startGuidedDemo(T)}>Start the guided demo (about 5 minutes)</button>
-          <a class="btn" href="#/personas">Pick a persona</a>
+        <h1>Any job, split into pieces separate people can do at once.</h1>
+        <p class="lead">Describe a job, whether it’s a gala, a grant, an app, 5,000 product listings or a podcast season. Tessera reads it, finds the separate pieces of work, and splits them into <b>tiles</b>: each one says exactly what it receives, what it delivers and how it’s checked, so a different person can do each at the same time.</p>
+        <p class="lead muted" style=${{ fontSize: '.95rem' }}>Then it prices the tiles, offers each to people with the right skills, and assembles the results. A working prototype that runs in your browser with simulated money.</p>
+        <div class="row hero-actions" style=${{ marginTop: '1.1rem' }}>
+          <a class="btn primary" href="#/breakdown">Break down a job</a>
+          <button class="btn" onClick=${() => startGuidedDemo(T)}>Run the full loop (guided, 5 minutes)</button>
           <a class="btn ghost" href="#/how">How it works</a>
+        </div>
+        <div class="row small" style=${{ marginTop: '.7rem', gap: '.35rem' }}><span class="muted">See a split:</span>
+          <a href="#/breakdown?example=gala">a gala</a><span class="muted">·</span><a href="#/breakdown?example=listings">5,000 listings</a><span class="muted">·</span><a href="#/breakdown?example=podcast">a podcast season</a><span class="muted">·</span><a href="#/breakdown?example=app">an app</a><span class="muted">·</span><a href="#/breakdown?example=grant">a grant proposal</a>
         </div>
       </div>
       <${HeroArt} />
@@ -50,6 +53,7 @@ export function Welcome() {
     <h2 class="section-title">How work flows</h2>
     <div class="flow">${FLOW.map((s, i) => html`${i ? html`<span class="arr" aria-hidden="true">→</span>` : ''}<span class="step">${s}</span>`)}</div>
     <div class="grid-3" style=${{ marginTop: '1.4rem' }}>
+      <div class="card"><h3>Contract first, then everyone at once</h3><p class="small">The first tile fixes the shared terms, formats and file names. Every other tile works from it, so a glossary, codebook or API contract lets ten people work in parallel without stepping on each other.</p></div>
       <div class="card"><h3>Fixed prices, no bidding</h3><p class="small">Pay comes from a formula on estimated time and skill tier. Nobody can win work by accepting less, and a pay floor is a hard filter.</p></div>
       <div class="card"><h3>Reputation you own</h3><p class="small">Built only from accepted work and reviews, per skill, and exportable as a signed record anyone can verify.</p></div>
       <div class="card"><h3>People decide what matters</h3><p class="small">Agents propose, check and assemble. People approve plans, claim work, settle disputes and sign off.</p></div>

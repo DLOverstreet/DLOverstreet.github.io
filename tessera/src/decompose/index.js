@@ -7,7 +7,7 @@
 //   ops.js      split, merge, drop, wire and repair a graph
 //   schedule.js earliest start and finish, critical path, parallel width, timeline rows
 export { analyzeJob } from './analyze.js';
-export { disaggregate, applyFix, MAX_TILES } from './plan.js';
+export { disaggregate, applyFix, groupTitle, MAX_TILES } from './plan.js';
 export { assessQuality } from './quality.js';
 export { scheduleGraph } from './schedule.js';
 export { splitTile, mergeTiles, dropTile, addEdge, removeEdge, repairGraph, inferIO, OpError } from './ops.js';

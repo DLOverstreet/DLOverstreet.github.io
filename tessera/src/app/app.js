@@ -14,6 +14,7 @@ import { ProfileView } from './views/profile.js';
 import { AdminView } from './views/admin.js';
 import { SettingsView } from './views/settings.js';
 import { VerifyView } from './views/verify.js';
+import { BreakdownPage } from './views/breakdown.js';
 import { Guide } from './guide.js';
 
 function useOutside(ref, onOut) {
@@ -101,6 +102,7 @@ function Nav({ route }) {
   const link = (to, label, key, count) => html`<a href=${to} class=${here === key ? 'active' : ''} aria-current=${here === key ? 'page' : undefined}>${label}${count ? html`<span class="count" aria-label=${`${count} waiting`}>${count}</span>` : ''}</a>`;
   return html`<nav class="nav" aria-label="Main">
     ${link('#/', 'Home', '')}
+    ${link('#/breakdown', 'Break down a job', 'breakdown')}
     ${me?.isRequester ? html`${link('#/post', 'Post a commission', 'post')}` : ''}
     ${me?.isContributor ? html`${link('#/offers', 'Offers', 'offers', offers)}${link('#/board', 'Open board', 'board')}${link('#/work', 'My tiles', 'work')}${link('#/earnings', 'Earnings', 'earnings')}${link('#/reputation', 'Reputation', 'reputation')}${link('#/profile', 'Profile', 'profile')}` : ''}
     ${me?.isAdmin ? link('#/admin', 'Admin', 'admin') : ''}
@@ -118,6 +120,7 @@ function Routes({ route }) {
   switch (a) {
     case undefined: return me ? html`<${Home} />` : html`<${Welcome} />`;
     case 'how': return html`<${HowItWorks} />`;
+    case 'breakdown': return html`<${BreakdownPage} key=${route.query.example || ''} example=${route.query.example} />`;
     case 'personas': return html`<${PersonaPage} />`;
     case 'post': return needPersona(html`<${PostCommission} example=${route.query.example} />`);
     case 'c': return html`<${CommissionView} id=${b} tab=${c} />`;

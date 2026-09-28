@@ -306,10 +306,17 @@ export function planPieces(a) {
   }
   // Every target language gets its own translator, after the source text is final.
   if (frame !== 'translation' && a.languages.targets.length) {
-    const sources = PRODUCT_FRAMES.has(frame) ? pieces.filter((p) => p.role === 'work' && ['write', 'visualize'].includes(p.archetype) && !p.internal) : text;
+    const texty = pieces.filter((p) => p.role === 'work' && p.archetype === 'design' && /\b(flyer|poster|brochure|invitations?|signs?|signage|banner|slides?|infographic|leaflet|postcard|handout|menu)\b/i.test(p.phrase));
+    const sources = PRODUCT_FRAMES.has(frame) ? pieces.filter((p) => p.role === 'work' && ['write', 'visualize'].includes(p.archetype) && !p.internal) : [...text, ...texty];
     if (sources.length) {
       for (const t of a.languages.targets) {
-        pieces.push(piece({ id: `translate-${t}`, archetype: 'translate', role: 'layer', phrase: `Translate the ${PRODUCT_FRAMES.has(frame) ? 'page text' : 'final text'} into ${LANGUAGE_NAMES[t] || t}`, lang: t, sourcesOf: sources.map((s) => s.id), covers: a.requirements.filter((r) => r.kind === 'language' && r.ref === t).map((r) => r.id) }));
+        const lang = LANGUAGE_NAMES[t] || t;
+        pieces.push(piece({ id: `translate-${t}`, archetype: 'translate', role: 'layer', phrase: `Translate the ${PRODUCT_FRAMES.has(frame) ? 'page text' : 'final text'} into ${lang}`, lang: t, sourcesOf: sources.map((s) => s.id), covers: a.requirements.filter((r) => r.kind === 'language' && r.ref === t).map((r) => r.id) }));
+        // A designed piece with words on it needs its translated text laid out in the same design.
+        for (const d of texty) {
+          const noun = (d.phrase.match(/\b(flyer|poster|brochure|invitations?|signs?|signage|banner|slides?|infographic|leaflet|postcard|handout|menu)\b/i) || ['piece'])[0].toLowerCase();
+          pieces.push(piece({ id: `layout-${d.id}-${t}`, archetype: 'design', phrase: `Lay out the ${lang} ${noun}`, title: `Lay out the ${lang} version of the ${noun}`, lang: t, after: [d.id, `translate-${t}`], covers: [...d.covers], minutes: 45 }));
+        }
       }
     }
   }
