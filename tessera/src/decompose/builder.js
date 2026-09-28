@@ -92,6 +92,12 @@ function sizePiece(p, a, byId, pieces) {
   }
   // Work pieces.
   if (p.minutes) return single(p.minutes);
+  // A story or book is one writer's voice: its text is not split by page.
+  if (p.archetype === 'write' && p.qty?.kind === 'length' && /\b(book|story|stories|manuscript|novel|memoir|script|poem|screenplay)\b/i.test(`${p.phrase}`)) {
+    const short = /\b(picture|children'?s|board) book\b/i.test(a.text);
+    const m = p.qty.n * (short ? 5 : 45) + TILE_OVERHEAD;
+    if (m <= LIMITS.max || short) return single(Math.min(LIMITS.max, m));
+  }
   const assetsN = (() => {
     if (p.assetUnit && p.qty) return p.qty.n;
     if (p.parent && byId.get(p.parent)?.qty) return byId.get(p.parent).qty.n;
@@ -117,7 +123,8 @@ function sizePiece(p, a, byId, pieces) {
       const share = p.subset ? SUBSET_SHARE : 1;
       if (p.subset) p.subsetAssumed = true;
       if (p.archetype === 'outreach' && q.unit === 'person') { p.target = q.n; }
-      batch(q.n, (60 / rate) * share, `${q.unit}-${q.n}`, q.noun, { maxBatches: 60, target: p.archetype === 'translate' ? 105 : 75 });
+      const perUnit = (/\bletters?\b/i.test(p.phrase) && q.unit === 'contact' ? 30 : 60 / rate) * share;
+      batch(q.n, perUnit, `${q.unit}-${q.n}`, q.noun, { maxBatches: 60, target: p.archetype === 'translate' ? 105 : 75 });
       if (p.batches.deferred) p.deferred = { ...p.batches.deferred, noun: q.noun };
       p.rangeOverAll = !p.subset;
       return;
@@ -939,7 +946,8 @@ function verbPhrase(p) {
   }
   const sp = shortPhrase(p.phrase);
   const lead = leadVerbOf(sp);
-  let vp = lead ? cap(sp).replace(/^(\S+(?: up| in| out)?) (?:a|an) /i, '$1 the ') : `${VERB_FOR[p.archetype] || 'Do'} the ${lowerFirst(sp.replace(/^(?:a|an|the|our|some|its|their|your)\s+/i, ''))}`;
+  const verb = p.verb && /^[a-z]+(?: up| in| out)?$/.test(p.verb) && !/^(?:a|an|the)$/.test(p.verb) ? cap(p.verb) : VERB_FOR[p.archetype] || 'Do';
+  let vp = lead ? cap(sp).replace(/^(\S+(?: up| in| out)?) (?:a|an) /i, '$1 the ') : `${verb} the ${lowerFirst(sp.replace(/^(?:a|an|the|our|some|its|their|your)\s+/i, ''))}`;
   // A bare topic in a document is a section: "Safety" → "Write the safety section".
   if (!lead && p.archetype === 'write' && p.ctxFrame === 'document' && words(sp).length <= 3 && !ARCHETYPES.write.nouns.test(sp.toLowerCase())) vp += ' section';
   if (p.archetype === 'visualize' && !/\b(chart|map|graph|plot|table|infographic|dashboard)s?\b/i.test(vp)) vp += ' chart';
@@ -974,6 +982,9 @@ function titleFor(p, b) {
   }
   const range = rangeText(p, b);
   if (!range) return vp;
+  // "Illustrate page 3 of the picture book".
+  const docNoun = /^page-/.test(p.axis || '') && /\b(picture book|book|handbook|report|guide|manual|brochure|magazine|document|catalog|zine)\b/i.exec(p.phrase);
+  if (docNoun) return `${vp.split(' ')[0]} ${range} of the ${docNoun[1].toLowerCase()}`;
   if (/^hour-media/.test(p.axis || '')) {
     if (p.archetype === 'transcribe') return `Transcribe ${range}`;
     return `${vp.replace(/\s+(?:of|for) (?:each|every|the) \w+$/i, '')} (${range})`;
@@ -1147,6 +1158,7 @@ function specText(p, b, c, inputs, up, ctx) {
   ];
   if (conv.length && p.role !== 'conventions') lines.push(`Shared conventions: follow ${conv.join(' and ')} for terms, formats and file names, so your work fits the other pieces without edits.`);
   if (p.role !== 'integrate') lines.push(`Stay inside your piece: ${scopeLine(p, ctx)}`);
+  if (p.physical || /\b(scan|photograph)\b/i.test(p.phrase)) lines.push('On site: this tile needs the physical items. Take it only if you can get to them or they are sent to you.');
   if (a.sensitive.yes && p.role !== 'prep') lines.push(a.sensitive.redact ? 'Privacy: work only from de-identified files. If you see personal details, stop and flag the row.' : 'Privacy: the inputs may include personal details. Use them only for this tile and keep them out of your deliverable.');
   return lines.join('\n\n');
 }

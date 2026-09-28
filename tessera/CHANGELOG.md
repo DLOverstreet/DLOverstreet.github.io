@@ -23,7 +23,7 @@
   video editing, so the crowd can take any kind of job. Simulated contributors can now deliver
   JavaScript and TypeScript files.
 - Decomposer eval grew to fifteen fixtures and scores separability and requirement coverage.
-- Tests: 100 unit and integration tests (a 30-job corpus property test among them) and a
+- Tests: 100 unit and integration tests (a 45-job corpus property test among them) and a
   breakdown end-to-end test.
 
 ## 2026-09-27

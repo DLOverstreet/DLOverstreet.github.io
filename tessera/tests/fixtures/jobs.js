@@ -17,5 +17,12 @@ export const JOBS = [
   { id: 'bookkeeping', title: 'Catch up our bookkeeping', goal: 'Our nonprofit is behind on bookkeeping. We need 12 months of transactions categorized, bank accounts reconciled, and a profit and loss statement for the board.' },
   { id: 'campaign', title: 'Year-end donor campaign', goal: 'Run a year-end fundraising campaign: a donor segment list, 4 emails, 8 social media posts with graphics, a donation landing page, and a results tracker.' },
   { id: 'vague', title: 'Help with our community project', goal: 'We are starting a community garden project and need help getting it off the ground this spring.' },
+  { id: 'migration-site', title: 'Website migration', goal: 'Move our nonprofit website from WordPress to Squarespace: 40 pages of content, set up redirects, and replace old photos.' },
+  { id: 'tournament', title: 'Youth soccer tournament', goal: 'Organize a 3-day youth soccer tournament for 16 teams: schedule the games, book referees, arrange fields, and set up a results website.' },
+  { id: 'picture-book', title: 'Picture book', goal: "Write and illustrate a 24-page children's picture book about recycling." },
+  { id: 'prospecting', title: 'Foundation prospecting', goal: 'Research 50 foundations that fund literacy programs in Arizona and draft a letter of inquiry for the top 10.' },
+  { id: 'onboarding', title: 'Onboarding program', goal: 'Create an employee onboarding program: a welcome packet, 5 training videos, a checklist, and a 30-day survey.' },
+  { id: 'photos', title: 'Photo archive', goal: 'Digitize 3,000 historical photos: scan them, tag each with dates and places, and write captions.' },
+  { id: 'a11y', title: 'Accessibility audit', goal: 'Audit our website for accessibility and fix the problems.' },
   { id: 'bullets', title: 'Market research for a coffee cart', goal: 'We want to open a coffee cart downtown.\n- competitor list with prices\n- foot traffic counts from public data\n- a survey of 50 office workers\n- a short summary with a go/no-go recommendation' },
 ];

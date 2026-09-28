@@ -26,8 +26,12 @@ const CONVENTIONS = {
   literature: () => ({ title: 'Write the search protocol and run the searches', fixes: 'the databases, search strings, date range and inclusion criteria, plus the list of candidate papers', archetype: 'research' }),
   bulk: (a) => ({ title: `Write the batch spec for the ${a.primary.items?.noun || 'records'}`, fixes: 'the id column, which columns each operation owns, the formatting rules, and the batch ranges', archetype: 'clean' }),
   dataproduct: () => ({ title: 'Write the data dictionary and chart style', fixes: 'column names, units and definitions, plus colors, fonts and chart conventions', archetype: 'visualize' }),
-  document: () => ({ title: 'Outline the document and set the style sheet', fixes: 'each section’s purpose, length and key points, plus voice, terms and citation style', archetype: 'write' }),
-  web: () => ({ title: 'Outline the content and set the style tokens', fixes: 'the page structure, section order, tone, colors and fonts', archetype: 'design' }),
+  document: (a) => (a.components.some((c) => c.archetype === 'design' && c.qty)
+    ? { title: 'Plan the pages and set the art style', fixes: 'what goes on each page, the characters and the palette, so separate illustrators match', archetype: 'design' }
+    : { title: 'Outline the document and set the style sheet', fixes: 'each section’s purpose, length and key points, plus voice, terms and citation style', archetype: 'write' }),
+  web: (a) => (a.components.some((c) => /\baudit|\btest|\bfix\b/i.test(c.phrase)) && !a.components.some((c) => ['write', 'design'].includes(c.archetype))
+    ? { title: 'Set the audit checklist and severity scale', fixes: 'what gets checked, how problems are rated, and how each fix is recorded', archetype: 'test' }
+    : { title: 'Outline the content and set the style tokens', fixes: 'the page structure, section order, tone, colors and fonts', archetype: 'design' }),
   software: () => ({ title: 'Write the API contract and data model', fixes: 'every endpoint, field and screen state, so front end and back end can be built in parallel', archetype: 'software' }),
   media: (a) => ({ title: `Outline the ${a.primary.assets ? `${a.primary.assets.n} ${a.primary.assets.noun.replace(/s?$/, 's')}` : 'series'} and set the format`, fixes: 'each episode’s topic and guests, the running time, audio specs and file names', archetype: 'media' }),
   course: () => ({ title: 'Write the course outline and lesson template', fixes: 'each lesson’s objectives and the template every lesson, slide deck and quiz follows', archetype: 'teach' }),
@@ -57,6 +61,7 @@ function rankOf(p) {
   else if (p.archetype === 'research' && /\bsynthes/.test(ph)) sub = 6;
   else if (p.archetype === 'research' && /\bfield|\bresponses/.test(ph)) sub = 3;
   else if (p.archetype === 'design' && p.ux) sub = -2;
+  else if (p.archetype === 'design') sub = 2;
   else if (['media', 'research', 'write', 'transcribe'].includes(p.archetype)) {
     for (const [re, o] of MEDIA_ORDER) if (re.test(ph)) { sub = o; break; }
   }
@@ -85,14 +90,17 @@ function needsOf(p, frame, all) {
     case 'visualize': return GEO.test(phrase) ? ['geo', 'findings', 'clean-data', 'data'] : ['findings', 'clean-data', 'data'];
     case 'write':
       if (METHODOLOGY.test(phrase)) return ['clean-data', 'data', 'geo'];
+      if (/\btop \d+|\bshortlist|\bselected|\bthe best\b|\bchosen\b/.test(phrase)) return ['research', 'data'];
       if (frame === 'media') return ['media', 'research'];
       if (frame === 'translation') return [];
       return [];
     case 'edit': return frame === 'media' ? ['media'] : ['text'];
     case 'translate': return [];
-    case 'design': return all.some((o) => o.archetype === 'write' && /\b(copy|text|wording|invitation|flyer)\b/i.test(o.phrase) && sharesWords(o.phrase, p.phrase)) ? ['copy'] : [];
-    case 'web': return PRODUCT_FRAMES.has(frame) ? ['text', 'design', 'visuals', 'copy', 'text-translated'] : [];
-    case 'software': return p.side === 'ui' ? ['ux'] : [];
+    case 'design': return all.some((o) => o.archetype === 'write' && o.role === 'work' && sharesWords(o.phrase, p.phrase)) ? ['copy', 'text'] : [];
+    case 'web': if (/\b(?:fix|repair|patch|resolve|remediat\w*|address)\b/.test(phrase)) return ['qa'];
+      return PRODUCT_FRAMES.has(frame) ? ['text', 'design', 'visuals', 'copy', 'text-translated', 'clean-data'] : [];
+    case 'software': if (/\b(?:fix|repair|patch|resolve|remediat\w*|address)\b/.test(phrase)) return ['qa'];
+      return p.side === 'ui' ? ['ux'] : [];
     case 'outreach': return ['copy', 'contacts'];
     case 'schedule': return frame === 'event' ? ['research'] : [];
     case 'media': return ['research', 'media'];
@@ -101,7 +109,7 @@ function needsOf(p, frame, all) {
       if (/\breconcil/i.test(phrase)) return ['books'];
       if (/\b(statement|p&l|profit|balance sheet|cash flow|report)\b/i.test(phrase)) return ['books', 'reconciled'];
       return frame === 'event' ? ['research'] : [];
-    case 'test': return ['build'];
+    case 'test': return /\baudit|\breview|\bassess/.test(phrase) ? [] : ['build'];
     default: return [];
   }
 }
@@ -159,10 +167,13 @@ export function planPieces(a) {
   const conventionsFromJob = comps.find((c) => c.role === 'conventions');
   for (const c of comps) {
     if (c === conventionsFromJob) continue;
+    // "Fix the problems" keeps its verb, which decides what it waits for.
+    const phrase = c.verb && /^(?:fix|repair|patch|resolve|remediate|address)$/.test(c.verb) && !c.phrase.toLowerCase().startsWith(c.verb) ? `${c.verb[0].toUpperCase()}${c.verb.slice(1)} ${c.phrase.replace(/^[A-Z]/, (x) => x.toLowerCase())}` : c.phrase;
     pieces.push(piece({
-      id: c.id, archetype: c.archetype, phrase: c.phrase, role: c.role === 'check' ? 'check' : 'work', qty: c.qty, subset: c.subset,
+      id: c.id, archetype: c.archetype, phrase, role: c.role === 'check' ? 'check' : 'work', qty: c.qty, subset: c.subset,
       perAsset: c.perAsset, assetUnit: c.assetUnit, parent: c.parent, details: c.details || [], covers: reqFor(c.id), assumed: !!c.assumed,
-      internal: INTERNAL.test(c.phrase), feature: !!c.feature, verb: c.verb,
+      internal: INTERNAL.test(c.phrase), feature: !!c.feature, verb: c.verb, physical: !!c.physical,
+      ...((['web', 'software'].includes(c.archetype) && /^(?:fix|repair|patch|resolve|remediate|address)\b/i.test(phrase)) ? { rankOverride: 65 } : {}),
     }));
   }
 
@@ -170,10 +181,10 @@ export function planPieces(a) {
   if (frame === 'document') {
     const docNoun = /\b(report|proposal|brief|white paper|plan|handbook|manual|guide|book|application|memo|toolkit|playbook|case study|fact sheet)\b/i;
     const sectionWrites = pieces.filter((p) => p.archetype === 'write' && p.role === 'work' && !(REPORTISH.test(p.phrase) && docNoun.test(p.phrase)) && !/\bletters?\b/i.test(p.phrase));
-    if (sectionWrites.length < 2) {
-      const docPiece = pieces.find((p) => p.archetype === 'write' && docNoun.test(p.phrase));
-      const key = `${a.title} ${a.head?.phrase || ''} ${docPiece?.phrase || ''}`.toLowerCase();
-      const spec = DOCUMENT_SECTIONS.find((d) => d.match.test(key)) || DOCUMENT_SECTIONS[DOCUMENT_SECTIONS.length - 1];
+    const docPiece = pieces.find((p) => p.archetype === 'write' && docNoun.test(p.phrase));
+    const key = `${a.title} ${a.head?.phrase || ''} ${docPiece?.phrase || ''}`.toLowerCase();
+    const spec = DOCUMENT_SECTIONS.find((d) => d.match.test(key)) || DOCUMENT_SECTIONS[DOCUMENT_SECTIONS.length - 1];
+    if (sectionWrites.length < 2 && spec.sections.length) {
       const pages = a.primary.length?.unit === 'page' ? a.primary.length.n : null;
       const dataPieces = pieces.filter((p) => p.role === 'work' && ['collect', 'clean', 'enrich', 'code', 'analyze', 'visualize', 'research', 'finance'].includes(p.archetype) && p !== docPiece);
       const numeric = /numbers|outcomes|participation|findings|results|data|market|financial|budget|evidence|impact|trends/i;
@@ -217,7 +228,7 @@ export function planPieces(a) {
     const level = /tract/.test(ph) ? 'census tracts' : /zip/.test(ph) ? 'ZIP codes' : /neighbou?rhood/.test(ph) ? 'neighborhoods' : /county|counties/.test(ph) ? 'counties' : /district|ward|precinct/.test(ph) ? 'districts' : 'map areas';
     pieces.splice(pieces.findIndex((p) => p.archetype === 'clean') + 1, 0, piece({ id: 'geocode', archetype: 'enrich', phrase: `Geocode the records to ${level}` }));
   }
-  if (PRODUCT_FRAMES.has(frame) && frame !== 'software' && !has('web', /\b(build|page|site|dashboard)\b/i)) {
+  if ((frame === 'dataproduct' && !has('web', /\b(build|page|site|dashboard)\b/i)) || (frame === 'web' && !pieces.some((p) => ['web', 'software'].includes(p.archetype) && p.role === 'work'))) {
     const pages = a.primary.assets?.unit === 'screen' ? a.primary.assets.n : 1;
     const what = frame === 'dataproduct' ? `Build the ${/dashboard/i.test(a.title) ? 'dashboard' : 'data'} page` : `Build the ${pages > 1 ? 'pages' : 'page'}`;
     pieces.push(piece({ id: 'build', archetype: 'web', phrase: what, qty: pages > 1 ? { n: pages, unit: 'page', kind: 'assets', noun: 'pages' } : null, covers: reqFor(null).filter(() => false) }));
@@ -255,6 +266,7 @@ export function planPieces(a) {
   // "A survey of 50 office workers" is three jobs: the questionnaire, the fieldwork and the tabulation.
   for (const p of [...pieces]) {
     if (!/\b(?:survey|poll|questionnaire)\b/i.test(p.phrase) || frame === 'coding' || !['research', 'outreach', 'analyze', 'collect'].includes(p.archetype)) continue;
+    if (!p.qty && !/\b(?:conduct|run|field|administer|send out|survey of)\b/i.test(p.phrase)) { p.phrase = `Write the ${p.phrase.replace(/^(?:a|an|the)\s+/i, '')} questions`; p.archetype = 'research'; continue; }
     const n = p.qty?.n || 30;
     const who = p.qty?.noun || 'respondents';
     const i = pieces.indexOf(p);
@@ -346,7 +358,9 @@ export function planPieces(a) {
   if (PRODUCT_FRAMES.has(frame)) {
     const wantsPhone = a.formats.includes('phone') || frame === 'software';
     const wantsA11y = a.formats.includes('accessible');
-    const label = frame === 'software' ? 'Test the app on phones' : `Test the ${frame === 'dataproduct' ? 'dashboard' : 'page'}${wantsPhone ? ' on phones' : ''}${wantsA11y ? ' and with a screen reader' : ''}`;
+    const where = [wantsPhone ? 'on phones' : null, wantsA11y ? 'with a screen reader' : null].filter(Boolean).join(' and ');
+    const retest = pieces.some((p) => /\b(?:fix|repair|remediat)/i.test(p.phrase) && p.role === 'work');
+    const label = frame === 'software' ? 'Test the app on phones' : `${retest ? 'Re-test' : 'Test'} the ${frame === 'dataproduct' ? 'dashboard' : 'site'}${where ? ` ${where}` : ''}${retest ? ' after the fixes' : ''}`;
     pieces.push(piece({ id: 'qa', archetype: 'test', role: 'check', phrase: label, priority: wantsPhone || wantsA11y ? 1 : 2, covers: reqKind(['format']).filter((id) => /phone|mobile|accessib|screen/i.test(a.requirements.find((r) => r.id === id)?.text || '')) }));
   }
 
@@ -373,12 +387,12 @@ function integrationPhrase(a) {
     case 'dataproduct': return 'Apply the test fixes and publish the dashboard';
     case 'web': return 'Apply the test fixes and publish the page';
     case 'software': return 'Integrate the features and ship a test build';
-    case 'media': return 'Package the season for release';
+    case 'media': return /\b(podcast|season|episode)/i.test(a.text) ? 'Package the season for release' : `Package the ${a.primary.assets?.noun ? a.primary.assets.noun.replace(/s?$/, 's') : 'media'} for release`;
     case 'course': return 'Package the course';
     case 'event': return 'Assemble the event binder';
     case 'campaign': return 'Assemble the campaign kit and send calendar';
     case 'finance': return 'Assemble the financial package';
-    case 'document': return `Assemble the final ${/\breport\b/i.test(a.title) ? 'report' : /\b(proposal|grant)\b/i.test(a.title) ? 'proposal' : /\bbrief\b/i.test(a.title) ? 'brief' : /\bhandbook|manual|guide\b/i.test(a.title) ? 'handbook' : 'document'}`;
+    case 'document': return `Assemble the final ${/\bbook\b/i.test(a.title) ? 'book' : /\breport\b/i.test(a.title) ? 'report' : /\b(proposal|grant)\b/i.test(a.title) ? 'proposal' : /\bbrief\b/i.test(a.title) ? 'brief' : /\bhandbook|manual|guide\b/i.test(a.title) ? 'handbook' : 'document'}`;
     default: return 'Bring the parts together';
   }
 }

@@ -40,7 +40,7 @@ Acceptance checks and where each is verified:
 | Each commission's ledger nets to zero (property test) | `tests/unit/ledger.test.js`, plus every integration test |
 | Seed: 2 requesters, 12 contributors with varied skills and floors, 3 commissions | `tests/integration/seed.test.js` |
 | A sample commission produces a valid, priced graph on the mock | `tests/integration/loop.test.js`, `npm run eval:decomposer` (15/15 valid, median separability 100, 100% of requirements covered) |
-| Any job in a 30-job corpus splits into a valid, file-wired plan graded B or better, covering every requirement, whose automatic checks a contributor can pass | `tests/unit/decompose-plan.test.js` |
+| Any job in a 45-job corpus splits into a valid, file-wired plan graded B or better, covering every requirement, whose automatic checks a contributor can pass | `tests/unit/decompose-plan.test.js` |
 | The job reader finds kinds, pieces, counts, languages, formats and sensitive data | `tests/unit/decompose-analyze.test.js` |
 | Split, merge, drop, repair and the quality report's fixes keep the graph valid | `tests/unit/decompose-ops.test.js` |
 | A breakdown posts straight to a commission's approval step and can be fixed in place | `tests/integration/breakdown.test.js`, `tests/e2e/breakdown.spec.js` |

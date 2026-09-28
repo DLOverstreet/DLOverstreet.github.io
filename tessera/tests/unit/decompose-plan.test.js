@@ -77,7 +77,7 @@ test('shared conventions come first whenever several people work in parallel', (
 });
 
 test('simulated contributors can pass every automatic check', () => {
-  for (const { j, r } of plans.slice(0, 20)) {
+  for (const { j, r } of plans) {
     for (const t of r.tiles) {
       const work = generateSampleWork(t, { seed: `prop:${t.key}` });
       const files = work.files.map((f) => ({ name: f.name, size: (f.text || '').length, text: f.text }));
@@ -109,6 +109,16 @@ test('a budget is met by cutting nice-to-haves, then trimming batches into a sec
   assert.ok(Math.max(...froms) - Math.min(...froms) < 200, 'every operation stops at about the same row');
   const small = disaggregate(CORPUS.find((x) => x.id === 'flyer'), { maxTotalCents: 15000 });
   assert.ok(priceGraph(small.tiles).total <= 15000);
+});
+
+test('audits come before fixes, and a story is written by one person before it is illustrated', () => {
+  const a11y = plans.find((p) => p.j.id === 'a11y').r;
+  assert.ok(a11y.tiles.find((t) => t.key === 'fix-problems').dependsOn.includes('audit-website-accessibility'));
+  const book = plans.find((p) => p.j.id === 'picture-book').r;
+  assert.equal(book.tiles.filter((t) => /^write-/.test(t.key)).length, 1);
+  assert.ok(book.tiles.filter((t) => /^illustrate-/.test(t.key)).every((t) => t.dependsOn.some((d) => /^write-/.test(d))));
+  const pros = plans.find((p) => p.j.id === 'prospecting').r;
+  assert.ok(pros.tiles.filter((t) => /^draft-/.test(t.key)).every((t) => t.dependsOn.some((d) => /^research-/.test(d))), 'letters wait for the research');
 });
 
 test('plans are deterministic', () => {
