@@ -154,6 +154,12 @@ export function generateSampleWork(tile, { seed = tile.id || tile.key, quality =
     const comment = ext === 'sql' ? '--' : '#';
     files.push({ name: nameFromFormat(tile, ext, `${tile.key}.${ext}`), text: `${comment} ${tile.title}\n${comment} Source URL: https://example.gov/public-records\n${comment} How to rerun: python ${tile.key}.py > output.csv\n${ext === 'py' ? 'import csv\n\ndef main():\n    """Reads the input, applies the rules in the spec and writes the output."""\n    pass\n\nif __name__ == "__main__":\n    main()\n' : ''}` });
   }
+  if (exts.has('js') || exts.has('ts')) {
+    const ext = exts.has('js') ? 'js' : 'ts';
+    const name = nameFromFormat(tile, ext, `${tile.key}.${ext}`);
+    files.push({ name, text: `// ${tile.title}\n// Implements this tile's part of the shared contract; see the README section in the notes.\nexport function handler(input = {}) {\n  if (!input || typeof input !== 'object') throw new Error('Invalid input');\n  return { ok: true, ...input };\n}\n` });
+    if (req.minFiles > 1) files.push({ name: name.replace(new RegExp(`\\.${ext}$`), `.test.${ext}`), text: `// Tests for ${tile.title}\nimport assert from 'node:assert/strict';\nimport { handler } from './${name}';\nassert.deepEqual(handler({ a: 1 }), { ok: true, a: 1 });\n` });
+  }
   if (exts.has('svg')) files.push({ name: nameFromFormat(tile, 'svg', `${tile.key}.svg`), text: svgChart(tile.title, rnd) });
   if (req.json || exts.has('json')) {
     const obj = { title: `${tile.title}: filings rose through the year`, source: 'County court public calendar' };

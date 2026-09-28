@@ -1,7 +1,8 @@
 // The six agents plus the tile copilot. Each pairs a versioned prompt with an output
 // schema and a validator; runAgent rejects anything that fails either and retries.
 import * as scopingPrompt from './prompts/scoping.v1.js';
-import * as decomposerPrompt from './prompts/decomposer.v1.js';
+import * as decomposerPrompt from './prompts/decomposer.v2.js';
+import * as refinePrompt from './prompts/decomposer-refine.v1.js';
 import * as matcherPrompt from './prompts/matcher-note.v1.js';
 import * as translatorPrompt from './prompts/translator.v1.js';
 import * as reviewerPrompt from './prompts/reviewer.v1.js';
@@ -21,6 +22,14 @@ export const scoping = {
 
 export const decomposer = {
   name: 'decomposer', prompt: decomposerPrompt, schema: TileGraph, tier: 'heavy',
+  validate(out) {
+    return validateGraph(out.tiles).map((i) => i.message);
+  },
+};
+
+/** Second pass on a plan whose separability report found problems. */
+export const decomposerRefine = {
+  name: 'decomposer-refine', prompt: refinePrompt, schema: TileGraph, tier: 'heavy',
   validate(out) {
     return validateGraph(out.tiles).map((i) => i.message);
   },
@@ -88,11 +97,12 @@ export const copilot = {
   name: 'copilot', prompt: copilotPrompt, format: 'text', tier: 'light',
 };
 
-export const AGENTS = { scoping, decomposer, matcherNote, translator, reviewer, assembler, copilot };
+export const AGENTS = { scoping, decomposer, decomposerRefine, matcherNote, translator, reviewer, assembler, copilot };
 
 export const AGENT_TABLE = [
   { name: 'Scoping', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Asks the requester up to five clarifying questions', version: scopingPrompt.version },
-  { name: 'Decomposer', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Builds the tile graph from the goal and clarifications', version: decomposerPrompt.version },
+  { name: 'Decomposer', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Splits the job into separable tiles, starting from the rule-based engine’s reading and reference plan', version: decomposerPrompt.version },
+  { name: 'Decomposer refine', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Fixes the problems the separability report finds in a model-made plan (only when it grades below C)', version: refinePrompt.version },
   { name: 'Matcher', runsIn: 'Worker', model: `Light (${config.llm.lightModel}), for the note only`, job: 'Scores contributors with a fixed formula and sends offers', version: matcherPrompt.version },
   { name: 'Translator', runsIn: 'Contributor’s browser', model: 'Contributor’s own model, shared model as fallback', job: 'Writes the personal brief and powers the tile copilot', version: translatorPrompt.version },
   { name: 'Reviewer', runsIn: 'Worker', model: `Light, escalating to heavy under ${config.reviewConfidenceFloor} confidence`, job: 'Pass or fail per criterion, with a reason', version: reviewerPrompt.version },

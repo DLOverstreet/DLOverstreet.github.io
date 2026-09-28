@@ -10,6 +10,9 @@ the decisions the blueprint left open. Keep both documents true when you change 
 
 ## Working rules
 - Business logic lives in src/domain as pure, tested functions. Services and UI call it.
+- Disaggregation (reading a job and splitting it into tiles) lives in src/decompose, also pure
+  and tested. Check a change against the corpus: `node --test tests/unit/decompose-*.test.js`
+  and `npm run eval:decomposer`.
 - Every tile or commission status change goes through transitionTile or
   transitionCommission (src/services/core.js).
 - LedgerEntry, ReputationEvent and StatusChange are append-only. The database refuses

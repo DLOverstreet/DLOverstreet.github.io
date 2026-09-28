@@ -45,6 +45,7 @@ export async function doHeldTile(page) {
   await expect(page.getByRole('heading', { name: 'Checklist' })).toBeVisible();
   await page.getByRole('button', { name: /Fill with sample work/ }).click();
   await page.getByRole('button', { name: /^Submit \d/ }).click();
-  await expect(page.getByRole('heading', { name: 'Being checked' }).or(page.getByText('Round 1 didn’t pass'))).toBeVisible();
+  // The checks can finish before the "Being checked" view renders, so wait on the tile's state instead.
+  await expect.poll(() => page.evaluate(() => window.tessera.db.get('Tile', location.hash.split('/')[2])?.status)).toMatch(/SUBMITTED|IN_REVIEW|REVISION|ACCEPTED/);
   return 'work';
 }

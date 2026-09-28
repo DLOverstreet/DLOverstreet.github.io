@@ -10,6 +10,8 @@ import { commissionBalance } from '../../domain/ledger.js';
 import { runCostUsd, shadowCostUsd } from '../../llm/prices.js';
 import { fmtMoney, fmtDateTime, fmtMinutes, truncate } from '../../lib/util.js';
 import { isRush } from '../../domain/pricing.js';
+import { assessQuality } from '../../decompose/index.js';
+import { PlanSummary, JobReading, Coverage, Issues, Timeline, StreamList } from './breakdown.js';
 
 function defaultTab(c) {
   if (['DRAFT', 'SCOPING', 'PLANNED'].includes(c.status)) return 'plan';
@@ -96,7 +98,7 @@ function PlanTab({ c, owner }) {
   const T = useT();
   const now = T.clock.now();
   const [selected, setSelected] = useState(null);
-  const [view, setView] = useState('graph');
+  const [view, setView] = useState(null);
   const [confirm, setConfirm] = useState(false);
   const [rethink, setRethink] = useState(false);
   const [instruction, setInstruction] = useState('');
@@ -113,6 +115,10 @@ function PlanTab({ c, owner }) {
   if (!tiles.length) return html`<div class="card"><${Empty} title="No plan yet" /></div>`;
   const editable = owner && c.status === 'PLANNED';
   const q = quote(T.db, c.id, now);
+  const analysis = c.plan?.analysis ? { ...c.plan.analysis, requirements: c.plan.analysis.requirements || [] } : null;
+  const quality = assessQuality(tiles, analysis);
+  const shown = view || (tiles.length > 30 ? 'streams' : 'graph');
+  const fix = editable ? (f) => act(() => T.api.applyPlanFix(c.requesterId, c.id, f), 'Plan updated and re-priced.') : null;
   const sel = tiles.find((t) => t.key === selected);
   const over = q.total > c.budgetCents;
   const pct = Math.min(100, Math.round((q.total / c.budgetCents) * 100));
@@ -146,16 +152,26 @@ function PlanTab({ c, owner }) {
       </div>
     </div>
     ${q.issues.length ? html`<div class="callout warn">${q.issues.map((i) => html`<div>${i.message}</div>`)}</div>` : ''}
+    <${PlanSummary} quality=${quality} pricing=${q} source=${c.plan?.source === 'model' ? 'model' : 'engine'} model=${c.plan?.source === 'model' ? 'Claude' : null} edited=${(c.plan?.edits || []).length > 0} />
+    <div class="split">
+      <${JobReading} analysis=${analysis} />
+      <div class="stack">
+        <${Coverage} analysis=${analysis} tiles=${tiles} onFix=${fix} />
+        <${Issues} quality=${quality} onFix=${fix} onRepair=${fix ? () => fix({ op: 'repair' }) : null} />
+      </div>
+    </div>
+    <${Timeline} tiles=${tiles} quality=${quality} />
     <div class=${sel && editable ? 'split' : ''}>
       <div class="card">
         <div class="card-head"><h2>Tiles</h2><div class="row">
           <div class="tabs" role="tablist" aria-label="Plan view" style=${{ margin: 0, border: 0 }}>
-            <button role="tab" aria-selected=${view === 'graph'} onClick=${() => setView('graph')}>Graph</button>
-            <button role="tab" aria-selected=${view === 'list'} onClick=${() => setView('list')}>List</button>
+            <button role="tab" aria-selected=${shown === 'graph'} onClick=${() => setView('graph')}>Graph</button>
+            <button role="tab" aria-selected=${shown === 'streams'} onClick=${() => setView('streams')}>Workstreams</button>
+            <button role="tab" aria-selected=${shown === 'list'} onClick=${() => setView('list')}>List</button>
           </div>
           ${editable ? html`<button class="btn small" onClick=${() => act(async () => { const t = T.api.addDraftTile(c.requesterId, c.id); setSelected(t.key); }, 'Added a tile. Fill it in on the right.')}>Add tile</button>` : ''}
         </div></div>
-        ${view === 'graph'
+        ${shown === 'streams' ? html`<${StreamList} tiles=${tiles} quality=${quality} onOpen=${(k) => (editable ? setSelected(k) : navigate(`#/t/${tiles.find((t) => t.key === k).id}`))} />` : shown === 'graph'
           ? html`<${GraphView} tiles=${tiles} selected=${selected} onSelect=${(k) => (editable ? setSelected(k === selected ? null : k) : navigate(`#/t/${tiles.find((t) => t.key === k).id}`))} colorBy=${editable ? 'kind' : 'status'} />
             <p class="tiny muted" style=${{ marginTop: '.4rem' }}>${editable ? 'Select a tile to edit it. Bar color shows the kind: blue work, purple review, amber integration.' : 'Select a tile to open it.'}</p>`
           : html`<${TileTable} tiles=${tiles} onSelect=${(t) => (editable ? setSelected(t.key) : navigate(`#/t/${t.id}`))} />`}

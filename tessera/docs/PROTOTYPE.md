@@ -19,6 +19,19 @@ The blueprint describes a Next.js app, a worker and Postgres on a container host
 
 Because each browser is its own platform instance, "other people" are simulated. The **crowd** (`src/services/crowd.js`) lets every seeded contributor you aren't playing accept offers, submit sample work that meets the tile's automatic checks, review each other and vote on panels, after short human-like delays. It goes through the same API a person uses, so it can't bypass a rule. Personas you have played are never simulated.
 
+## The disaggregation engine
+
+The blueprint makes decomposition the Decomposer's job and leaves its method to the prompt. The prototype adds a rule-based engine, `src/decompose`, for three reasons: the mock must split *any* job well without a model, a model does better when it starts from a careful reading and a reference split, and a plan from any source needs an objective check of how separable it is.
+
+- **Reading** (`analyze.js`). Sentences and bullet lists become components; each gets a kind of work (24 archetypes, from collect and clean to translate, design, software, media and finance), a count and whether it repeats per asset. Requirements are listed one per line with ids so coverage can be checked tile by tile.
+- **Planning** (`pieces.js`). A conventions piece comes first whenever two or more people work in parallel. Named pieces follow; then the pieces a product takes for granted (a data pull and cleaning step behind charts, geocoding behind a map, a build step for a page, back end and screens built apart against an API contract); then layers (de-identification, per-language translation, one-voice editing, phone and accessibility testing, spot and agreement checks); then one assembly tile.
+- **Sizing** (`rates.js`, `builder.js`). Throughput rates by kind of work and unit ("clean 120 listings an hour") turn counts into minutes; batches aim for 75 minutes (105 for translation, where context matters) and never exceed 120. Past 60 batches in one piece or 120 tiles in one plan, later ranges are left for a second phase with the same tiles.
+- **Wiring**. Each tile lists `inputs` and `outputs` by file name; dependencies come from which tile makes each file a tile reads, choosing the closest producer. Batches of the same count align by range, so per-asset pipelines don't wait on other assets.
+- **Budget**. Priority 3 then 2 tiles are cut first, then batch groups are trimmed from the end so every operation on the same rows stops at the same row, then whole pieces. What was left out is listed as phase two.
+- **Grading** (`quality.js`). Parallel speedup of the core work, share of tiles in the 30–90 minute sweet spot, inputs that come from tiles the reader waits for, hidden dependencies, duplicate outputs, mixed-skill tiles, uncovered requirements, missing assembly and the share of automatic criteria give a score and grade. Each problem carries a fix (`ops.js`) the requester can apply in one click, on the breakdown page or a planned commission.
+
+The new tile fields (`inputs`, `outputs`, `stream`, `phase`, `partOf`, `part`, `covers`, `priority`) are optional in the `TileDraft` schema, so older plans and model plans still parse; `repairGraph` infers missing inputs and outputs from the spec and deliverable text. The Claude Decomposer uses prompt `decomposer.v2` (v1 is kept), with the engine's compact analysis and reference plan in its input; `decomposer-refine.v1` runs once when a model plan grades below C and is kept only if it scores higher.
+
 ## Decisions the blueprint left open
 
 **Ledger sign convention.** `amountCents` is the entry's effect on the commission's escrow: funding is positive; payouts, fees and refunds are negative. A contributor's earnings are the negated sum of their payout entries. A closed commission's entries sum to exactly zero, and no prefix may go below zero; `postLedger` rolls back any transaction that would overdraw.
@@ -53,4 +66,4 @@ Because each browser is its own platform instance, "other people" are simulated.
 
 ## What isn't real
 
-The money, the people other than you, and (by default) the model. The mock agents are deterministic: the Decomposer uses templates for seven kinds of job and cuts optional tiles to fit a budget, the Reviewer uses transparent heuristics (and flags text addressed to it), and the Translator fills its brief from the tile spec. Connect Claude in Settings to see the real agents on the same pipeline; every call is logged with its prompt version, tokens and cost.
+The money, the people other than you, and (by default) the model. The mock agents are deterministic: the Decomposer is the rule-based disaggregation engine in `src/decompose` (see below), the Reviewer uses transparent heuristics (and flags text addressed to it), and the Translator fills its brief from the tile spec. Connect Claude in Settings to see the real agents on the same pipeline; every call is logged with its prompt version, tokens and cost.
