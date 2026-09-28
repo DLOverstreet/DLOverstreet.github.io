@@ -38,9 +38,10 @@ export function Welcome() {
       <div>
         <h1>Any job, split into pieces separate people can do at once.</h1>
         <p class="lead">Describe a job, whether it’s a gala, a grant, an app, 5,000 product listings or a podcast season. Tessera reads it, finds the separate pieces of work, and splits them into <b>tiles</b>: each one says exactly what it receives, what it delivers and how it’s checked, so a different person can do each at the same time.</p>
-        <p class="lead muted" style=${{ fontSize: '.95rem' }}>Then it prices the tiles, offers each to people with the right skills, and assembles the results. A working prototype that runs in your browser with simulated money.</p>
+        <p class="lead muted" style=${{ fontSize: '.95rem' }}>Then it prices the tiles, offers each to people with the right skills, and assembles the results. Or hand the whole job to a swarm of AI agents that do every step after you submit it. A working prototype that runs in your browser with simulated money.</p>
         <div class="row hero-actions" style=${{ marginTop: '1.1rem' }}>
           <a class="btn primary" href="#/breakdown">Break down a job</a>
+          <a class="btn primary" href="#/swarm">Hand a job to the agent swarm</a>
           <button class="btn" onClick=${() => startGuidedDemo(T)}>Start the guided demo (the full loop, 5 minutes)</button>
           <a class="btn ghost" href="#/how">How it works</a>
         </div>
@@ -100,6 +101,8 @@ export function PersonaPage({ reason }) {
 /** Things a requester needs to act on for one commission. */
 export function requesterTodos(db, c) {
   const out = [];
+  // On a swarm job the autopilot does the requester's steps; you're needed only when it pauses.
+  if (c.workforce === 'agents') return c.autopilot?.state === 'PAUSED' && !['ACCEPTED', 'CANCELLED'].includes(c.status) ? [{ text: `The swarm is paused. ${c.autopilot.note || ''}`, tab: 'swarm', bad: true }] : [];
   const tiles = db.filter('Tile', (t) => t.commissionId === c.id);
   if (c.status === 'SCOPING' && c.clarifications.scopedAt && !c.clarifications.answeredAt && c.clarifications.questions.length) out.push({ text: 'Answer the scoping questions', tab: 'plan' });
   if (c.planError) out.push({ text: c.planError, tab: 'plan', bad: true });
@@ -135,7 +138,7 @@ function RequesterHome({ me }) {
   const T = useT();
   const mine = T.db.filter('Commission', (c) => c.requesterId === me.id).sort((a, b) => b.createdAt - a.createdAt);
   return html`<div>
-    <div class="page-head"><div><h1>${me.name}</h1><p class="sub">${me.org} · requester</p></div><a class="btn primary" href="#/post">Post a commission</a></div>
+    <div class="page-head"><div><h1>${me.name}</h1><p class="sub">${me.org} · requester</p></div><div class="row"><a class="btn primary" href="#/post">Post a commission</a><a class="btn" href="#/swarm">Hand a job to the agent swarm</a></div></div>
     ${mine.length ? html`<div class="grid-2">${mine.map((c) => html`<${CommissionCard} c=${c} key=${c.id} />`)}</div><${Legend} />` : html`<div class="card"><${Empty} title="No commissions yet">Post one to see it scoped, split into tiles and priced.</${Empty}></div>`}
   </div>`;
 }

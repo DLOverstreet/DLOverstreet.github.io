@@ -56,6 +56,18 @@ export const config = Object.freeze({
     submissionsPerHour: 20,
     llmCallsPerWindow: 40,
     llmWindowMs: 10 * MINUTE,
+    /** The agent swarm has its own, larger allowance so a big job doesn't starve the platform agents. */
+    swarmCallsPerWindow: 300,
+  }),
+
+  /** Defaults for the agent swarm; Settings can change them. */
+  swarm: Object.freeze({
+    size: 12,
+    concurrency: 4,
+    workerTier: 'heavy',
+    spendCapUsd: 15,
+    maxInputChars: 60000,
+    maxFileChars: 16000,
   }),
 });
 

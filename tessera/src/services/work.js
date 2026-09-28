@@ -109,14 +109,15 @@ export async function askCopilot(T, actorId, tileId, question, history = []) {
 
 // ---------------------------------------------------------------- submissions
 
-export async function submitWork(T, actorId, tileId, { files = [], notes = '', minutesSpent, checklist = {}, modelUsed = null }) {
+export async function submitWork(T, actorId, tileId, { files = [], notes = '', minutesSpent, checklist = {}, modelUsed = null, handoff = '' }) {
   const tile = requireHolder(T.db, tileId, actorId);
   if (tile.kind === 'REVIEW' && tile.dynamic) throw new UserError('Peer review tiles are submitted with the review form.');
   if (!files.length) throw new UserError('Attach at least one file.');
   const errs = checkFileLimits(files.map((f) => ({ name: f.name, size: f.bytes ? f.bytes.length : new TextEncoder().encode(f.text || '').length })));
   if (errs.length) throw new UserError(errs.join(' '));
   const now = T.clock.now();
-  const mine = T.db.filter('Submission', (s) => s.contributorId === actorId).map((s) => s.createdAt);
+  const agent = !!getUser(T.db, actorId).isAgent;
+  const mine = agent ? [] : T.db.filter('Submission', (s) => s.contributorId === actorId).map((s) => s.createdAt);
   const rl = rateLimitCheck(mine, config.limits.submissionsPerHour, HOUR, now);
   if (!rl.ok) throw new UserError(rl.message);
   const minutes = Math.round(Number(minutesSpent));
@@ -127,7 +128,7 @@ export async function submitWork(T, actorId, tileId, { files = [], notes = '', m
     const cur = requireHolder(tx, tileId, actorId);
     const sub = tx.insert('Submission', {
       tileId, commissionId: cur.commissionId, contributorId: actorId, round, notes: String(notes).slice(0, 4000),
-      minutesSpent: minutes, files: refs, checklist, modelUsed,
+      minutesSpent: minutes, files: refs, checklist, modelUsed, ...(handoff ? { handoff: String(handoff).slice(0, 2000) } : {}),
     });
     transitionTile(tx, tileId, 'SUBMITTED', actorId, { submissionId: sub.id, patch: { lastSubmissionId: sub.id }, note: `Round ${round}` });
     return sub;
@@ -162,10 +163,10 @@ export async function runVerifyJob(T, { submissionId }) {
       submission: { notes: sub.notes, files: files.map((f) => ({ name: f.name, excerpt: excerptFor(f, { restricted }) })) },
     };
     const meta = { commissionId: tile.commissionId, tileId: tile.id, userId: sub.contributorId };
-    const light = await runAgent({ agent: AGENTS.reviewer, input, route: T.llm.platform('light'), log: T.log, meta });
+    const light = await runAgent({ agent: AGENTS.reviewer, input, route: T.llm.forCommission(commission, 'light'), log: T.log, meta });
     llm = { ...light.output, model: light.model, escalated: false };
     if (light.output.confidence < config.reviewConfidenceFloor) {
-      const heavy = await runAgent({ agent: AGENTS.reviewer, input, route: T.llm.platform('heavy'), log: T.log, meta });
+      const heavy = await runAgent({ agent: AGENTS.reviewer, input, route: T.llm.forCommission(commission, 'heavy'), log: T.log, meta });
       llm = { ...heavy.output, model: heavy.model, escalated: true, lightConfidence: light.output.confidence };
     }
   }
@@ -187,7 +188,7 @@ export async function runVerifyJob(T, { submissionId }) {
       failTile(tx, cur, sub, 'verifier');
       return;
     }
-    const decision = peerReviewDecision({ tile: cur, priorAcceptedWork: priorAcceptedWork(tx, sub.contributorId), round: sub.round });
+    const decision = peerReviewDecision({ tile: cur, priorAcceptedWork: priorAcceptedWork(tx, sub.contributorId), round: sub.round, agent: !!tx.get('User', sub.contributorId)?.isAgent });
     if (decision.required) createPeerReviewTile(tx, cur, sub, decision.reason);
     else acceptTile(tx, cur.id, sub.id, 'verifier', decision.reason);
   });

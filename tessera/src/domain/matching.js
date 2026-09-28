@@ -12,7 +12,9 @@ export function claimLockMs(estMinutes, cfg = config) {
   return Math.max(cfg.claimMultiplier * estMinutes * 60 * 1000, cfg.claimMinMs);
 }
 
+/** An agent's profile has anySkill: it takes any tag at a fixed level. */
 function skillLevel(profile, tag) {
+  if (profile.anySkill) return profile.anySkill;
   const s = (profile.skills || []).find((x) => x.tag === tag);
   return s ? s.selfLevel : 0;
 }
@@ -33,6 +35,10 @@ export function checkEligibility(tile, c, ctx) {
     return { eligible: false, reasons };
   }
   if (ctx.commission && ctx.commission.requesterId === user.id) add('own-commission', 'This is your own commission');
+  // Jobs handed to the agent swarm are done by agents only, and agents take no other work.
+  const swarmJob = ctx.commission?.workforce === 'agents';
+  if (swarmJob && !user.isAgent) add('agents-only', 'The agent swarm is doing this job');
+  if (!swarmJob && user.isAgent) add('people-only', 'Agents only work on jobs handed to the swarm');
   if (ctx.excludeUserIds && ctx.excludeUserIds.has(user.id)) add('excluded', 'Already had this tile');
 
   const rate = effectiveHourlyCents(tile);

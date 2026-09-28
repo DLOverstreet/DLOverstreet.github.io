@@ -5,6 +5,7 @@
 import { html, useState, useEffect, useMemo, useRef } from '../../../vendor/preact.js';
 import { useT, useDbVersion, navigate, currentUser, setPersona, act, toast, downloadBytes } from '../state.js';
 import { Modal, Field, AsyncButton, Empty } from '../ui.js';
+import { handToSwarm } from './swarm.js';
 import { GraphView } from './graph.js';
 import { disaggregate, applyFix, assessQuality, groupTitle, FRAME_LABELS, OpError } from '../../decompose/index.js';
 import { priceGraph, tilePayCents } from '../../domain/pricing.js';
@@ -148,9 +149,10 @@ export function BreakdownResult({ result, onChange }) {
       onMerge=${(keys) => edit({ op: 'merge', keys }, 'Merged into one tile.')}
       onDrop=${(k) => edit({ op: 'drop', key: k }, 'Removed. Tiles that waited on it now wait on its inputs.')} />
     <div class="card row-between">
-      <div><h2>Use this plan</h2><p class="small muted">Post it as a commission to price, fund and run it with the crowd, or download it as JSON.</p></div>
+      <div><h2>Use this plan</h2><p class="small muted">Hand it to the agent swarm to have AI agents do every tile, post it as a commission to run it with people, or download it as JSON.</p></div>
       <div class="row">
-        <button class="btn primary" onClick=${() => setPosting(true)}>Post as a commission</button>
+        <${AsyncButton} class="primary" onClick=${() => handToSwarm(T, { title: (result.job.title || result.analysis.title || 'Untitled job').slice(0, 120).padEnd(5, '.'), goal: result.job.goal.padEnd(20, ' ').slice(0, 6000), privacy: result.job.privacy, plan: { tiles: result.tiles, rationale: result.rationale, source: result.source, pricing } })}>Run it with agents<//>
+        <button class="btn" onClick=${() => setPosting(true)}>Post as a commission</button>
         <button class="btn" onClick=${download}>Download JSON</button>
       </div>
     </div>

@@ -44,7 +44,10 @@ export function buildCandidates(db, now) {
  */
 export function matchContext(db, tile, now, { forOffers = false } = {}) {
   const commission = db.get('Commission', tile.commissionId);
-  const candidates = buildCandidates(db, now);
+  // Swarm jobs are matched among agents, every other job among people, so neither side's
+  // earnings move the other's fair-rotation score.
+  const agentsJob = commission?.workforce === 'agents';
+  const candidates = buildCandidates(db, now).filter((c) => !!c.user.isAgent === agentsJob);
   const excluded = new Set(tile.excludedUserIds || []);
   if (forOffers) {
     for (const o of db.filter('Offer', (x) => x.tileId === tile.id && ['DECLINED', 'EXPIRED'].includes(x.response))) excluded.add(o.contributorId);
@@ -72,7 +75,15 @@ export function explainFit(db, tileId, userId, now) {
   const tile = db.get('Tile', tileId);
   const { candidates, ctx } = matchContext(db, tile, now);
   const c = candidates.find((x) => x.user.id === userId);
-  if (!c) return { eligible: false, reasons: [{ code: 'not-contributor', text: 'Set up a contributor profile first' }] };
+  if (!c) {
+    const u = db.get('User', userId);
+    if (u?.isContributor && profileOf(db, userId)) {
+      return u.isAgent
+        ? { eligible: false, reasons: [{ code: 'people-only', text: 'Agents only work on jobs handed to the swarm' }] }
+        : { eligible: false, reasons: [{ code: 'agents-only', text: 'The agent swarm is doing this job' }] };
+    }
+    return { eligible: false, reasons: [{ code: 'not-contributor', text: 'Set up a contributor profile first' }] };
+  }
   const el = checkEligibility(tile, c, ctx);
   return { ...el, ...(el.eligible ? scoreCandidate(tile, c, ctx) : {}) };
 }
@@ -102,7 +113,8 @@ export function runMatchJob(T, { tileId }) {
       });
     }
     transitionTile(tx, tileId, 'OFFERED', 'matcher', { note: `Offered to ${top.length}` });
-    tx.enqueue('matcherNote', { tileId }, { dedupeKey: `note:${tileId}:${now}` });
+    // Agents don't read offer notes, so swarm jobs skip that model call.
+    if (ctx.commission?.workforce !== 'agents') tx.enqueue('matcherNote', { tileId }, { dedupeKey: `note:${tileId}:${now}` });
   });
 }
 

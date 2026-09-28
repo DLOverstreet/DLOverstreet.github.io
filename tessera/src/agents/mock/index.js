@@ -6,6 +6,8 @@ import { mockTranslator } from './translator.js';
 import { mockReviewer } from './reviewer.js';
 import { mockAssembler } from './assembler.js';
 import { mockCopilot } from './copilot.js';
+import { mockWorker } from './worker.js';
+import { mockAutopilot } from './autopilot.js';
 
 export const mockBrains = {
   scoping: mockScoping,
@@ -16,4 +18,6 @@ export const mockBrains = {
   reviewer: mockReviewer,
   assembler: mockAssembler,
   copilot: mockCopilot,
+  worker: mockWorker,
+  autopilot: mockAutopilot,
 };

@@ -22,14 +22,16 @@ function clip(value, max = 24000) {
  * @param {{role: string, content: string}[]} [p.history] prior chat turns (copilot)
  * @param {number} [p.maxTokens]
  * @param {number} [p.retries]
+ * @param {boolean} [p.bestEffort] if the last attempt parses but still fails the validator, return it with its problems instead of failing
  */
-export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries }) {
+export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false }) {
   const system = agent.prompt.system;
   const format = agent.format || 'json';
   const baseMessages = [...history, { role: 'user', content: agent.prompt.render(input) }];
   let messages = baseMessages;
   let lastError = 'unknown error';
   let feedback = null;
+  let lastValid = null;
   const attempts = retries + 1;
   for (let attempt = 0; attempt < attempts; attempt++) {
     const started = Date.now();
@@ -50,7 +52,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
         const parsed = agent.schema.safeParse(raw);
         if (!parsed.success) throw new ValidationProblem([parsed.error.message]);
         const problems = agent.validate ? agent.validate(parsed.data, input) : [];
-        if (problems.length) throw new ValidationProblem(problems);
+        if (problems.length) { lastValid = { output: parsed.data, model: res.model, problems }; throw new ValidationProblem(problems); }
         output = parsed.data;
       }
     } catch (e) {
@@ -85,6 +87,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       ];
     }
   }
+  if (bestEffort && lastValid) return { output: lastValid.output, model: lastValid.model, provider: route.providerName, problems: lastValid.problems };
   throw new AgentFailure(agent.name, lastError, attempts);
 }
 
