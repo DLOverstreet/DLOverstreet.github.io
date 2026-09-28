@@ -406,3 +406,4 @@ td.money { text-align: right; font-variant-numeric: tabular-nums; white-space: n
 .tile-detail { margin-top: .55rem; border-top: 1px dashed var(--line); padding-top: .55rem; }
 pre.spec { font-family: inherit; font-size: .85rem; max-height: 320px; background: var(--surface-2); margin-bottom: .5rem; }
 .hero-actions .btn.primary { font-size: 1rem; padding: .6rem 1.1rem; }
+.bad-text { color: var(--bad); }

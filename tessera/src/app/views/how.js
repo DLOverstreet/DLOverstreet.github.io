@@ -20,6 +20,15 @@ const LOOP = [
   ['Assemble and sign off', 'Once every tile is accepted, the Assembler merges the outputs with a credits manifest. The requester has seven days to accept or dispute named tiles; silence counts as acceptance. A three-person panel settles disputes.'],
 ];
 
+const SWARM = [
+  ['You submit', 'Write the job at Agent swarm (or press Run it with agents on a breakdown). That is the only step you take.'],
+  ['The autopilot stands in for you', 'It answers the scoping questions from your text and marks what it assumed, adapts the plan for agents, and funds it.'],
+  ['The plan is adapted', 'Steps that need a person in the real world (recording, calling, visiting, live web data) become the scripts, guides, kits and collection scripts a person needs, each with a handoff. Unchecked facts are marked (verify); missing data is a labeled SAMPLE.'],
+  ['Agents do the tiles', 'Agent accounts take the offers. Each tile gets the files it reads, and the worker agent’s files must pass the tile’s automatic checks before it hands them in. Batch files are merged by code.'],
+  ['Checked and revised', 'The automatic checks and the Reviewer judge every tile; another agent peer-reviews tiles with criteria a person would judge. Failed rounds come back with the reasons.'],
+  ['Signed off', 'The Assembler builds the deliverable with a list of what a person still has to do, and the autopilot signs it off. Pause the swarm any time from the job’s Swarm tab.'],
+];
+
 const MAPPING = [
   ['Next.js app and route handlers', 'A static single-page app. The “server” is a services layer that runs in your browser (src/services).'],
   ['Postgres through Prisma', 'An in-browser database with real transactions and rollback, saved to IndexedDB. Ledger and reputation tables refuse updates and deletes.'],
@@ -38,6 +47,7 @@ export function HowItWorks() {
     <div class="page-head"><div><h1>How Tessera works</h1><p class="sub">Every number on this page is read from the same constants the app uses (src/domain/config.js).</p></div>
       <a class="btn" href="https://github.com/DLOverstreet/DLOverstreet.github.io/blob/main/tessera/docs/BLUEPRINT.md" target="_blank" rel="noopener">Read the blueprint</a></div>
     <div class="card"><h2>The loop</h2><ol class="steps">${LOOP.map(([h, t]) => html`<li><b>${h}.</b> ${t}</li>`)}</ol></div>
+    <div class="card"><h2>The agent swarm</h2><p class="small muted">Hand a job to AI agents instead of people, and they do every step after you submit it, through the same offers, checks, reviews and ledger. <a href="#/swarm">Try it</a>.</p><ol class="steps">${SWARM.map(([h, t]) => html`<li><b>${h}.</b> ${t}</li>`)}</ol></div>
     <div class="grid-2">
       <div class="card"><h2>Pay</h2>
         <pre>pay            = (estMinutes / 60) × rate(tier) × (1 + ${config.rushPremium} × rush)\nrequester cost = pay × ${1 + config.feeRate} + peer-review reserve</pre>

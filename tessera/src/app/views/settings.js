@@ -8,6 +8,8 @@ import { runAgent } from '../../llm/run-agent.js';
 import { bytesToBase64, base64ToBytes, DAY, HOUR } from '../../lib/util.js';
 import { WORLD_VERSION } from '../../db/schema.js';
 import { startGuidedDemo } from './home.js';
+import { swarmSettings } from '../../services/swarm.js';
+import { config } from '../../domain/config.js';
 
 const PING = { name: 'ping', format: 'text', prompt: { version: 'ping.v1', system: 'You are a connectivity check. Reply with the single word OK.', render: () => 'Reply with OK.' } };
 
@@ -80,7 +82,7 @@ export function SettingsView() {
             <button class="btn small" onClick=${() => { if (!/^sk-ant-/.test(key)) { toast('Anthropic keys start with sk-ant-.', 'err'); return; } T.secrets.set('platform.anthropic', key); T.llm.clearCache(); setKey(''); toast('Key saved in this browser.', 'ok'); }}>Save key</button>
             ${hasKey ? html`<button class="btn small danger" onClick=${() => { T.secrets.remove('platform.anthropic'); T.llm.clearCache(); toast('Key removed.', 'ok'); }}>Remove</button>` : ''}</div><//>
         ${!hasKey ? html`<p class="small" style=${{ color: 'var(--warn)' }}>Without a key the platform keeps using the mock.</p>` : ''}
-        <p class="small muted">Calls are rate-limited to 40 per 10 minutes as a safety net. Everything is logged under Admin → Agent runs with its cost.</p>
+        <p class="small muted">Platform calls are rate-limited to ${config.limits.llmCallsPerWindow} per 10 minutes as a safety net, and the agent swarm has its own ${config.limits.swarmCallsPerWindow}. Everything is logged under Admin → Agent runs with its cost.</p>
       </div>` : ''}
       ${llm.provider === 'openai' ? html`<div class="inline-fields">
         <${Field} label="Base URL" id="obase"><input id="obase" type="url" value=${llm.openai.baseUrl} onInput=${(e) => setLlm({ openai: { ...llm.openai, baseUrl: e.target.value } })} /><//>
@@ -89,6 +91,7 @@ export function SettingsView() {
       </div>` : ''}
       <div><${AsyncButton} onClick=${test}>Test the connection<//></div>
     </div>
+    <${SwarmSettings} />
     <div class="grid-2">
       <div class="card stack-sm">
         <h2>Crowd simulation</h2>
@@ -116,6 +119,28 @@ export function SettingsView() {
         <button class="btn danger" onClick=${reset}>Reset the demo</button>
       </div>
       <p class="tiny muted">Storage: ${T.stores.worldStore.kind}${T.stores.worldStore.kind === 'memory' ? ' (this browser blocked IndexedDB, so nothing persists after you close the tab)' : ''}.</p>
+    </div>
+  </div>`;
+}
+
+function SwarmSettings() {
+  const T = useT();
+  const sw = swarmSettings(T.db);
+  const llm = T.db.meta.settings.llm;
+  const set = (patch) => T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, swarm: { ...(tx.meta.settings.swarm || {}), ...patch } } }));
+  const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || lo)));
+  const label = (id) => MODEL_PRICES[id]?.label || id;
+  return html`<div class="card stack-sm">
+    <h2>Agent swarm</h2>
+    <p class="small muted">The AI agents that do every step of a job you <a href="#/swarm">hand to the swarm</a>. They use the platform model above; with the mock they hand in placeholder files.</p>
+    <div class="inline-fields">
+      <${Field} label="Worker model" id="sw-tier" hint="The model each agent works with. The Reviewer still starts light and escalates."><select id="sw-tier" value=${sw.workerTier} onChange=${(e) => set({ workerTier: e.target.value })}>
+        <option value="heavy">Heavy (${llm.provider === 'anthropic' ? label(llm.heavyModel) : 'platform heavy'})</option>
+        <option value="light">Light (${llm.provider === 'anthropic' ? label(llm.lightModel) : 'platform light'}), cheaper</option>
+      </select><//>
+      <${Field} label="Agents working at once" id="sw-conc" hint="1 to 8. More is faster and spends faster."><input id="sw-conc" type="number" min="1" max="8" value=${sw.concurrency} onChange=${(e) => set({ concurrency: num(e.target.value, 1, 8) })} /><//>
+      <${Field} label="Spend cap per job (USD)" id="sw-cap" hint="The swarm pauses a job when its model spend reaches this. 0 means no cap."><input id="sw-cap" type="number" min="0" step="1" value=${sw.spendCapUsd} onChange=${(e) => set({ spendCapUsd: Math.max(0, Number(e.target.value) || 0) })} /><//>
+      <${Field} label="Agents in the swarm" id="sw-size" hint="How many agent accounts share the work (2 to 24)."><input id="sw-size" type="number" min="2" max="24" value=${sw.size} onChange=${(e) => set({ size: num(e.target.value, 2, 24) })} /><//>
     </div>
   </div>`;
 }

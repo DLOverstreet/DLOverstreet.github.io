@@ -43,12 +43,14 @@ async function boot() {
     seed: params.get('seed') || `web-${Date.now().toString(36)}`,
     frozenAt: Number.isFinite(frozenAt) ? frozenAt : null,
     crowd: params.get('crowd') === 'off' ? false : undefined,
+    swarmPaceMs: params.get('fast') === '1' ? 0 : 1200,
   });
   T.stores = stores;
   if (params.get('crowd') === 'off' && T.db.meta.settings.crowd) T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, crowd: false } }));
   if (params.get('fast') === '1') document.documentElement.classList.add('fast');
   window.tessera = T; // handy in the console, and used by the end-to-end tests
   T.worker.start();
+  T.swarm.start();
   ensureSigningKey(T).catch((e) => console.warn('Signing key unavailable:', e.message));
 
   // A second tab would write over this one's database; warn instead of corrupting it.

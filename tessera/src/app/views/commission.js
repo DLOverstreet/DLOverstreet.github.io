@@ -12,8 +12,10 @@ import { fmtMoney, fmtDateTime, fmtMinutes, truncate } from '../../lib/util.js';
 import { isRush } from '../../domain/pricing.js';
 import { assessQuality } from '../../decompose/index.js';
 import { PlanSummary, JobReading, Coverage, Issues, Timeline, StreamList } from './breakdown.js';
+import { SwarmTab } from './swarm.js';
 
 function defaultTab(c) {
+  if (c.workforce === 'agents') return c.status === 'ACCEPTED' ? 'delivery' : 'swarm';
   if (['DRAFT', 'SCOPING', 'PLANNED'].includes(c.status)) return 'plan';
   if (['DELIVERED', 'DISPUTED', 'ACCEPTED'].includes(c.status)) return 'delivery';
   return 'progress';
@@ -42,19 +44,21 @@ export function CommissionView({ id, tab }) {
     <div class="page-head">
       <div style=${{ minWidth: 0 }}>
         <h1>${c.title}</h1>
-        <p class="sub"><${UserName} user=${requester} /> · budget ${fmtMoney(c.budgetCents)} · due ${fmtDateTime(c.deadline)}${isRush(c.deadline, now) && ['SCOPING', 'PLANNED'].includes(c.status) ? ' (rush)' : ''} · ${c.privacy.replace(/_/g, '-').toLowerCase()}</p>
+        <p class="sub"><${UserName} user=${requester} /> · ${c.workforce === 'agents' ? 'run by the agent swarm' : html`budget ${fmtMoney(c.budgetCents)} · due ${fmtDateTime(c.deadline)}${isRush(c.deadline, now) && ['SCOPING', 'PLANNED'].includes(c.status) ? ' (rush)' : ''}`} · ${c.privacy.replace(/_/g, '-').toLowerCase()}</p>
         <div style=${{ marginTop: '.5rem' }}><${Pipeline} steps=${steps} current=${c.status === 'FUNDED' ? 'ACTIVE' : c.status} /></div>
       </div>
       <div class="stat right"><span class="v">${fmtMoney(balance)}</span><span class="l">in escrow</span></div>
     </div>
     ${todos.map((t) => html`<div class=${`callout ${t.bad ? 'bad' : 'warn'}`} style=${{ marginBottom: '.5rem' }}>${t.text} ${t.href ? html`<a href=${t.href}>Open →</a>` : html`<a href=${`#/c/${id}/${t.tab}`}>Open →</a>`}</div>`)}
     <${Tabs} value=${active} onChange=${setTab} label="Commission sections" tabs=${[
+      ...(c.workforce === 'agents' ? [{ id: 'swarm', label: 'Swarm' }] : []),
       { id: 'plan', label: c.status === 'SCOPING' ? 'Scoping' : 'Plan' },
       { id: 'progress', label: 'Progress' },
       { id: 'delivery', label: 'Delivery' },
       { id: 'ledger', label: 'Ledger' },
       { id: 'runs', label: `Agent runs (${runs.length})` },
     ]} />
+    ${active === 'swarm' && html`<${SwarmTab} c=${c} owner=${owner} />`}
     ${active === 'plan' && html`<${PlanTab} c=${c} owner=${owner} />`}
     ${active === 'progress' && html`<${ProgressTab} c=${c} owner=${owner} now=${now} />`}
     ${active === 'delivery' && html`<${DeliveryTab} c=${c} owner=${owner} now=${now} />`}
@@ -109,6 +113,7 @@ function PlanTab({ c, owner }) {
       return html`<div class="card"><h2>Building the tile graph</h2><p class="small">The Decomposer is splitting the job into tiles of 15 to 120 minutes, each with checkable acceptance criteria. The platform then prices them; if the total is over budget, the Decomposer is asked for a smaller scope.</p>
         <${JobStatus} type="decompose" commissionId=${c.id} /></div>`;
     }
+    if (c.workforce === 'agents' && c.autopilot?.state !== 'PAUSED') return html`<div class="card"><h2>The autopilot is answering</h2><p class="small">On a job handed to the swarm, the autopilot answers the Scoping agent’s questions from your text and marks anything it assumed. Pause the swarm to answer them yourself.</p></div>`;
     return html`<${ScopingForm} c=${c} owner=${owner} />`;
   }
   const tiles = draftGraph(T.db, c.id).filter((t) => t.status !== 'CANCELLED');
@@ -278,7 +283,7 @@ function DeliveryTab({ c, owner, now }) {
       <div class="row-between"><div><h2>Delivered ${ago(c.deliveredAt, now)}</h2><p class="small">Accept it, or dispute specific tiles. If you do nothing, it’s accepted automatically in <b><${Countdown} until=${c.autoAcceptAt} now=${now} /></b>.</p></div>
       ${owner ? html`<div class="row"><${AsyncButton} class="good" onClick=${() => act(() => T.api.acceptDelivery(c.requesterId, c.id), 'Accepted. Unspent escrow has been refunded.')}>Accept delivery<//><button class="btn" onClick=${() => setDispute(true)}>Dispute tiles</button></div>` : ''}</div>
     </div>` : ''}
-    ${c.status === 'ACCEPTED' ? html`<div class="callout good">Accepted ${c.acceptedAt ? ago(c.acceptedAt, now) : ''}. Every contributor was paid when their tile was accepted, and unspent escrow was refunded.</div>` : ''}
+    ${c.status === 'ACCEPTED' ? html`<div class="callout good">Accepted ${c.acceptedAt ? ago(c.acceptedAt, now) : ''}. ${c.workforce === 'agents' ? 'The autopilot signed it off after every tile passed its checks. Anything marked (verify) or SAMPLE, and the steps listed for a person, still need one.' : 'Every contributor was paid when their tile was accepted, and unspent escrow was refunded.'}</div>` : ''}
     ${disputes.map((x) => html`<div class=${`card ${x.status === 'OPEN' ? 'warn' : ''}`}>
       <h3>Dispute ${x.status === 'OPEN' ? '(panel voting)' : `· ${x.outcome === 'UPHOLD' ? 'delivery upheld' : 'tiles reopened as rework'}`}</h3>
       <p class="small">“${x.reason}”</p>

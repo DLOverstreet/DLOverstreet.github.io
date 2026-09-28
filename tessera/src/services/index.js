@@ -8,6 +8,7 @@ import { createLlmRouter } from '../llm/router.js';
 import { mockBrains } from '../agents/mock/index.js';
 import { createWorker } from '../jobs/worker.js';
 import { createCrowd } from './crowd.js';
+import { createSwarm, runWithAgents, pauseSwarmJob, resumeSwarmJob } from './swarm.js';
 import { seedWorld } from './seed.js';
 import * as commissions from './commissions.js';
 import * as market from './market.js';
@@ -42,6 +43,7 @@ const API = {
   disputeDelivery: delivery.disputeDelivery,
   castPanelVote: delivery.castPanelVote,
   buildDeliverableZip: delivery.buildDeliverableZip,
+  runWithAgents, pauseSwarmJob, resumeSwarmJob,
   updateProfile: profiles.updateProfile,
   exportReputation: profiles.exportReputation,
   ensureSigningKey: profiles.ensureSigningKey,
@@ -61,9 +63,10 @@ const API = {
  * @param {boolean} [o.debug]
  * @param {number} [o.persistDelayMs]
  * @param {boolean} [o.crowd] start with the crowd simulation on or off
+ * @param {number} [o.swarmPaceMs] with the mock, how long each swarm task waits, so the swarm is watchable
  * @returns {Promise<any>}
  */
-export async function createTessera({ worldStore, blobs, keystore, secrets, seed = 'tessera', frozenAt = null, autoSeed = true, fixtures = {}, providerFactory = {}, debug = false, persistDelayMs = 200, crowd = undefined }) {
+export async function createTessera({ worldStore, blobs, keystore, secrets, seed = 'tessera', frozenAt = null, autoSeed = true, fixtures = {}, providerFactory = {}, debug = false, persistDelayMs = 200, crowd = undefined, swarmPaceMs = 0 }) {
   let world = await worldStore.load();
   const fresh = !world || world.version !== WORLD_VERSION;
   if (fresh) world = emptyWorld({ seed, now: frozenAt ?? Date.now() });
@@ -76,6 +79,7 @@ export async function createTessera({ worldStore, blobs, keystore, secrets, seed
   T.log = (row) => db.tx((tx) => tx.insert('AgentRun', row));
   T.api = Object.fromEntries(Object.entries(API).map(([name, fn]) => [name, (...args) => fn(T, ...args)]));
   T.crowd = createCrowd(T);
+  T.swarm = createSwarm(T, { paceMs: swarmPaceMs });
   T.worker = createWorker(T);
 
   let saveTimer = null;

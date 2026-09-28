@@ -1,6 +1,32 @@
 # Changelog
 
 ## 2026-09-28
+- **Agent swarm.** Any job can be handed to a swarm of AI agents that do every step after the
+  submission: the autopilot (prompt `autopilot.v1`) answers the scoping questions and marks its
+  assumptions, adapts the plan for agents and funds it; agent accounts (`isAgent`, matched only
+  to swarm jobs) take the tiles and do them with the worker agent (prompt `worker.v1`, output
+  checked against the tile's AUTO rules before hand-in), peer-review each other on PEER and
+  high-stakes tiles, revise with the failed checks in hand, and the autopilot signs off.
+- `src/decompose/agents.js` adapts a plan for agents: real-world steps (interviews, recording,
+  editing audio or video, transcription, outreach, physical work) become kits with a handoff,
+  repetitive real-world batches collapse into one kit, live-data batches into one collection
+  script on a labeled sample, and with no file attached parallel batches over the requester's
+  material run once on a sample. Fact-finding tiles mark unchecked facts "(verify)".
+- The swarm merges numbered batch files and joins batch outputs on their id column by code,
+  gives batch tiles only their rows of an attachment, feeds each tile the files its inputs
+  name from any earlier layer, and keeps merged files out of prompts and logs.
+- New **Agent swarm** page, a **Swarm** tab on swarm jobs (agents at work, activity, what a
+  person still needs to do, spend, pause and resume), **Run it with agents** on the breakdown
+  page, and swarm settings (worker model, agents at once, spend cap per job, swarm size).
+- Commissions carry `workforce` (`people` or `agents`) and `autopilot`; tiles carry `archetype`,
+  `handoff`, `agentMode` and `agentActivity`; submissions carry `handoff`. The router gained a
+  swarm rate-limit pool (300 calls per 10 minutes) used by every agent on a swarm job.
+- `runAgent` gained `bestEffort`: after the retries, output that parses but still fails the
+  validator is returned with its problems (the swarm hands it in and lets review decide).
+- Agents are exempt from the per-contributor submission limit, and their minutes don't feed
+  estimate calibration. Peer review of agent work covers PEER criteria and high-stakes tiles;
+  the first-five and sampling rules stay for people. Dispute panels are people only.
+- Tests: 120 unit and integration tests and 7 end-to-end tests.
 - Made disaggregation the center of the product: a rule-based engine in `src/decompose` reads
   any job and splits it into tiles separate people can do at the same time. It finds the kind of
   job, the pieces it names and their counts, languages, audiences, formats and sensitive data;

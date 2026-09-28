@@ -36,7 +36,7 @@ export async function runAssembleJob(T, { commissionId }) {
     });
   }
   const input = { commission: { title: c.title, goal: c.goal }, tiles: inputTiles };
-  const { output, model } = await runAgent({ agent: AGENTS.assembler, input, route: T.llm.platform('heavy'), log: T.log, meta: { commissionId } });
+  const { output, model } = await runAgent({ agent: AGENTS.assembler, input, route: T.llm.forCommission(c, 'heavy'), log: T.log, meta: { commissionId } });
 
   // Integration checks run on the real files, not on the model's word.
   const gaps = [...output.gaps];
@@ -46,7 +46,7 @@ export async function runAssembleJob(T, { commissionId }) {
     tileKey: t.key, contributorId: t.claimedById, files: [], role: `Peer review of ${T.db.get('Tile', t.reviewOf.tileId)?.title || 'a tile'}`,
   }));
   const manifest = [...output.manifest, ...reviewers].map((m) => ({ ...m, contributorName: T.db.get('User', m.contributorId)?.name || m.contributorId, tileTitle: tilesOf(T.db, commissionId).find((t) => t.key === m.tileKey)?.title || m.tileKey }));
-  const report = renderReport(c, output, manifest, gaps, conflicts);
+  const report = renderReport(c, output, manifest, gaps, conflicts, handoffsOf(T.db, commissionId));
   const key = `deliverables/${commissionId}/${Date.now().toString(36)}/deliverable.md`;
   await T.blobs.put(key, textToBytes(report));
   T.db.tx((tx) => {
@@ -61,9 +61,28 @@ export async function runAssembleJob(T, { commissionId }) {
   });
 }
 
-function renderReport(c, out, manifest, gaps, conflicts) {
+/** What a person still has to do after an agent-run job: each tile's real-world step, in plan order. */
+export function handoffsOf(db, commissionId) {
+  const out = [];
+  for (const t of deliveredTiles(db, commissionId)) {
+    const sub = db.get('Submission', t.acceptedSubmissionId);
+    const text = [t.handoff, sub?.handoff].filter(Boolean).filter((x, i, a) => a.indexOf(x) === i).join(' ');
+    if (text) out.push({ key: t.key, title: t.title, handoff: text });
+  }
+  return out;
+}
+
+function renderReport(c, out, manifest, gaps, conflicts, handoffs = []) {
   const lines = [`# ${out.title}`, '', out.summary, ''];
+  if (c.workforce === 'agents') {
+    lines.push('> Done by Tessera’s agent swarm. The agents had no internet access: anything marked (verify) or SAMPLE needs a person to confirm or replace it.', '');
+  }
   for (const s of out.sections) lines.push(`## ${s.heading}`, '', s.body, '', `*From tile${s.tileKeys.length > 1 ? 's' : ''}: ${s.tileKeys.join(', ')}*`, '');
+  if (handoffs.length) {
+    lines.push('## What a person still needs to do', '');
+    for (const h of handoffs) lines.push(`- **${h.title}** (${h.key}): ${h.handoff}`);
+    lines.push('');
+  }
   if (gaps.length || conflicts.length) {
     lines.push('## Flagged for the requester', '');
     for (const g of gaps) lines.push(`- Gap: ${g}`);
@@ -72,7 +91,9 @@ function renderReport(c, out, manifest, gaps, conflicts) {
   }
   lines.push('## Credits', '', '| Tile | Contributor | Role | Files |', '| --- | --- | --- | --- |');
   for (const m of manifest) lines.push(`| ${m.tileTitle} | ${m.contributorName} | ${m.role} | ${m.files.join(', ') || '—'} |`);
-  lines.push('', `Commissioned by ${c.title ? 'the requester' : ''} through Tessera. Every contributor above was paid when their tile was accepted.`, '');
+  lines.push('', c.workforce === 'agents'
+    ? 'Commissioned through Tessera and done by its agent swarm: every tile above was written by an AI agent, checked automatically and by the Reviewer, and accepted.'
+    : `Commissioned by ${c.title ? 'the requester' : ''} through Tessera. Every contributor above was paid when their tile was accepted.`, '');
   return lines.join('\n');
 }
 
@@ -100,11 +121,11 @@ function requireRequester(tx, commissionId, actorId) {
   return c;
 }
 
-export function acceptDelivery(T, actorId, commissionId) {
+export function acceptDelivery(T, actorId, commissionId, note = 'Signed off by the requester') {
   return T.db.tx((tx) => {
     const c = requireRequester(tx, commissionId, actorId);
     if (c.status !== 'DELIVERED') throw new UserError('There is no delivery waiting for sign-off.');
-    return transitionCommission(tx, commissionId, 'ACCEPTED', actorId, { note: 'Signed off by the requester' });
+    return transitionCommission(tx, commissionId, 'ACCEPTED', actorId, { note: String(note).slice(0, 200) });
   }, { actor: actorId });
 }
 
@@ -114,7 +135,7 @@ export function pickPanel(db, commissionId, tileIds, now) {
   const workers = commissionWorkers(db, commissionId);
   const tags = [...new Set(tileIds.flatMap((id) => db.get('Tile', id)?.skillTags || []))];
   const events = db.all('ReputationEvent');
-  const ranked = db.filter('User', (u) => u.isContributor && u.id !== c.requesterId && !workers.has(u.id)).map((u) => {
+  const ranked = db.filter('User', (u) => u.isContributor && !u.isAgent && u.id !== c.requesterId && !workers.has(u.id)).map((u) => {
     const rep = summarizeReputation(events, u.id, now);
     const skillScore = tags.reduce((n, t) => n + (rep.skills[t]?.accepted || 0), 0);
     return { id: u.id, skillScore, total: rep.totalAccepted };

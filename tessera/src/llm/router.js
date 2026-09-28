@@ -4,6 +4,8 @@
 //    stored in this browser.
 //  - The Translator and copilot use the contributor's own model (their key, or Ollama),
 //    falling back to the shared platform model.
+//  - The agent swarm uses the platform model through its own, larger rate-limit pool, and
+//    so do the Reviewer and Assembler on jobs handed to the swarm.
 import { createAnthropicProvider } from './anthropic.js';
 import { createOpenAiCompatibleProvider } from './openai-compatible.js';
 import { rateLimitCheck } from '../domain/limits.js';
@@ -22,13 +24,14 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     return cache.get(key);
   }
 
-  function limited(provider, actorKey) {
+  /** @param {any} provider @param {string} actorKey @param {number} [max] */
+  function limited(provider, actorKey, max = config.limits.llmCallsPerWindow) {
     if (provider.name === 'mock') return provider;
     return {
       name: provider.name,
       async complete(req) {
         const list = calls.get(actorKey) || [];
-        const check = rateLimitCheck(list, config.limits.llmCallsPerWindow, config.limits.llmWindowMs, now());
+        const check = rateLimitCheck(list, max, config.limits.llmWindowMs, now());
         if (!check.ok) throw new LlmError(check.message, { retryable: false, code: 'rate_limited' });
         list.push(now());
         calls.set(actorKey, list.filter((t) => now() - t < config.limits.llmWindowMs));
@@ -37,20 +40,22 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     };
   }
 
-  function platform(tier = 'heavy') {
+  /** @param {'heavy'|'light'} [tier] @param {{ pool?: 'platform'|'swarm' }} [opts] */
+  function platform(tier = 'heavy', { pool = 'platform' } = {}) {
     const s = getSettings();
     const shadow = tier === 'heavy' ? s.heavyModel : s.lightModel;
+    const max = pool === 'swarm' ? config.limits.swarmCallsPerWindow : config.limits.llmCallsPerWindow;
     if (s.provider === 'anthropic') {
       const key = secrets.get('platform.anthropic');
       if (key) {
         const p = cached(`anthropic:${key}`, () => makeAnthropic({ apiKey: key }));
-        return { provider: limited(p, 'platform'), model: shadow, providerName: 'anthropic', label: shadow };
+        return { provider: limited(p, pool, max), model: shadow, providerName: 'anthropic', label: shadow };
       }
     }
     if (s.provider === 'openai' && s.openai?.baseUrl) {
       const key = secrets.get('platform.openai') || '';
       const p = cached(`openai:${s.openai.baseUrl}:${key}`, () => makeOpenAi({ baseUrl: s.openai.baseUrl, apiKey: key }));
-      return { provider: limited(p, 'platform'), model: s.openai.model, providerName: 'openai-compatible', label: s.openai.model };
+      return { provider: limited(p, pool, max), model: s.openai.model, providerName: 'openai-compatible', label: s.openai.model };
     }
     return { provider: mock, model: `mock-${tier}`, providerName: 'mock', shadowModel: shadow, label: `Mock (${tier})` };
   }
@@ -82,5 +87,10 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     return platform('heavy');
   }
 
-  return { platform, contributor, clearCache: () => cache.clear() };
+  /** The route for work on a commission: swarm jobs draw on the swarm's pool. @param {any} commission @param {'heavy'|'light'} [tier] */
+  function forCommission(commission, tier = 'heavy') {
+    return platform(tier, { pool: commission?.workforce === 'agents' ? 'swarm' : 'platform' });
+  }
+
+  return { platform, contributor, forCommission, clearCache: () => cache.clear() };
 }

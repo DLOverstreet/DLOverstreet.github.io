@@ -1,5 +1,6 @@
-// The six agents plus the tile copilot. Each pairs a versioned prompt with an output
-// schema and a validator; runAgent rejects anything that fails either and retries.
+// The platform agents, the tile copilot, and the swarm's worker and autopilot agents. Each
+// pairs a versioned prompt with an output schema and a validator; runAgent rejects anything
+// that fails either and retries.
 import * as scopingPrompt from './prompts/scoping.v1.js';
 import * as decomposerPrompt from './prompts/decomposer.v2.js';
 import * as refinePrompt from './prompts/decomposer-refine.v1.js';
@@ -8,7 +9,10 @@ import * as translatorPrompt from './prompts/translator.v1.js';
 import * as reviewerPrompt from './prompts/reviewer.v1.js';
 import * as assemblerPrompt from './prompts/assembler.v1.js';
 import * as copilotPrompt from './prompts/copilot.v1.js';
-import { ScopingQuestions, TileGraph, MatcherNotes, Brief, ReviewVerdict, Assembly } from './schemas.js';
+import * as workerPrompt from './prompts/worker.v1.js';
+import * as autopilotPrompt from './prompts/autopilot.v1.js';
+import { ScopingQuestions, TileGraph, MatcherNotes, Brief, ReviewVerdict, Assembly, WorkResult, ScopingAnswers } from './schemas.js';
+import { runAutoChecks } from '../domain/autochecks.js';
 import { validateGraph } from '../domain/graph.js';
 import { config } from '../domain/config.js';
 
@@ -93,11 +97,52 @@ export const assembler = {
   },
 };
 
+const TEXT_FILE = /\.(csv|tsv|json|geojson|md|markdown|txt|svg|html|css|js|ts|py|r|sql|yaml|yml|xml|ipynb)$/i;
+
+/** The files a worker hands in, plus any the swarm computed for it (merged batches), as the checker sees them. */
+export function workerFiles(out, input) {
+  const made = out.files.map((f) => ({ name: f.name, size: f.content.length, text: f.content }));
+  const pre = (input && input.precomputedFiles) || [];
+  return [...made.filter((f) => !pre.some((p) => p.name === f.name)), ...pre.map((p) => ({ name: p.name, size: p.text.length, text: p.text }))];
+}
+
+/** A worker agent does one tile. Its files must pass the tile's AUTO checks before they're handed in. */
+export const worker = {
+  name: 'worker', prompt: workerPrompt, schema: WorkResult, tier: 'heavy',
+  validate(out, input) {
+    const problems = [];
+    const names = new Set();
+    for (const f of out.files) {
+      if (!TEXT_FILE.test(f.name)) problems.push(`${f.name}: hand in text formats only (csv, md, json, svg, html, js, py and so on)`);
+      if (!f.content.trim()) problems.push(`${f.name} is empty`);
+      if (names.has(f.name)) problems.push(`${f.name} appears twice`);
+      names.add(f.name);
+    }
+    const ids = (input.tile?.acceptanceCriteria || []).map((c) => c.id);
+    const got = out.checklist.map((c) => c.criterionId);
+    const missing = ids.filter((id) => !got.includes(id));
+    if (missing.length) problems.push(`checklist is missing criterionId(s): ${missing.join(', ')}`);
+    const { results } = runAutoChecks(input.tile?.acceptanceCriteria || [], workerFiles(out, input));
+    for (const r of results.filter((x) => !x.pass)) problems.push(`AUTO check ${r.rule} fails: ${r.reason}`);
+    return problems;
+  },
+};
+
+/** Stands in for the requester on a job handed to the swarm: answers the scoping questions. */
+export const autopilot = {
+  name: 'autopilot', prompt: autopilotPrompt, schema: ScopingAnswers, tier: 'light',
+  validate(out, input) {
+    const want = (input.questions || []).map((q) => q.id).sort();
+    const got = out.answers.map((a) => a.id).sort();
+    return JSON.stringify(want) === JSON.stringify(got) ? [] : [`answer exactly these question ids: ${want.join(', ')}`];
+  },
+};
+
 export const copilot = {
   name: 'copilot', prompt: copilotPrompt, format: 'text', tier: 'light',
 };
 
-export const AGENTS = { scoping, decomposer, decomposerRefine, matcherNote, translator, reviewer, assembler, copilot };
+export const AGENTS = { scoping, decomposer, decomposerRefine, matcherNote, translator, reviewer, assembler, copilot, worker, autopilot };
 
 export const AGENT_TABLE = [
   { name: 'Scoping', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Asks the requester up to five clarifying questions', version: scopingPrompt.version },
@@ -107,4 +152,6 @@ export const AGENT_TABLE = [
   { name: 'Translator', runsIn: 'Contributor’s browser', model: 'Contributor’s own model, shared model as fallback', job: 'Writes the personal brief and powers the tile copilot', version: translatorPrompt.version },
   { name: 'Reviewer', runsIn: 'Worker', model: `Light, escalating to heavy under ${config.reviewConfidenceFloor} confidence`, job: 'Pass or fail per criterion, with a reason', version: reviewerPrompt.version },
   { name: 'Assembler', runsIn: 'Worker', model: 'Heavy', job: 'Merges accepted outputs and writes the credits manifest', version: assemblerPrompt.version },
+  { name: 'Worker agents', runsIn: 'Agent swarm', model: 'Heavy or light, set in Settings', job: 'Do tiles, peer-review each other and revise, on jobs you hand to the swarm', version: workerPrompt.version },
+  { name: 'Autopilot', runsIn: 'Agent swarm', model: 'Light', job: 'Stands in for you on a swarm job: answers the scoping questions, marking assumptions', version: autopilotPrompt.version },
 ];

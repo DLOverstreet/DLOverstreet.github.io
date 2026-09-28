@@ -43,7 +43,7 @@ export function createCrowd(T) {
 
   function contributor(userId) {
     const u = T.db.get('User', userId);
-    return u && u.isContributor && !u.isAdmin && userId !== T.db.meta.activePersonaId ? u : null;
+    return u && u.isContributor && !u.isAdmin && !u.isAgent && userId !== T.db.meta.activePersonaId ? u : null;
   }
   /** A persona the crowd plays freely: not the active one, and never played by you. */
   function simulated(userId) {
@@ -112,7 +112,7 @@ export function createCrowd(T) {
       // 4. A requester who isn't being played settles peer reviews no one is eligible for.
       for (const t of T.db.filter('Tile', (x) => x.dynamic && x.status === 'OPEN' && x.matchSummary && x.matchSummary.eligible === 0)) {
         const c = T.db.get('Commission', t.commissionId);
-        if (c.requesterId === T.db.meta.activePersonaId) continue;
+        if (c.requesterId === T.db.meta.activePersonaId || c.workforce === 'agents') continue;
         if (!isDue(`self-review:${t.id}`, 'board', force)) continue;
         const verdicts = generatePeerVerdicts(reviewTarget(t), { seed: t.id });
         await act(() => requesterReview(T, c.requesterId, t.reviewOf.tileId, verdicts));

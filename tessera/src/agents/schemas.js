@@ -29,6 +29,7 @@ export const TileDraft = s.object({
   outputs: s.array(s.string()).optional().describe('Exact file names this tile delivers; each file has one maker'),
   stream: s.string().optional().describe('Short name of the workstream this tile belongs to, e.g. "Setup", "Code responses", "Checks"'),
   phase: s.enum(['prep', 'conventions', 'work', 'layer', 'check', 'integrate']).optional(),
+  archetype: s.string().optional().describe('The kind of step, e.g. collect, code, translate, draft, outreach, review'),
   partOf: s.string().optional().describe('Shared id of a batch group: tiles that split one piece of work by range'),
   part: s.object({ index: s.int().min(1), of: s.int().min(1), from: s.int(), to: s.int(), label: s.string() }).optional(),
   covers: s.array(s.string()).optional().describe('Ids of the requester requirements this tile answers for'),
@@ -74,6 +75,26 @@ export const Assembly = s.object({
   manifest: s.array(s.object({ tileKey: s.string(), contributorId: s.string(), files: s.array(s.string()), role: s.string() })).min(1),
   gaps: s.array(s.string()),
   conflicts: s.array(s.string()),
+});
+
+/** What a worker agent hands in for one tile: its approach, the files, and what a person must still do. */
+export const ScopingAnswers = s.object({
+  answers: s.array(s.object({
+    id: s.string().min(1),
+    answer: s.string().min(2).max(1000),
+    assumption: s.boolean().default(false),
+  })),
+});
+
+export const WorkResult = s.object({
+  approach: s.array(s.string().min(3)).min(1).max(10).describe('The steps you took, in order: your own brief'),
+  files: s.array(s.object({
+    name: s.string().min(3).max(120).describe('Exact file name with extension, e.g. coded_02.csv'),
+    content: s.string().describe('The full file content as text'),
+  })).min(1).max(10),
+  notes: s.string().describe('For the reviewer: choices you made, anything uncertain, and any limits of the work'),
+  checklist: s.array(s.object({ criterionId: s.string(), done: s.boolean(), note: s.string() })),
+  handoff: s.string().default('').describe('What a person must still do in the real world, or an empty string'),
 });
 
 export const MatcherNotes = s.object({

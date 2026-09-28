@@ -51,16 +51,22 @@ async function preparePost(T, actorId, input) {
     const bytes = f.bytes || new TextEncoder().encode(f.text || '');
     r.summary = summarizeUpload(r.name, bytes, { restricted: privacy === 'RESTRICTED' });
   });
-  return { title, goal, budgetCents, deadline, privacy, language: input.language || 'en', refs };
+  return { title, goal, budgetCents, deadline, privacy, language: input.language || 'en', refs, ...workforceOf(input, now) };
+}
+
+/** Who does the work: the exchange's people (the default) or the agent swarm, run on autopilot. */
+function workforceOf(input, now) {
+  if (input.workforce !== 'agents') return { workforce: 'people' };
+  return { workforce: 'agents', autopilot: { state: 'RUNNING', startedAt: now, note: null } };
 }
 
 export async function postCommission(T, actorId, input) {
   if (input.plan) return postCommissionWithPlan(T, actorId, input);
-  const { title, goal, budgetCents, deadline, privacy, refs } = await preparePost(T, actorId, input);
+  const { title, goal, budgetCents, deadline, privacy, refs, workforce, autopilot } = await preparePost(T, actorId, input);
   return T.db.tx((tx) => {
     const c = tx.insert('Commission', {
       requesterId: actorId, title, goal, budgetCents, deadline, privacy, language: input.language || 'en',
-      clarifications: { questions: [], answers: {} }, status: 'DRAFT', files: refs, plan: null, delivery: null,
+      clarifications: { questions: [], answers: {} }, status: 'DRAFT', files: refs, plan: null, delivery: null, workforce, autopilot: autopilot || null,
     });
     transitionCommission(tx, c.id, 'SCOPING', actorId, { note: 'Posted' });
     tx.enqueue('scope', { commissionId: c.id }, { dedupeKey: `scope:${c.id}` });
@@ -79,7 +85,7 @@ export async function runScopingJob(T, { commissionId }) {
   const c = T.db.get('Commission', commissionId);
   if (!c || c.status !== 'SCOPING' || c.clarifications.scopedAt) return;
   const input = { commission: commissionForPrompt(c), files: c.files.map((f) => ({ name: f.name, summary: f.summary })) };
-  const { output } = await runAgent({ agent: AGENTS.scoping, input, route: T.llm.platform('heavy'), log: T.log, meta: { commissionId } });
+  const { output } = await runAgent({ agent: AGENTS.scoping, input, route: T.llm.forCommission(c, 'heavy'), log: T.log, meta: { commissionId } });
   T.db.tx((tx) => {
     const cur = tx.get('Commission', commissionId);
     if (cur.status !== 'SCOPING') return;
@@ -108,6 +114,8 @@ function calibrationFor(tx) {
   for (const s of tx.all('Submission')) {
     const t = tx.get('Tile', s.tileId);
     if (!t || t.status !== 'ACCEPTED' || t.acceptedSubmissionId !== s.id || t.dynamic) continue;
+    // An agent's minutes say nothing about how long a person takes.
+    if (tx.get('User', s.contributorId)?.isAgent) continue;
     samples.push({ tags: t.skillTags, estMinutes: t.estMinutes, minutesSpent: s.minutesSpent });
   }
   return calibrationRatios(samples);
@@ -160,7 +168,7 @@ export async function finishPlan(T, tiles, analysis, opts = {}) {
   return { tiles: out, quality, changes, refined };
 }
 
-const PLAN_FIELDS = ['inputs', 'outputs', 'stream', 'phase', 'partOf', 'part', 'covers', 'priority'];
+const PLAN_FIELDS = ['inputs', 'outputs', 'stream', 'phase', 'archetype', 'partOf', 'part', 'covers', 'priority', 'handoff', 'agentMode', 'collapsed'];
 
 function insertPlanTiles(tx, commissionId, tiles, rush) {
   const idByKey = new Map();
@@ -194,7 +202,7 @@ export async function runDecomposeJob(T, { commissionId, instruction = null }) {
   const now = T.clock.now();
   const rush = isRush(c.deadline, now);
   const ratios = calibrationFor(T.db);
-  const route = T.llm.platform('heavy');
+  const route = T.llm.forCommission(c, 'heavy');
   const { input: base, analysis } = decomposerInput(c, { instruction, ratios, rush, reference: route.providerName !== 'mock' });
   /** @type {any} */
   let input = base;
@@ -406,7 +414,7 @@ export function cancelCommission(T, actorId, commissionId) {
 
 /** Posts a commission with a plan made in the breakdown tool, skipping scoping and the Decomposer. */
 export async function postCommissionWithPlan(T, actorId, input) {
-  const { title, goal, budgetCents, deadline, privacy, language, refs } = await preparePost(T, actorId, input);
+  const { title, goal, budgetCents, deadline, privacy, language, refs, workforce, autopilot } = await preparePost(T, actorId, input);
   const plan = input.plan;
   const draft = repairGraph(plan.tiles || []).tiles;
   const bad = draft.map((t) => TileDraft.safeParse(t)).find((p) => !p.success);
@@ -422,6 +430,7 @@ export async function postCommissionWithPlan(T, actorId, input) {
     const c = tx.insert('Commission', {
       requesterId: actorId, title, goal, budgetCents, deadline, privacy, language,
       clarifications: { questions: [], answers: {}, scopedAt: now, answeredAt: now }, status: 'DRAFT', files: refs, plan: null, delivery: null,
+      workforce, autopilot: autopilot || null,
     });
     transitionCommission(tx, c.id, 'SCOPING', actorId, { note: 'Posted with a plan from the breakdown tool' });
     insertPlanTiles(tx, c.id, draft, rush);
