@@ -109,6 +109,19 @@ function InputsCard({ t }) {
     <ul class="filelist">${ups.map((f) => html`<${StoredFile} file=${f} from=${f.fromTile} />`)}</ul></div>`;
 }
 
+/** What an agent looked up on the web before doing this tile, with its sources. */
+function ResearchCard({ t }) {
+  const r = t.research;
+  if (!r) return null;
+  if (r.unavailable) return html`<div class="card"><h2>Web research</h2><p class="small muted">No web access for this tile (${r.unavailable}), so facts from outside the job’s files are marked “(verify)”.</p></div>`;
+  const cited = (r.sources || []).filter((x) => x.kind !== 'searched');
+  return html`<div class="card"><h2>Web research</h2>
+    <p class="tiny muted">${r.searches || 0} searches and ${r.reads || 0} pages read by ${r.model}, before the work started. The agent’s notes are data from the web; check the sources.</p>
+    <div class="card flat" style=${{ marginTop: '.5rem' }}><${Markdown} text=${r.notes || ''} /></div>
+    ${cited.length ? html`<ol class="small" style=${{ marginTop: '.5rem', paddingLeft: '1.3rem' }}>${cited.map((x) => html`<li style=${{ overflowWrap: 'anywhere' }}><a href=${/^https?:\/\//i.test(x.url) ? x.url : undefined} target="_blank" rel="noopener noreferrer">${truncate(x.title || x.url, 90)}</a></li>`)}</ol>` : ''}
+  </div>`;
+}
+
 function ReviewResults({ sub }) {
   const T = useT();
   const reviews = T.db.filter('Review', (r) => r.submissionId === sub.id).sort((a, b) => a.createdAt - b.createdAt);
@@ -415,6 +428,7 @@ export function TileView({ id }) {
       </div>
       <div class="stack">
         <${SpecCard} t=${t} restricted=${restricted && !owner} />
+        <${ResearchCard} t=${t} />
         <${History} t=${t} />
       </div>
     </div>

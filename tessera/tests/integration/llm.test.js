@@ -48,7 +48,7 @@ test('the Anthropic provider sends structured-output requests straight to the AP
   const calls = [];
   const fakeFetch = async (url, init) => {
     calls.push({ url: String(url), headers: Object.fromEntries(new Headers(init.headers).entries()), body: JSON.parse(init.body) });
-    const body = { id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-sonnet-5', stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ questions: [] }) }], usage: { input_tokens: 120, output_tokens: 30 } };
+    const body = { id: 'msg_1', type: 'message', role: 'assistant', model: 'claude-opus-5-5', stop_reason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ questions: [] }) }], usage: { input_tokens: 120, output_tokens: 30 } };
     return new Response(JSON.stringify(body), { status: 200, headers: { 'content-type': 'application/json', 'request-id': 'req_1' } });
   };
   const T = await makeTessera({ crowd: false, providerFactory: { anthropic: (o) => createAnthropicProvider({ ...o, baseURL: 'https://api.anthropic.com', fetch: fakeFetch }) } });
@@ -59,12 +59,15 @@ test('the Anthropic provider sends structured-output requests straight to the AP
   const res = await runAgent({ agent: AGENTS.scoping, input: { commission: { title: 't', goal: 'g' }, files: [] }, route, log: T.log });
   assert.deepEqual(res.output, { questions: [] });
   assert.equal(calls.length, 1);
-  assert.equal(calls[0].url, 'https://api.anthropic.com/v1/messages');
+  assert.match(calls[0].url, /^https:\/\/api\.anthropic\.com\/v1\/messages(\?beta=true)?$/);
   assert.equal(calls[0].headers['x-api-key'], KEY);
   assert.equal(calls[0].headers['anthropic-dangerous-direct-browser-access'], 'true');
-  assert.equal(calls[0].body.model, 'claude-sonnet-5');
+  assert.equal(calls[0].body.model, 'claude-opus-5-5', 'the heavy model is the current Opus');
   assert.equal(calls[0].body.output_config.format.type, 'json_schema');
   assert.equal(calls[0].body.output_config.format.schema.additionalProperties, false);
+  assert.equal(calls[0].body.output_config.effort, 'medium', 'the agent sets its effort');
+  assert.equal(calls[0].body.fallbacks, 'default', 'a refusal falls back server-side');
+  assert.match(calls[0].headers['anthropic-beta'], /server-side-fallback-2026-07-01/);
   const run = T.db.all('AgentRun').at(-1);
   assert.equal(run.provider, 'anthropic');
   assert.equal(run.tokensIn, 120);
@@ -79,4 +82,54 @@ test('a contributor with no personal key falls back to the shared model, and say
   const route = T.llm.contributor(dev, profile);
   assert.equal(route.providerName, 'mock');
   assert.match(route.fallback, /shared model/);
+});
+
+test('a research call gets Anthropic’s web tools, resumes a paused turn, and returns its sources and search count', async () => {
+  const calls = [];
+  const cited = { type: 'text', text: 'The venue seats 250 (https://example.org/hall).', citations: [{ type: 'web_search_result_location', url: 'https://example.org/hall', title: 'Hall', cited_text: 'Seats 250', encrypted_index: 'x' }] };
+  const replies = [
+    { stop_reason: 'pause_turn', content: [{ type: 'text', text: 'Searching. ' }, { type: 'server_tool_use', id: 'srv_1', name: 'web_search', input: { query: 'hall capacity' } }, { type: 'web_search_tool_result', tool_use_id: 'srv_1', content: [{ type: 'web_search_result', url: 'https://example.org/hall', title: 'Hall', encrypted_content: 'e' }] }], usage: { input_tokens: 100, output_tokens: 20, server_tool_use: { web_search_requests: 1 } } },
+    { stop_reason: 'end_turn', content: [cited], usage: { input_tokens: 150, output_tokens: 40, server_tool_use: { web_search_requests: 1, web_fetch_requests: 1 } } },
+  ];
+  const fakeFetch = async (url, init) => {
+    calls.push({ url: String(url), body: JSON.parse(init.body) });
+    const r = replies[calls.length - 1];
+    return new Response(JSON.stringify({ id: `msg_${calls.length}`, type: 'message', role: 'assistant', model: 'claude-sonnet-5-5', ...r }), { status: 200, headers: { 'content-type': 'application/json', 'request-id': 'req' } });
+  };
+  const T = await makeTessera({ crowd: false, providerFactory: { anthropic: (o) => createAnthropicProvider({ ...o, baseURL: 'https://api.anthropic.com', fetch: fakeFetch }) } });
+  T.secrets.set('platform.anthropic', 'sk-ant-test-web');
+  T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, llm: { ...tx.meta.settings.llm, provider: 'anthropic' } } }));
+  const route = T.llm.agent('claude-sonnet-5-5');
+  const { webTools } = await import('../../src/services/swarm.js');
+  const res = await runAgent({ agent: AGENTS.researcher, input: { tile: { title: 'Find the venue' } }, route, log: T.log, tools: webTools(route.model, { maxSearchesPerTile: 3, maxFetchesPerTile: 2 }) });
+  assert.equal(calls.length, 2, 'the paused turn was resumed once');
+  assert.deepEqual(calls[0].body.tools.map((t) => t.type), ['web_search_20260318', 'web_fetch_20260318']);
+  assert.equal(calls[0].body.tools[0].max_uses, 3);
+  assert.equal(calls[0].body.output_config?.format, undefined, 'no JSON format alongside cited web results');
+  assert.equal(calls[1].body.messages.at(-1).role, 'assistant', 'the paused content went back unchanged');
+  assert.equal(calls[1].body.messages.at(-1).content[2].content[0].encrypted_content, 'e');
+  assert.match(res.output, /Searching\. The venue seats 250/);
+  assert.deepEqual(res.sources.map((x) => [x.url, x.kind]), [['https://example.org/hall', 'cited']]);
+  const run = T.db.filter('AgentRun', (r) => r.agent === 'researcher').at(-1);
+  assert.equal(run.webSearches, 2);
+  assert.equal(run.webFetches, 1);
+  assert.equal(run.tokensIn, 250);
+  const { runCostUsd } = await import('../../src/llm/prices.js');
+  assert.equal(Number(runCostUsd(run).toFixed(6)), Number(((250 * 2 + 60 * 10) / 1e6 + 0.02).toFixed(6)), 'searches are billed at $10 per 1,000');
+});
+
+test('old default settings move to the current models, and a model someone picked is kept', async () => {
+  const { createTessera } = await import('../../src/services/index.js');
+  const { createMemoryWorldStore, createMemoryBlobStore, createMemoryKeyStore, createSecretStore } = await import('../../src/storage/stores.js');
+  const T = await makeTessera({ crowd: false });
+  const world = T.db.snapshot();
+  world.meta.settingsVersion = 1;
+  world.meta.settings = { ...world.meta.settings, llm: { ...world.meta.settings.llm, heavyModel: 'claude-sonnet-5', lightModel: 'claude-opus-5' }, swarm: { workerTier: 'light' } };
+  const store = createMemoryWorldStore();
+  await store.save(world);
+  const T2 = await createTessera({ worldStore: store, blobs: createMemoryBlobStore(), keystore: createMemoryKeyStore(), secrets: createSecretStore(null) });
+  assert.equal(T2.db.meta.settings.llm.heavyModel, 'claude-opus-5-5');
+  assert.equal(T2.db.meta.settings.llm.lightModel, 'claude-opus-5', 'a deliberate choice stays');
+  assert.equal(T2.db.meta.settings.swarm.workerModel, 'claude-opus-5');
+  assert.equal(T2.db.meta.settings.swarm.workerTier, undefined);
 });

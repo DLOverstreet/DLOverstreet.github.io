@@ -51,7 +51,7 @@ test('a contributor’s own API key is sent only to the provider and never store
   await page.goto(`#/t/${tileId}`);
   await page.getByRole('button', { name: 'Accept and claim' }).first().click();
   await page.getByRole('button', { name: 'Write my brief' }).click();
-  await expect(page.getByText(/Written by claude-sonnet-5 \(anthropic\)/)).toBeVisible();
+  await expect(page.getByText(/Written by claude-sonnet-5-5 \(anthropic\)/)).toBeVisible();
   await page.getByRole('textbox', { name: 'Ask the copilot' }).fill('How do I start?');
   await page.getByRole('button', { name: 'Ask', exact: true }).click();
   await expect(page.getByText('Start by listing the terms the flyer repeats.')).toBeVisible();

@@ -39,8 +39,12 @@ export const config = Object.freeze({
 
   llm: Object.freeze({
     maxRetries: 2,
-    heavyModel: 'claude-sonnet-5',
+    /** Planning, assembly and escalated reviews: the current Opus. */
+    heavyModel: 'claude-opus-5-5',
+    /** First-pass reviews and offer notes: the current Haiku. */
     lightModel: 'claude-haiku-4-5',
+    /** A contributor's own key when they haven't picked a model. */
+    contributorModel: 'claude-sonnet-5-5',
   }),
 
   scoping: Object.freeze({ maxQuestions: 5 }),
@@ -64,10 +68,17 @@ export const config = Object.freeze({
   swarm: Object.freeze({
     size: 12,
     concurrency: 4,
-    workerTier: 'heavy',
+    /** The model each agent works with: the current Sonnet, fast and a fraction of Opus's price. */
+    workerModel: 'claude-sonnet-5-5',
+    /** Consistency and agreement checks run on a different model from the work they check. */
+    checkModel: 'claude-opus-5-5',
     spendCapUsd: 15,
     maxInputChars: 60000,
     maxFileChars: 16000,
+    /** Agents may search and read the web when a tile needs current or outside facts. */
+    web: true,
+    maxSearchesPerTile: 5,
+    maxFetchesPerTile: 5,
   }),
 });
 

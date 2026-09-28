@@ -4,6 +4,9 @@
 // turned into the preparation an agent can do (scripts, guides, kits, collection scripts),
 // each with a handoff saying exactly what a person must still do. Repetitive real-world
 // batches (twenty hours of transcription, six rounds of outreach) collapse into one kit.
+// When agents may use the web, tiles that need outside facts (research, prices, venues,
+// funders, public data) get a research step first and cite their sources instead of
+// handing every fact to a person to check.
 import { dropTile } from './ops.js';
 
 const kit = (heads) => heads.map((h) => ({ check: 'AUTO', text: `The kit has a ${h} section`, rule: `has_heading("${h}")` }));
@@ -51,12 +54,24 @@ export const HUMAN_STEPS = [
 
 /** Steps agents can do but whose facts or results a person should confirm, in the order they're tested. */
 const VERIFY = [
-  { test: /\bpublish\b|\bship a test build\b|\bdeploy\b/i, handoff: 'A person uploads the final files to the site or app store.' },
-  { test: /\b(venues?|catering|quotes?|prices?|vendors?|competitors?|foundations?|funders?|suppliers?|shortlist|options|candidates)\b/i, handoff: 'A person confirms every entry marked (verify): names, prices, availability and links.' },
-  { test: /\b(test|audit|qa)\b.*\b(phone|screen reader|browser|site|app|page|dashboard)\b|\bon phones\b/i, handoff: 'A person checks the result on a real phone and with a screen reader; the agent reviewed the code.' },
+  { kind: 'person', test: /\bpublish\b|\bship a test build\b|\bdeploy\b/i, handoff: 'A person uploads the final files to the site or app store.' },
+  { kind: 'facts', test: /\b(venues?|catering|price quotes?|prices?|vendors?|competitors?|foundations?|funders?|suppliers?|shortlist|options|candidates)\b|\b(?:get|request|collect|compare) (?:\w+ ){0,2}quotes?\b/i, handoff: 'A person confirms every entry marked (verify): names, prices, availability and links.' },
+  { kind: 'person', test: /\b(test|audit|qa)\b.*\b(phone|screen reader|browser|site|app|page|dashboard)\b|\bon phones\b/i, handoff: 'A person checks the result on a real phone and with a screen reader; the agent reviewed the code.' },
 ];
 
+/** Tiles that need facts from outside the job's own files, whatever the job came with. */
+const OUTSIDE_FACTS = /\b(literature|evidence base|benchmark|best practices?|statistics|data sources?|regulations?|laws?|legal|policy|policies|market|competitors?|prices?|pricing|costs?|budget|rates?|venues?|vendors?|suppliers?|caterers?|catering|funders?|foundations?|grants?)\b/i;
+/** Research words that point outside only when the job brought no material of its own ("Research the main findings" is about the job's data). */
+const LOOK_UP = /\b(research|find|identify|look up|compare|sources|quotes)\b/i;
+/** Tiles whose numbers a reader will act on: every figure needs its basis. */
+const NUMBERS = /\b(recommend\w*|costs?|budget|estimates?|pric(?:e|es|ing)|forecast|projection)\b/i;
+/** Tiles that check other tiles' work. */
+const CHECKS = /\b(agreement|consistency|inter-?rater|double[- ]cod\w*|second coder|spot[- ]check\w*|cross[- ]check\w*|quality check|qa|fact[- ]check\w*|verify the|audit the)\b/i;
+
 const LIVE_DATA = /\b(collect|scrape|pull|download|compile)\b.*\b(data|records|filings|counts|calendar|portal|public)\b|\bfoot traffic\b|\bfrom (?:the )?public\b/i;
+const DATA_FILE = /\.(csv|tsv|geojson|xlsx)$/i;
+/** A tile that computes from data files made upstream isn't collecting live data ("Collect theme counts" from coded_all.csv). */
+const readsData = (t) => (t.inputs || []).some((f) => DATA_FILE.test(f));
 
 function stepFor(t) {
   if (t.kind === 'INTEGRATION' || t.phase === 'conventions') return null;
@@ -117,11 +132,12 @@ function markSample(t, why) {
 /**
  * Adapts a plan for the agent swarm.
  * @param {any[]} input tiles
- * @param {{ hasSource?: boolean, sourceRows?: number|null }} [opts] hasSource: the requester attached a file for
- *   the tiles that read one; sourceRows: data rows in the attached table, when there is one
+ * @param {{ hasSource?: boolean, sourceRows?: number|null, web?: boolean }} [opts] hasSource: the requester attached a
+ *   file for the tiles that read one; sourceRows: data rows in the attached table, when there is one; web: agents
+ *   may search and read the web
  * @returns {{ tiles: any[], changes: string[], handoffs: { key: string, title: string, handoff: string }[] }}
  */
-export function adaptForAgents(input, { hasSource = true, sourceRows = null } = {}) {
+export function adaptForAgents(input, { hasSource = true, sourceRows = null, web = false } = {}) {
   let tiles = input.map((t) => ({ ...t, dependsOn: [...(t.dependsOn || [])], inputs: [...(t.inputs || [])], outputs: [...(t.outputs || [])], acceptanceCriteria: (t.acceptanceCriteria || []).map((c) => ({ ...c })) }));
   const changes = [];
   const renamed = new Map();
@@ -167,7 +183,7 @@ export function adaptForAgents(input, { hasSource = true, sourceRows = null } = 
   }
   // Batches of live-data collection become one collection script: without the web, each batch
   // would only write the same script for a different range.
-  const live = (t) => (LIVE_DATA.test(t.title) && (!t.archetype || ['collect', 'research', 'enrich'].includes(t.archetype))) || (t.skillTags || []).includes('web-scraping');
+  const live = (t) => !readsData(t) && ((LIVE_DATA.test(t.title) && (!t.archetype || ['collect', 'research', 'enrich'].includes(t.archetype))) || (t.skillTags || []).includes('web-scraping'));
   const liveGroups = new Map();
   for (const t of tiles) if (t.partOf && live(t) && !stepFor(t)) (liveGroups.get(t.partOf) || liveGroups.set(t.partOf, []).get(t.partOf)).push(t);
   for (const [, list] of liveGroups) {
@@ -225,9 +241,15 @@ export function adaptForAgents(input, { hasSource = true, sourceRows = null } = 
       continue;
     }
     // Collecting live data: the agent writes the script; any rows it hands in are a labeled sample.
+    // With the web, a research step first finds the real source, and rows read from it are real.
     if (live(t)) {
-      markSample(t, 'without internet access, write the collection script and hand in a small SAMPLE file with the right columns, labeled as sample data. A person runs the script to get the real records.');
-      t.handoff = 'A person runs the collection script to pull the real data, then the downstream files can be regenerated from it.';
+      markSample(t, web
+        ? 'the research notes name the real source (portal, dataset, API). Write the collection script against it, hand in the rows you could read from the source with its URL, and label any rows you couldn\u2019t read as SAMPLE. A person runs the script for the full data.'
+        : 'without internet access, write the collection script and hand in a small SAMPLE file with the right columns, labeled as sample data. A person runs the script to get the real records.');
+      if (web) t.webResearch = true;
+      t.handoff = web
+        ? 'A person runs the collection script against the source the agent found to pull the full data, then the downstream files can be regenerated from it.'
+        : 'A person runs the collection script to pull the real data, then the downstream files can be regenerated from it.';
       handoffs.push({ key: t.key, title: t.title, handoff: t.handoff });
       continue;
     }
@@ -237,15 +259,36 @@ export function adaptForAgents(input, { hasSource = true, sourceRows = null } = 
       handoffs.push({ key: t.key, title: t.title, handoff: t.handoff });
       continue;
     }
+    // Work on the job's own data (coding, cleaning, filling in columns) stays offline, and so do
+    // batches unless their title names outside facts ("Research foundations 1–6").
+    const ownData = t.inputs.some((f) => SOURCE.test(f)) || (t.part?.of > 1 && readsData(t));
     const v = VERIFY.find((x) => x.test.test(t.title));
-    if (v) {
+    if (v && v.kind === 'facts' && web && !ownData) {
+      // With the web, facts are looked up and cited; only what couldn't be confirmed is marked.
+      t.webResearch = true;
+      t.agentMode = 'researched';
+      if (!t.acceptanceCriteria.some((c) => /\(verify\)/.test(c.text))) t.acceptanceCriteria.push({ id: 'x', check: 'LLM', text: 'Every name, price and fact cites a source URL from the research; anything not confirmed is marked (verify)' });
+    } else if (v) {
       t.handoff = v.handoff;
       t.agentMode = 'verify';
       if (/\(verify\)/.test(v.handoff) && !t.acceptanceCriteria.some((c) => /verify/i.test(c.text))) {
-        t.acceptanceCriteria.push({ id: `c${t.acceptanceCriteria.length + 1}`, check: 'LLM', text: 'Facts that couldn’t be checked are marked (verify)' });
+        t.acceptanceCriteria.push({ id: 'x', check: 'LLM', text: 'Facts that couldn’t be checked are marked (verify)' });
       }
       handoffs.push({ key: t.key, title: t.title, handoff: v.handoff });
     }
+    // Other tiles that need outside facts get a research step when agents may use the web.
+    const aboutOutside = OUTSIDE_FACTS.test(t.title)
+      || (!hasSource && !readsData(t) && (LOOK_UP.test(t.title) || (!(t.part?.of > 1) && (t.archetype === 'research' || (t.skillTags || []).some((x) => x === 'literature-review' || x === 'legal-research')))));
+    if (web && !t.webResearch && !ownData && t.kind !== 'INTEGRATION' && t.phase !== 'conventions' && !CHECKS.test(t.title) && aboutOutside) {
+      t.webResearch = true;
+    }
+    // Numbers a reader acts on (recommendations, costs, budgets) must show where they come from.
+    if (t.kind !== 'INTEGRATION' && NUMBERS.test(t.title) && !t.acceptanceCriteria.some((c) => /arithmetic/i.test(c.text))) {
+      t.acceptanceCriteria.push({ id: 'x', check: 'LLM', text: 'Every number comes from a named input file or a cited source, each cost shows its arithmetic and the basis for its rate, and each recommendation follows from the findings it cites' });
+    }
+    // A check of other tiles' work runs on a different model from the work it checks.
+    if (CHECKS.test(t.title) || (t.kind === 'REVIEW' && !t.dynamic)) t.independentCheck = true;
+    t.acceptanceCriteria = t.acceptanceCriteria.map((c, i) => ({ ...c, id: `c${i + 1}` }));
   }
   // Readers of a renamed file read the kit instead.
   for (const t of tiles) t.inputs = [...new Set(t.inputs.map((f) => renamed.get(f) || f))];
@@ -263,5 +306,9 @@ export function adaptForAgents(input, { hasSource = true, sourceRows = null } = 
     if (!/SAMPLE/.test(t.spec)) t.spec += '\n\nAgent note: some upstream data is a labeled SAMPLE. Keep the SAMPLE label on anything built from it.';
   }
   if (handoffs.length) changes.push(`${handoffs.length} tile${handoffs.length > 1 ? 's' : ''} end with a step for a person; each says what it is.`);
+  const researched = tiles.filter((t) => t.webResearch).length;
+  if (researched) changes.push(`${researched} tile${researched > 1 ? 's' : ''} look${researched > 1 ? '' : 's'} up outside facts on the web first and cite ${researched > 1 ? 'their' : 'its'} sources.`);
+  const checks = tiles.filter((t) => t.independentCheck).length;
+  if (checks) changes.push(`${checks} check${checks > 1 ? 's' : ''} of other tiles' work run${checks > 1 ? '' : 's'} on a different model from the work ${checks > 1 ? 'they check' : 'it checks'}.`);
   return { tiles, changes, handoffs };
 }

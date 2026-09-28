@@ -40,10 +40,13 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     };
   }
 
-  /** @param {'heavy'|'light'} [tier] @param {{ pool?: 'platform'|'swarm' }} [opts] */
-  function platform(tier = 'heavy', { pool = 'platform' } = {}) {
+  /**
+   * @param {'heavy'|'light'} [tier]
+   * @param {{ pool?: 'platform'|'swarm', model?: string|null }} [opts] model: a specific Claude model instead of the tier's
+   */
+  function platform(tier = 'heavy', { pool = 'platform', model = null } = {}) {
     const s = getSettings();
-    const shadow = tier === 'heavy' ? s.heavyModel : s.lightModel;
+    const shadow = model || (tier === 'heavy' ? s.heavyModel : s.lightModel);
     const max = pool === 'swarm' ? config.limits.swarmCallsPerWindow : config.limits.llmCallsPerWindow;
     if (s.provider === 'anthropic') {
       const key = secrets.get('platform.anthropic');
@@ -57,7 +60,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
       const p = cached(`openai:${s.openai.baseUrl}:${key}`, () => makeOpenAi({ baseUrl: s.openai.baseUrl, apiKey: key }));
       return { provider: limited(p, pool, max), model: s.openai.model, providerName: 'openai-compatible', label: s.openai.model };
     }
-    return { provider: mock, model: `mock-${tier}`, providerName: 'mock', shadowModel: shadow, label: `Mock (${tier})` };
+    return { provider: mock, model: `mock-${tier}`, providerName: 'mock', shadowModel: shadow, label: `Mock (${model ? shadow : tier})` };
   }
 
   /** The contributor's own model, with the shared model as fallback. */
@@ -68,7 +71,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
       const prov = llm.provider || 'anthropic';
       const key = secrets.get(`user.${user.id}.${prov}`);
       if (key && prov === 'anthropic') {
-        const model = llm.model || config.llm.heavyModel;
+        const model = llm.model || config.llm.contributorModel;
         const p = cached(`anthropic:${key}`, () => makeAnthropic({ apiKey: key }));
         return { provider: limited(p, user.id), model, providerName: 'anthropic', label: `${model} (your key)`, own: true };
       }
@@ -92,5 +95,10 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     return platform(tier, { pool: commission?.workforce === 'agents' ? 'swarm' : 'platform' });
   }
 
-  return { platform, contributor, forCommission, clearCache: () => cache.clear() };
+  /** A swarm agent's route: the platform provider with the model Settings picked for agents. @param {string} model */
+  function agent(model) {
+    return platform('heavy', { pool: 'swarm', model });
+  }
+
+  return { platform, contributor, forCommission, agent, clearCache: () => cache.clear() };
 }

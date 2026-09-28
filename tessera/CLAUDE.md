@@ -15,6 +15,8 @@ the decisions the blueprint left open. Keep both documents true when you change 
   and `npm run eval:decomposer`.
 - The agent swarm (src/services/swarm.js) acts only through the services a person uses; agents
   are contributor users with isAgent. Adapting a plan for agents lives in src/decompose/agents.js.
+  Web research uses Anthropic's server tools in a separate text call (researcher agent); never
+  combine web tools with a JSON output format.
 - Every tile or commission status change goes through transitionTile or
   transitionCommission (src/services/core.js).
 - LedgerEntry, ReputationEvent and StatusChange are append-only. The database refuses

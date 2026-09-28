@@ -42,11 +42,12 @@ export function emptyWorld({ seed = 'tessera', now = Date.now() } = {}) {
       createdAt: now,
       clock: { mode: 'running', offsetMs: 0, frozenAt: null },
       settings: {
-        llm: { provider: 'mock', heavyModel: 'claude-sonnet-5', lightModel: 'claude-haiku-4-5', openai: { baseUrl: 'http://localhost:11434/v1', model: 'llama3.1' } },
+        llm: { provider: 'mock', heavyModel: 'claude-opus-5-5', lightModel: 'claude-haiku-4-5', openai: { baseUrl: 'http://localhost:11434/v1', model: 'llama3.1' } },
         crowd: true,
       },
       activePersonaId: null,
       signingKey: null,
+      settingsVersion: 2,
       guide: { dismissed: false, done: [] },
     },
     tables,

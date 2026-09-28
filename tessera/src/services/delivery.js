@@ -46,7 +46,8 @@ export async function runAssembleJob(T, { commissionId }) {
     tileKey: t.key, contributorId: t.claimedById, files: [], role: `Peer review of ${T.db.get('Tile', t.reviewOf.tileId)?.title || 'a tile'}`,
   }));
   const manifest = [...output.manifest, ...reviewers].map((m) => ({ ...m, contributorName: T.db.get('User', m.contributorId)?.name || m.contributorId, tileTitle: tilesOf(T.db, commissionId).find((t) => t.key === m.tileKey)?.title || m.tileKey }));
-  const report = renderReport(c, output, manifest, gaps, conflicts, handoffsOf(T.db, commissionId));
+  const product = await finishedDocument(T, tiles);
+  const report = renderReport(c, output, manifest, gaps, conflicts, handoffsOf(T.db, commissionId), product, sourcesOf(T.db, commissionId));
   const key = `deliverables/${commissionId}/${Date.now().toString(36)}/deliverable.md`;
   await T.blobs.put(key, textToBytes(report));
   T.db.tx((tx) => {
@@ -61,6 +62,36 @@ export async function runAssembleJob(T, { commissionId }) {
   });
 }
 
+const NOT_PRODUCT = /(^|_)(handoff|manifest|notes?|change_?log|log|readme|delivery|credits|kit)(_|\.)/i;
+
+/**
+ * The finished piece to lead the deliverable with: the longest Markdown file from the final
+ * assembly tile (or, without one, from the last tile), unless it's a manifest or a log.
+ */
+export async function finishedDocument(T, tiles) {
+  const last = [...tiles].reverse();
+  const tile = last.find((t) => t.kind === 'INTEGRATION') || last[0];
+  if (!tile) return null;
+  const sub = T.db.get('Submission', tile.acceptedSubmissionId);
+  const files = (await loadFileTexts(T, sub?.files || [], { maxChars: 60000 })).filter((f) => /\.(md|markdown)$/i.test(f.name) && typeof f.text === 'string' && !NOT_PRODUCT.test(f.name));
+  const best = files.sort((a, b) => b.text.length - a.text.length)[0];
+  return best && best.text.trim().length > 200 ? { tileKey: tile.key, name: best.name, text: best.text } : null;
+}
+
+/** Web sources the agents cited or read while researching tiles, numbered once each. */
+export function sourcesOf(db, commissionId) {
+  const out = [];
+  const seen = new Set();
+  for (const t of deliveredTiles(db, commissionId)) {
+    for (const s of t.research?.sources || []) {
+      if (seen.has(s.url) || s.kind === 'searched') continue;
+      seen.add(s.url);
+      out.push({ url: s.url, title: s.title || s.url, tileKey: t.key });
+    }
+  }
+  return out;
+}
+
 /** What a person still has to do after an agent-run job: each tile's real-world step, in plan order. */
 export function handoffsOf(db, commissionId) {
   const out = [];
@@ -72,12 +103,24 @@ export function handoffsOf(db, commissionId) {
   return out;
 }
 
-function renderReport(c, out, manifest, gaps, conflicts, handoffs = []) {
+/**
+ * The deliverable leads with the product: the finished document when there is one, then what
+ * a person still needs to do and what was flagged, the sources, and last, how it was made.
+ */
+function renderReport(c, out, manifest, gaps, conflicts, handoffs = [], product = null, sources = []) {
   const lines = [`# ${out.title}`, '', out.summary, ''];
   if (c.workforce === 'agents') {
-    lines.push('> Done by Tessera’s agent swarm. The agents had no internet access: anything marked (verify) or SAMPLE needs a person to confirm or replace it.', '');
+    lines.push(sources.length
+      ? '> Done by Tessera’s agent swarm. Facts the agents looked up on the web cite their sources below; anything marked (verify) or SAMPLE still needs a person to confirm or replace it.'
+      : '> Done by Tessera’s agent swarm. Anything marked (verify) or SAMPLE needs a person to confirm or replace it.', '');
   }
-  for (const s of out.sections) lines.push(`## ${s.heading}`, '', s.body, '', `*From tile${s.tileKeys.length > 1 ? 's' : ''}: ${s.tileKeys.join(', ')}*`, '');
+  const section = (s) => lines.push(`## ${s.heading}`, '', s.body, '', `*From tile${s.tileKeys.length > 1 ? 's' : ''}: ${s.tileKeys.join(', ')}*`, '');
+  if (product) {
+    // The finished document itself, with its own title line dropped (the deliverable has one).
+    lines.push(product.text.replace(/^\s*#\s[^\n]*\n/, '').trim(), '', `*The finished document: ${product.name}, from ${product.tileKey}.*`, '');
+  } else {
+    for (const s of out.sections) section(s);
+  }
   if (handoffs.length) {
     lines.push('## What a person still needs to do', '');
     for (const h of handoffs) lines.push(`- **${h.title}** (${h.key}): ${h.handoff}`);
@@ -88,6 +131,15 @@ function renderReport(c, out, manifest, gaps, conflicts, handoffs = []) {
     for (const g of gaps) lines.push(`- Gap: ${g}`);
     for (const x of conflicts) lines.push(`- Conflict: ${x}`);
     lines.push('');
+  }
+  if (sources.length) {
+    lines.push('## Sources', '');
+    sources.forEach((s, i) => lines.push(`${i + 1}. [${s.title.replace(/[[\]]/g, '')}](${s.url})`));
+    lines.push('');
+  }
+  if (product) {
+    lines.push('## Appendix: how it was made', '');
+    for (const s of out.sections) lines.push(`### ${s.heading}`, '', s.body, '', `*From tile${s.tileKeys.length > 1 ? 's' : ''}: ${s.tileKeys.join(', ')}*`, '');
   }
   lines.push('## Credits', '', '| Tile | Contributor | Role | Files |', '| --- | --- | --- | --- |');
   for (const m of manifest) lines.push(`| ${m.tileTitle} | ${m.contributorName} | ${m.role} | ${m.files.join(', ') || '—'} |`);
