@@ -205,9 +205,22 @@ export function inferIO(input) {
  * Makes any graph valid and well-formed, and says what it changed.
  * @returns {{ tiles: any[], changes: string[] }}
  */
+/** A title cut to 80 characters at a word boundary. */
+function shortTitle(title) {
+  const t = String(title).trim();
+  if (t.length <= 80) return t;
+  const cut = t.slice(0, 79);
+  const at = Math.max(cut.lastIndexOf(': '), cut.lastIndexOf(' ('), cut.lastIndexOf(', '), cut.lastIndexOf(' '));
+  return `${(at > 40 ? cut.slice(0, at) : cut).replace(/[\s,:;–-]+$/, '')}…`;
+}
+
 export function repairGraph(input, { addIntegration = true } = {}) {
   let tiles = inferIO(input);
   const changes = [];
+  // Titles: at most 80 characters (a model's long title isn't a reason to lose its plan).
+  const long = tiles.filter((t) => String(t.title).length > 80);
+  for (const t of long) t.title = shortTitle(t.title);
+  if (long.length) changes.push(`Shortened ${long.length === 1 ? 'a title' : `${long.length} titles`} to 80 characters.`);
   // Keys: kebab-case and unique.
   const seen = new Set();
   const renamed = new Map();

@@ -29,8 +29,9 @@ function clip(value, max = 24000) {
  *   blocks with `cache: true` or `cache: '1h'`), for calls that share a long prefix with calls after them
  * @param {() => void} [p.onStart] called once the first attempt's prompt has been read (the provider
  *   streams to know), so calls sharing its cached prefix can start and read the cache
+ * @param {(ms: number) => Promise<void>} [p.wait] how a retry waits after a rate limit or overload (tests pass a no-op)
  */
-export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort, cache = false, onStart }) {
+export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort, cache = false, onStart, wait = sleep }) {
   const system = agent.prompt.system;
   // An agent that writes long replies (a whole plan, a whole deliverable) sets its own allowance.
   const outTokens = maxTokens ?? agent.maxTokens;
@@ -102,9 +103,11 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
     if (!error) return { output, model: res.model, provider: route.providerName, sources: res.sources || [], usage: res.usage || null };
     lastError = String(error.message || error);
     if (error instanceof LlmError && !error.retryable) throw new AgentFailure(agent.name, lastError, attempt + 1);
-    // Cut off at max_tokens: thinking took the room the answer needed, so the next try thinks less
-    // instead of repeating a call that would end the same way.
-    if (error instanceof LlmError && error.code === 'max_tokens' && EFFORT_DOWN[level]) level = EFFORT_DOWN[level];
+    // Cut off at max_tokens or the time limit: thinking took the room the answer needed, so the next
+    // try thinks less instead of repeating a call that would end the same way.
+    if (error instanceof LlmError && (error.code === 'max_tokens' || error.code === 'timeout') && EFFORT_DOWN[level]) level = EFFORT_DOWN[level];
+    // Rate limited or overloaded: wait as long as the API asks (at least a few seconds, longer each time).
+    if (error instanceof LlmError && BACK_OFF.has(error.code) && attempt + 1 < attempts) await wait(Math.min(120000, Math.max(error.retryAfterMs || 0, 5000 * 2 ** attempt)));
     if (error instanceof ValidationProblem && res) {
       feedback = error.problems;
       messages = [
@@ -117,6 +120,10 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
   if (bestEffort && lastValid) return { output: lastValid.output, model: lastValid.model, provider: route.providerName, problems: lastValid.problems, usage: null };
   throw new AgentFailure(agent.name, lastError, attempts);
 }
+
+/** Provider errors worth waiting out before the next try. */
+const BACK_OFF = new Set(['rate_limit', 'overloaded', 'api', 'connection']);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** The next lower effort level, for a retry after a reply ran out of room. */
 const EFFORT_DOWN = { max: 'xhigh', xhigh: 'high', high: 'medium', medium: 'low' };

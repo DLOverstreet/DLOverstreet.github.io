@@ -25,6 +25,7 @@ const API = {
   addDraftTile: commissions.addDraftTile,
   deleteDraftTile: commissions.deleteDraftTile,
   redecompose: commissions.redecompose,
+  retryPlanning: commissions.retryPlanning,
   replacePlan: commissions.replacePlan,
   applyPlanFix: commissions.applyPlanFix,
   breakdown: (T, job, opts) => commissions.breakdown(T, job, opts),

@@ -32,20 +32,25 @@ export const scoping = {
   },
 };
 
+/**
+ * What makes a model's plan unusable. Everything repairGraph can fix (keys, dependencies that
+ * point nowhere, loops, sizes, criteria ids, skill tags, long titles) is fixed after, not sent
+ * back: a whole plan takes minutes to write, and asking for it again takes as long.
+ */
+export function planProblems(tiles) {
+  return validateGraph(tiles).filter((i) => i.code === 'no-work').map((i) => i.message);
+}
+
 // A whole plan is a long reply: the Decomposer gets room for its thinking and every tile.
 export const decomposer = {
   name: 'decomposer', prompt: decomposerPrompt, schema: TileGraph, tier: 'heavy', effort: 'high', maxTokens: 64000,
-  validate(out) {
-    return validateGraph(out.tiles).map((i) => i.message);
-  },
+  validate(out) { return planProblems(out.tiles); },
 };
 
 /** Second pass on a plan whose separability report found problems. */
 export const decomposerRefine = {
   name: 'decomposer-refine', prompt: refinePrompt, schema: TileGraph, tier: 'heavy', effort: 'high', maxTokens: 64000,
-  validate(out) {
-    return validateGraph(out.tiles).map((i) => i.message);
-  },
+  validate(out) { return planProblems(out.tiles); },
 };
 
 /** Problems with a plan skeleton: keys unique across streams, dependencies that exist, no loops, one maker per file. */
@@ -80,17 +85,12 @@ export const decomposerStream = {
     const stream = input.outline.streams.find((st) => st.key === input.stream);
     const want = stream.tiles.map((t) => t.key);
     const got = out.tiles.map((t) => t.key);
-    const all = new Set(input.outline.streams.flatMap((st) => st.tiles.map((t) => t.key)));
     const problems = [];
     const missing = want.filter((k) => !got.includes(k));
     const extra = got.filter((k) => !want.includes(k));
     if (missing.length) problems.push(`write every tile of stream "${input.stream}": missing ${missing.join(', ')}`);
     if (extra.length) problems.push(`only the skeleton's tiles for this stream: ${extra.join(', ')} ${extra.length > 1 ? "aren't" : "isn't"} in it`);
-    for (const t of out.tiles) for (const d of t.dependsOn) if (!all.has(d)) problems.push(`"${t.key}" depends on "${d}", which isn't in the plan`);
-    for (const t of out.tiles) {
-      const ids = t.acceptanceCriteria.map((c) => c.id);
-      if (new Set(ids).size !== ids.length) problems.push(`"${t.key}" repeats a criterion id`);
-    }
+    // Dependencies come from the skeleton and criteria are renumbered in repair, so neither is sent back.
     return problems;
   },
 };

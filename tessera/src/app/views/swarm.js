@@ -53,6 +53,7 @@ export function SwarmStateBadge({ c }) {
 export function swarmStage(db, c) {
   if (c.autopilot?.state === 'PAUSED') return 'Paused';
   if (c.status === 'SCOPING') {
+    if (c.planError) return 'Planning stopped';
     if (!c.clarifications.scopedAt) return 'The Scoping agent is reading the job';
     if (!c.clarifications.answeredAt) return 'The autopilot is answering the scoping questions';
     return 'The Decomposer is splitting the job into tiles';
@@ -239,6 +240,10 @@ export function SwarmTab({ c, owner }) {
       </div>
       ${planned.length ? html`<div style=${{ marginTop: '.8rem' }}><${Mosaic} tiles=${tiles} onPick=${(t) => navigate(`#/t/${t.id}`)} /></div>` : ''}
     </div>
+    ${c.status === 'SCOPING' && c.planError ? html`<div class="callout bad">
+      <b>Planning stopped:</b> ${truncate(c.planError, 400)}
+      ${steward ? html`<div class="row" style=${{ marginTop: '.5rem' }}><${AsyncButton} class="primary" onClick=${() => act(() => T.api.retryPlanning(me.id, c.id), 'Planning again. A big job is planned in stages.')}>Plan again<//><span class="small muted">The Agent runs tab shows each call and why it failed.</span></div>` : ''}
+    </div>` : ''}
     ${(c.autopilot?.changes || []).length ? html`<div class="card"><h2>How the plan was adapted for agents</h2><ul class="small" style=${{ marginTop: '.4rem', paddingLeft: '1.1rem' }}>${c.autopilot.changes.map((x) => html`<li>${x}</li>`)}</ul></div>` : ''}
     <div class="split">
       <div class="card">

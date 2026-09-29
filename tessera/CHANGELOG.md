@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-29 (night)
+- **Planning the manuscript revision, take two.** The run showed three more ways planning failed:
+  - A complete 27-tile plan (46,000 tokens, 6.5 minutes, $1.04) was rejected because some tile
+    titles ran past 80 characters. Model plans now use a looser tile schema; long titles are clipped
+    and bad keys, stray dependencies, loops, oversized tiles and criteria ids are fixed by graph
+    repair, as they always could be, instead of sending the whole plan back.
+  - The retry asked the model to write the whole plan again, which ran past the SDK's 10-minute
+    limit twice (18.5 minutes). A failed one-shot plan is no longer retried: planning goes to stages.
+    Long calls get 30 minutes and no silent SDK retries; a timed-out reply retries with less thinking.
+  - The staged calls failed within seconds with no reply (most likely rate limits after that
+    burst). Rate-limit and overload errors now carry the API's retry-after, and runAgent waits it out
+    (at least 5 s, longer each time) before the next try; the error reason shows in the Agent runs list.
+  - A job with long attachments (more than 20,000 characters of text), or an engine plan of more
+    than 12 tiles, is planned in stages from the start: a short skeleton, then the workstreams at once.
+- **Unsticking a job.** A job left running when the page closed or reloaded starts again; Resume
+  replans a job whose planning stopped, and the Swarm tab shows why planning stopped with a
+  Plan again button.
+- Tests: 187 unit and integration tests and 9 end-to-end tests.
+
 ## 2026-09-29 (evening)
 - **The Decomposer no longer stalls on a big job.** In the second real swarm run, every Decomposer
   call spent about 2.5 minutes and was cut off at the 16,000-token reply limit (adaptive thinking at

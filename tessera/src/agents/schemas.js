@@ -36,9 +36,38 @@ export const TileDraft = s.object({
   priority: s.int().min(1).max(3).optional().describe('1 essential, 2 important, 3 nice to have; cut from 3 up when over budget'),
 });
 
+/**
+ * A tile as a model writes it. Looser than TileDraft (which checks what people type): a long
+ * title, a non-kebab key or skill tag, an estimate outside 15–120 minutes or a loop in the plan
+ * are fixed by repairGraph instead of throwing away a plan that took minutes to write.
+ */
+export const PlanTile = s.object({
+  key: s.string().min(1),
+  kind: s.enum(['WORK', 'REVIEW', 'INTEGRATION']),
+  title: s.string().min(3).max(300).describe('Short: at most 80 characters'),
+  spec: s.string().min(20),
+  deliverableFormat: s.string().min(3),
+  acceptanceCriteria: s.array(Criterion).min(1),
+  skillTags: s.array(s.string()).min(1),
+  tier: s.int(),
+  estMinutes: s.int(),
+  dependsOn: s.array(s.string()).describe('keys of upstream tiles'),
+  sensitiveInputs: s.array(s.string()).default([]),
+  languages: s.array(s.string()).default([]),
+  inputs: s.array(s.string()).optional(),
+  outputs: s.array(s.string()).optional(),
+  stream: s.string().optional(),
+  phase: s.enum(['prep', 'conventions', 'work', 'layer', 'check', 'integrate']).optional(),
+  archetype: s.string().optional(),
+  partOf: s.string().optional(),
+  part: s.object({ index: s.int().min(1), of: s.int().min(1), from: s.int(), to: s.int(), label: s.string() }).optional(),
+  covers: s.array(s.string()).optional(),
+  priority: s.int().min(1).max(3).optional(),
+});
+
 export const TileGraph = s.object({
   rationale: s.string().min(10),
-  tiles: s.array(TileDraft).min(1),
+  tiles: s.array(PlanTile).min(1),
 });
 
 /** The first stage of a staged plan: workstreams and the skeleton of their tiles. */
@@ -50,7 +79,7 @@ export const PlanOutline = s.object({
     purpose: s.string().min(10),
     tiles: s.array(s.object({
       key: s.string().regex(kebab, 'must be kebab-case (a-z, 0-9, -)'),
-      title: s.string().min(3).max(80),
+      title: s.string().min(3).max(300).describe('Short: at most 80 characters'),
       outputs: s.array(s.string()).min(1).describe('Exact file names this tile makes; each file has one maker'),
       dependsOn: s.array(s.string()).describe('Keys of the tiles (in any stream) whose files this tile reads'),
       covers: s.array(s.string()).default([]),
@@ -60,7 +89,7 @@ export const PlanOutline = s.object({
 
 /** The second stage: one workstream's tiles in full. */
 export const StreamTiles = s.object({
-  tiles: s.array(TileDraft).min(1),
+  tiles: s.array(PlanTile).min(1),
 });
 
 export const ScopingQuestions = s.object({

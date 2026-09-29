@@ -15,7 +15,7 @@ import { respondToOffer, claimFromBoard, explainFit } from './market.js';
 import { submitWork, submitPeerReview, requesterReview, upstreamFiles } from './work.js';
 import { acceptDelivery } from './delivery.js';
 import { createCompetition, competes } from './competition.js';
-import { answerScoping, fundCommission, replacePlan, draftGraph, postCommission } from './commissions.js';
+import { answerScoping, fundCommission, replacePlan, draftGraph, postCommission, queuePlanning } from './commissions.js';
 import { loadFileTexts, hasText } from './files.js';
 import { config } from '../domain/config.js';
 import { runAutoChecks } from '../domain/autochecks.js';
@@ -899,7 +899,10 @@ export function resumeSwarmJob(T, actorId, commissionId) {
     // Resuming a job the root supervisor held back lets the autopilot sign it off.
     const root = c.autopilot?.rootCheck;
     const rootCheck = root && !root.accept && c.status === 'DELIVERED' ? { ...root, overridden: c.deliveredAt } : root;
-    return tx.update('Commission', commissionId, { autopilot: { ...(c.autopilot || {}), state: 'RUNNING', note: 'Resumed.', notedAt: tx.now(), cleared, ...(rootCheck ? { rootCheck } : {}) } });
+    // Planning that failed or stopped starts again.
+    const replan = c.status === 'SCOPING' && c.planError && !(c.clarifications?.questions?.length && !c.clarifications.answeredAt);
+    if (replan) queuePlanning(tx, c);
+    return tx.update('Commission', commissionId, { autopilot: { ...(c.autopilot || {}), state: 'RUNNING', note: replan ? 'Resumed: planning again.' : 'Resumed.', notedAt: tx.now(), cleared, ...(rootCheck ? { rootCheck } : {}) } });
   }, { actor: actorId });
   T.swarm?.reset();
   return out;
