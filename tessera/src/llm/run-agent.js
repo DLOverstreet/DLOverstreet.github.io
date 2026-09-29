@@ -25,11 +25,15 @@ function clip(value, max = 24000) {
  * @param {boolean} [p.bestEffort] if the last attempt parses but still fails the validator, return it with its problems instead of failing
  * @param {any[]} [p.tools] server tools for the call (web search, web fetch); providers without them ignore them
  * @param {string} [p.effort] overrides the agent's effort level
+ * @param {boolean} [p.cache] keep the prompt-cache breakpoints the prompt marks (render() returning
+ *   blocks with `cache: true`), for calls that share a long prefix with calls right after them
  */
-export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort }) {
+export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort, cache = false }) {
   const system = agent.prompt.system;
   const format = agent.format || 'json';
-  const baseMessages = [...history, { role: 'user', content: agent.prompt.render(input) }];
+  const rendered = agent.prompt.render(input);
+  const content = typeof rendered === 'string' ? rendered : rendered.map((b) => ({ type: 'text', text: b.text, ...(cache && b.cache ? { cache: true } : {}) }));
+  const baseMessages = [...history, { role: 'user', content }];
   let messages = baseMessages;
   let lastError = 'unknown error';
   let feedback = null;
@@ -72,6 +76,8 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       error: error ? String(error.message || error) : null,
       tokensIn: res?.usage?.inputTokens ?? null,
       tokensOut: res?.usage?.outputTokens ?? null,
+      ...(res?.usage?.cacheWriteTokens ? { tokensCacheWrite: res.usage.cacheWriteTokens } : {}),
+      ...(res?.usage?.cacheReadTokens ? { tokensCacheRead: res.usage.cacheReadTokens } : {}),
       webSearches: res?.usage?.webSearches || 0,
       webFetches: res?.usage?.webFetches || 0,
       sources: res?.sources?.length ? res.sources.slice(0, 40).map((x) => ({ url: x.url, title: x.title, kind: x.kind })) : null,
@@ -80,6 +86,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       commissionId: meta.commissionId || null,
       tileId: meta.tileId || null,
       userId: meta.userId || null,
+      ...(meta.part ? { part: meta.part } : {}),
     });
     if (!error) return { output, model: res.model, provider: route.providerName, sources: res.sources || [], usage: res.usage || null };
     lastError = String(error.message || error);
@@ -93,7 +100,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       ];
     }
   }
-  if (bestEffort && lastValid) return { output: lastValid.output, model: lastValid.model, provider: route.providerName, problems: lastValid.problems };
+  if (bestEffort && lastValid) return { output: lastValid.output, model: lastValid.model, provider: route.providerName, problems: lastValid.problems, usage: null };
   throw new AgentFailure(agent.name, lastError, attempts);
 }
 

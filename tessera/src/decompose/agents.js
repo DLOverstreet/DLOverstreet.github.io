@@ -8,6 +8,7 @@
 // funders, public data) get a research step first and cite their sources instead of
 // handing every fact to a person to check.
 import { dropTile } from './ops.js';
+import { agentSeconds, estimateAgentWork, criticalPath, splittable } from './agent-time.js';
 
 const kit = (heads) => heads.map((h) => ({ check: 'AUTO', text: `The kit has a ${h} section`, rule: `has_heading("${h}")` }));
 
@@ -129,15 +130,106 @@ function markSample(t, why) {
   t.agentMode = 'sample-data';
 }
 
+const PROSE_FILE = /\.(md|txt|markdown)$/i;
+const wordRange = (t) => { const m = (t.acceptanceCriteria || []).map((c) => /^\s*word_count\((\d+)\s*,\s*(\d+)\)/.exec(c.rule || '')).find(Boolean); return m ? [Number(m[1]), Number(m[2])] : null; };
+
+/**
+ * Tunes a plan for agents' speed. People are slow at writing, so a plan splits a two-page report
+ * page by page; an agent writes it in under a minute, and one agent keeps it one voice. Agents
+ * are slow only at long output, so a tile expected to run far past the rest is marked as one its
+ * agent may split into parts done at the same time. Every tile gets its expected agent time,
+ * and the plan its expected time along the longest chain.
+ * @param {any[]} tiles
+ * @param {{ sourceRows?: number|null, charsPerRow?: number|null, tps?: number, targetSeconds?: number, maxParts?: number, split?: boolean }} timing
+ * @param {Map<string, string>} renamed files renamed on the way, for the readers
+ */
+function tuneForAgentTime(tiles, timing, renamed) {
+  const changes = [];
+  const target = timing.targetSeconds || 60;
+  const secs = (t) => agentSeconds(t, timing);
+  // Drafts split into pages or parts for people: an agent writes several within the target
+  // time, so consecutive parts fold into one tile each (the whole draft, when it fits).
+  const groups = new Map();
+  for (const t of tiles) if (t.partOf && t.kind === 'WORK' && !stepFor(t) && t.outputs.length && t.outputs.every((f) => PROSE_FILE.test(f))) (groups.get(t.partOf) || groups.set(t.partOf, []).get(t.partOf)).push(t);
+  for (const [, list] of groups) {
+    const deps = (t) => [...t.dependsOn].sort().join(',');
+    if (list.length < 2 || !list.every((t) => deps(t) === deps(list[0]))) continue;
+    const ordered = [...list].sort((a, b) => (a.part?.index || 0) - (b.part?.index || 0));
+    const chunks = [];
+    let cur = [];
+    let sum = 0;
+    for (const t of ordered) {
+      const x = secs(t);
+      if (cur.length && sum + x > target) { chunks.push(cur); cur = []; sum = 0; }
+      cur.push(t);
+      sum += x;
+    }
+    if (cur.length) chunks.push(cur);
+    if (chunks.length === ordered.length) continue;
+    const whole = chunks.length === 1;
+    for (const chunk of chunks) {
+      if (chunk.length < 2) continue;
+      const total = chunk.reduce((n, t) => n + secs(t), 0);
+      const ranges = chunk.map(wordRange);
+      const old = chunk[0].outputs[0];
+      const name = whole ? old.replace(/_0*1(\.[\w.]+)$/, '$1') : old;
+      const extra = chunk.slice(1).flatMap((t) => t.acceptanceCriteria.filter((c) => c.check !== 'AUTO'));
+      const parts = chunk.map((t) => t.title);
+      const from = chunk[0].part?.from;
+      const to = chunk[chunk.length - 1].part?.to;
+      const title0 = chunk[0].title;
+      const res = collapseGroup(tiles, chunk, renamed);
+      tiles = res.tiles;
+      const keep = res.keep;
+      if (name !== old) {
+        for (const [k, v] of renamed) if (v === old) renamed.set(k, name);
+        renamed.set(old, name);
+        keep.outputs = keep.outputs.map((f) => (f === old ? name : f));
+        keep.deliverableFormat = String(keep.deliverableFormat || '').split(old).join(name);
+      }
+      keep.title = (whole
+        ? baseTitle(title0.replace(/\bpages? \d+(?:\s*[–-]\s*\d+)? of (?:the )?/i, 'the ').replace(/\s*[:(]\s*part \d+ of \d+\)?$/i, ''))
+        : title0.replace(/\b(page|row|item|question|post|section|part|word)s?\s+[\d,]+(?:\s*[–-]\s*[\d,]+)?/i, (m, w) => `${w}s ${from}–${to}`)).slice(0, 80);
+      if (ranges.every(Boolean)) {
+        const lo = ranges.reduce((n, r) => n + r[0], 0);
+        const hi = ranges.reduce((n, r) => n + r[1], 0);
+        keep.acceptanceCriteria = keep.acceptanceCriteria.map((c) => (/^\s*word_count\(/.test(c.rule || '') ? { ...c, rule: `word_count(${lo}, ${hi})`, text: `The text is ${lo.toLocaleString('en-US')} to ${hi.toLocaleString('en-US')} words` } : c));
+      }
+      for (const c of extra) if (!keep.acceptanceCriteria.some((x) => x.text === c.text)) keep.acceptanceCriteria.push({ ...c });
+      keep.acceptanceCriteria = keep.acceptanceCriteria.map((c, i) => ({ ...c, id: `c${i + 1}` }));
+      if (whole) keep.part = null;
+      keep.estMinutes = Math.min(120, chunk.reduce((n, t) => n + (t.estMinutes || 30), 0));
+      keep.spec += `\n\nAgent note: the plan split this for people working apart (${parts.join('; ')}). One agent writes ${whole ? 'all of it as one document' : 'these parts together'}, in about ${total} s.`;
+    }
+    const kept = chunks.length;
+    changes.push(whole
+      ? `The ${ordered.length} parts of “${tiles.find((t) => t.key === ordered[0].key).title}” fold into one tile: one agent writes it in about ${chunks[0].reduce((n, t) => n + secs(t), 0)} s, and it reads as one document.`
+      : `${ordered.length} “${baseTitle(ordered[0].title.replace(/\s*\d[\d,]*\s*[–-]\s*\d[\d,]*/, ' ')).replace(/\s+/g, ' ').trim()}” batches fold into ${kept} tiles of up to about ${target} s each for agents.`);
+  }
+  // Tiles expected to run long, whose work divides by rows or sections.
+  let marked = 0;
+  for (const t of tiles) {
+    t.agentEstimate = secs(t);
+    const w = estimateAgentWork(t, timing);
+    if (timing.split && splittable(t) && w.by && t.agentEstimate > target) {
+      t.splitHint = { parts: Math.min(timing.maxParts || 4, Math.max(2, Math.ceil(t.agentEstimate / target))), by: w.by, estSeconds: t.agentEstimate };
+      marked++;
+    }
+  }
+  if (marked) changes.push(`${marked} tile${marked > 1 ? 's' : ''} expected to take one agent more than ${target} s may be split among agents working at the same time, when that pays.`);
+  const path = criticalPath(tiles, (t) => (t.splitHint ? Math.round(t.agentEstimate / t.splitHint.parts) + 15 : t.agentEstimate));
+  return { tiles, changes, estimate: { seconds: path.seconds, keys: path.keys } };
+}
+
 /**
  * Adapts a plan for the agent swarm.
  * @param {any[]} input tiles
- * @param {{ hasSource?: boolean, sourceRows?: number|null, web?: boolean }} [opts] hasSource: the requester attached a
+ * @param {{ hasSource?: boolean, sourceRows?: number|null, web?: boolean, timing?: any }} [opts] hasSource: the requester attached a
  *   file for the tiles that read one; sourceRows: data rows in the attached table, when there is one; web: agents
- *   may search and read the web
- * @returns {{ tiles: any[], changes: string[], handoffs: { key: string, title: string, handoff: string }[] }}
+ *   may search and read the web; timing: tune the plan for agents' speed ({ tps, targetSeconds, maxParts, split, charsPerRow })
+ * @returns {{ tiles: any[], changes: string[], handoffs: { key: string, title: string, handoff: string }[], estimate?: { seconds: number, keys: string[] } }}
  */
-export function adaptForAgents(input, { hasSource = true, sourceRows = null, web = false } = {}) {
+export function adaptForAgents(input, { hasSource = true, sourceRows = null, web = false, timing = null } = {}) {
   let tiles = input.map((t) => ({ ...t, dependsOn: [...(t.dependsOn || [])], inputs: [...(t.inputs || [])], outputs: [...(t.outputs || [])], acceptanceCriteria: (t.acceptanceCriteria || []).map((c) => ({ ...c })) }));
   const changes = [];
   const renamed = new Map();
@@ -290,7 +382,14 @@ export function adaptForAgents(input, { hasSource = true, sourceRows = null, web
     if (CHECKS.test(t.title) || (t.kind === 'REVIEW' && !t.dynamic)) t.independentCheck = true;
     t.acceptanceCriteria = t.acceptanceCriteria.map((c, i) => ({ ...c, id: `c${i + 1}` }));
   }
-  // Readers of a renamed file read the kit instead.
+  let estimate;
+  if (timing) {
+    const tuned = tuneForAgentTime(tiles, { sourceRows, ...timing }, renamed);
+    tiles = tuned.tiles;
+    changes.push(...tuned.changes);
+    estimate = tuned.estimate;
+  }
+  // Readers of a renamed file read the kit (or the folded draft) instead.
   for (const t of tiles) t.inputs = [...new Set(t.inputs.map((f) => renamed.get(f) || f))];
   // Downstream of sample data, row-count checks can't pass and would only loop revisions.
   const sample = new Set(tiles.filter((t) => t.agentMode === 'sample-data').map((t) => t.key));
@@ -310,5 +409,5 @@ export function adaptForAgents(input, { hasSource = true, sourceRows = null, web
   if (researched) changes.push(`${researched} tile${researched > 1 ? 's' : ''} look${researched > 1 ? '' : 's'} up outside facts on the web first and cite${researched > 1 ? '' : 's'} ${researched > 1 ? 'their' : 'its'} sources.`);
   const checks = tiles.filter((t) => t.independentCheck).length;
   if (checks) changes.push(`${checks} check${checks > 1 ? 's' : ''} of other tiles' work run${checks > 1 ? '' : 's'} on a different model from the work ${checks > 1 ? 'they check' : 'it checks'}.`);
-  return { tiles, changes, handoffs };
+  return { tiles, changes, handoffs, ...(estimate ? { estimate } : {}) };
 }

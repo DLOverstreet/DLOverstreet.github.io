@@ -17,6 +17,10 @@ the decisions the blueprint left open. Keep both documents true when you change 
   are contributor users with isAgent. Adapting a plan for agents lives in src/decompose/agents.js.
   Web research uses Anthropic's server tools in a separate text call (researcher agent); never
   combine web tools with a JSON output format.
+- Agent time estimates and split offers live in src/decompose/agent-time.js; split plans are
+  checked and joined in src/agents/split.js. A split's parts must share the lead call's cached
+  prefix byte for byte (same model, effort, system prompt and first message block), so keep the
+  worker prompt's shared block first and deterministic.
 - Every tile or commission status change goes through transitionTile or
   transitionCommission (src/services/core.js).
 - LedgerEntry, ReputationEvent and StatusChange are append-only. The database refuses

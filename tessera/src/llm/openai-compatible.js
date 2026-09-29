@@ -2,6 +2,7 @@
 // (http://localhost:11434/v1), OpenRouter, or a self-hosted gateway. Used for contributors
 // who bring a non-Claude model; it is never used to call Claude.
 import { LlmError } from './errors.js';
+import { contentText } from '../lib/util.js';
 
 export function createOpenAiCompatibleProvider({ baseUrl, apiKey = '', fetchImpl = globalThis.fetch }) {
   const root = String(baseUrl || '').replace(/\/+$/, '');
@@ -10,7 +11,7 @@ export function createOpenAiCompatibleProvider({ baseUrl, apiKey = '', fetchImpl
     async complete(req) {
       const body = {
         model: req.model,
-        messages: [{ role: 'system', content: req.system }, ...req.messages],
+        messages: [{ role: 'system', content: req.system }, ...req.messages.map((m) => ({ role: m.role, content: contentText(m.content) }))],
         stream: false,
       };
       if (req.jsonSchema) body.response_format = { type: 'json_object' };

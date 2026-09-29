@@ -133,3 +133,33 @@ test('old default settings move to the current models, and a model someone picke
   assert.equal(T2.db.meta.settings.swarm.workerModel, 'claude-opus-5');
   assert.equal(T2.db.meta.settings.swarm.workerTier, undefined);
 });
+
+test('a split tile’s shared context carries a prompt-cache breakpoint, and cache writes and reads are logged and priced', async () => {
+  const calls = [];
+  const usage = [{ input_tokens: 400, cache_creation_input_tokens: 6000, cache_read_input_tokens: 0, output_tokens: 300 }, { input_tokens: 450, cache_creation_input_tokens: 0, cache_read_input_tokens: 6000, output_tokens: 2000 }];
+  const fakeFetch = async (url, init) => {
+    calls.push(JSON.parse(init.body));
+    const text = JSON.stringify({ approach: ['Did it.'], files: [{ name: 'out.md', content: '# Out\n\nDone.' }], notes: '', checklist: [], handoff: '' });
+    return new Response(JSON.stringify({ id: `msg_${calls.length}`, type: 'message', role: 'assistant', model: 'claude-sonnet-5-5', stop_reason: 'end_turn', content: [{ type: 'text', text }], usage: usage[calls.length - 1] }), { status: 200, headers: { 'content-type': 'application/json', 'request-id': 'req' } });
+  };
+  const T = await makeTessera({ crowd: false, providerFactory: { anthropic: (o) => createAnthropicProvider({ ...o, baseURL: 'https://api.anthropic.com', fetch: fakeFetch }) } });
+  T.secrets.set('platform.anthropic', 'sk-ant-test-cache');
+  T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, llm: { ...tx.meta.settings.llm, provider: 'anthropic' } } }));
+  const route = T.llm.agent('claude-sonnet-5-5');
+  const input = { job: { title: 'Job' }, tile: { key: 't', title: 'Tile', outputs: ['out.md'], acceptanceCriteria: [] }, inputs: [], attachments: [] };
+  await runAgent({ agent: AGENTS.worker, input: { ...input, delegation: { maxParts: 2, by: 'sections', files: ['out.md'] } }, route, log: T.log, cache: true });
+  await runAgent({ agent: AGENTS.worker, input: { ...input, part: { index: 1, of: 2, brief: 'The first half.', files: ['out.md'] } }, route, log: T.log, cache: true });
+  await runAgent({ agent: AGENTS.worker, input, route, log: T.log });
+  const [lead, part, plain] = calls.map((b) => b.messages[0].content);
+  assert.deepEqual(lead[0].cache_control, { type: 'ephemeral' }, 'the shared context is marked for the cache');
+  assert.equal(lead[1].cache_control, undefined, 'what differs per call comes after the breakpoint');
+  assert.equal(lead[0].text, part[0].text, 'the lead’s and the part’s shared context are byte-identical, so the part reads the cache');
+  assert.notEqual(lead[1].text, part[1].text);
+  assert.ok(plain.every((b) => !b.cache_control), 'a call that shares nothing writes no cache entry');
+  const runs = T.db.filter('AgentRun', (r) => r.agent === 'worker');
+  assert.equal(runs[0].tokensCacheWrite, 6000);
+  assert.equal(runs[1].tokensCacheRead, 6000);
+  const { runCostUsd } = await import('../../src/llm/prices.js');
+  assert.equal(Number(runCostUsd(runs[0]).toFixed(6)), Number(((400 * 2 + 6000 * 2 * 1.25 + 300 * 10) / 1e6).toFixed(6)), 'a cache write costs 1.25 times the input price');
+  assert.equal(Number(runCostUsd(runs[1]).toFixed(6)), Number(((450 * 2 + 6000 * 0.2 + 2000 * 10) / 1e6).toFixed(6)), 'a cache read costs $0.20 per million on Sonnet 5.5');
+});

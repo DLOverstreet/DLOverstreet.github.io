@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-09-29
+- **Long tiles split among agents working at once.** When a tile would take one agent much longer
+  than the rest (60 s by default), its agent is offered a split: it either does the tile or returns
+  a plan (rows of a table, sections of a document), and each part runs as its own worker call at the
+  same time. The offer is made only when the time saved is real and the extra cost stays within an
+  allowance (40% of the tile's model cost by default, within the spend cap). The parts read the
+  tile's shared context from Anthropic's prompt cache, written by the lead's call, at about a tenth
+  of the input price; they're joined by code, checked like one agent's work, and fixed by the lead
+  in one pass if the joined files fail a check. A plan that doesn't hold up, or a part that fails,
+  falls back to one agent doing the whole tile. Revisions, conventions, checks, kits and final
+  assembly never split. Worker prompt `worker.v3`; settings for the target time, the most parts and
+  the extra cost allowed.
+- **Plans tuned to agents' speed.** Every tile gets an expected agent time from what it writes and
+  the model's writing speed (measured from this browser's own runs once there are enough), and a
+  swarm job shows its expected time along the longest chain. Drafts that a plan split page by page
+  for people fold into one tile, or into chunks near the target time (the handbook translation goes
+  from 40 two-page tiles to 20), so they read as one document and cost fewer reviews.
+- **Prompt-cache costs.** Runs log cache writes and reads apart from plain input, and costs price
+  them at 1.25× input and each model's cache-read price.
+- Letter tiles ask for their own share of the letters (two letters in a batch of two, not all ten).
+- Tests: 145 unit and integration tests.
+
 ## 2026-09-28
 - **Long jobs read cleanly.** The engine no longer turns the details of a long sentence into tiles of
   their own ("Code the definition", "Code the response_id", "Prepare the each with a rough cost…"):

@@ -134,3 +134,54 @@ test('costs and recommendations must show where their numbers come from, and che
   const ids = grant.acceptanceCriteria.map((c) => c.id);
   assert.equal(new Set(ids).size, ids.length, 'criterion ids stay unique');
 });
+
+const timing = { tps: 75, targetSeconds: 60, maxParts: 4, split: true, charsPerRow: 120 };
+
+test('tuned for agents’ speed, every corpus plan stays a valid, fully wired graph with an expected time', () => {
+  for (const j of JOBS) {
+    const { tiles, estimate } = adaptForAgents(disaggregate(j).tiles, { hasSource: true, sourceRows: 90, web: true, timing });
+    assert.deepEqual(validateGraph(tiles).filter((i) => i.code !== 'no-work'), [], j.id);
+    for (const t of tiles) assert.ok(TileDraft.safeParse(t).success, `${j.id}: ${t.key} parses`);
+    const made = new Map(tiles.flatMap((t) => t.outputs.map((f) => [f, t.key])));
+    assert.equal(made.size, tiles.flatMap((t) => t.outputs).length, `${j.id}: every file has one maker`);
+    for (const t of tiles) for (const f of t.inputs) assert.ok(/requester|attached/.test(f) || made.has(f), `${j.id}: ${t.key} reads ${f}, which some tile makes`);
+    assert.ok(tiles.every((t) => t.agentEstimate > 0), `${j.id}: every tile has an expected agent time`);
+    assert.ok(estimate.seconds > 0 && estimate.keys.length > 0, j.id);
+  }
+});
+
+test('drafts split page by page for people fold into one tile an agent writes as one document', () => {
+  const { tiles, changes } = adaptForAgents(plan('library'), { hasSource: true, sourceRows: 90, web: true, timing });
+  const report = tiles.filter((t) => /report/i.test(t.title) && t.archetype === 'write' && !t.languages.includes('es'));
+  assert.equal(report.length, 1);
+  assert.equal(report[0].title, 'Write the report');
+  assert.deepEqual(report[0].outputs, ['report_library.md']);
+  assert.ok(report[0].acceptanceCriteria.some((c) => c.rule === 'word_count(540, 1180)'), 'the word range covers both pages');
+  assert.ok(report[0].acceptanceCriteria.some((c) => /main findings/.test(c.text)) && report[0].acceptanceCriteria.some((c) => /differences between branches/.test(c.text)), 'both pages’ contents are still asked for');
+  const spanish = tiles.find((t) => t.languages.includes('es'));
+  assert.deepEqual(spanish.dependsOn.filter((d) => /report/.test(d)), [report[0].key]);
+  assert.ok(spanish.inputs.includes('report_library.md'), 'the summary reads the folded report');
+  assert.ok(changes.some((c) => /2 parts of “Write the report” fold into one tile/.test(c)));
+  // Many small batches fold into chunks near the target, not into one long tile.
+  const hb = adaptForAgents(plan('handbook'), { hasSource: true, web: true, timing });
+  const es = hb.tiles.filter((t) => /^translate-.*-es$/.test(t.key));
+  assert.ok(es.length >= 5 && es.length < 20, `${es.length} Spanish translation tiles`);
+  assert.ok(es.every((t) => t.agentEstimate <= 60));
+  assert.match(es[0].title, /^Translate pages 1–\d+ of the handbook$/);
+  // Without timing, the plan keeps its human-sized split.
+  assert.equal(adaptForAgents(plan('library'), { hasSource: true, sourceRows: 90 }).tiles.filter((t) => /page \d of the report/i.test(t.title)).length, 2);
+});
+
+test('a tile expected to run far longer than the rest is marked as one its agent may split', () => {
+  const tiles = [
+    { key: 'translate-all', kind: 'WORK', title: 'Translate every Spanish comment to English', archetype: 'translate', spec: 'Translate each comment and keep its id.', deliverableFormat: 'comments_en.csv', acceptanceCriteria: [{ id: 'c1', check: 'AUTO', text: 'Columns', rule: 'csv_columns(response_id, text_en)' }], skillTags: ['translation-es'], tier: 2, estMinutes: 60, dependsOn: [], inputs: ['the source file the requester attached'], outputs: ['comments_en.csv'] },
+    { key: 'summary', kind: 'WORK', title: 'Write the summary', archetype: 'write', spec: 'Summarize the comments in a page.', deliverableFormat: 'summary.md', acceptanceCriteria: [{ id: 'c1', check: 'AUTO', text: 'Length', rule: 'word_count(300, 600)' }], skillTags: ['technical-writing'], tier: 2, estMinutes: 45, dependsOn: ['translate-all'], inputs: ['comments_en.csv'], outputs: ['summary.md'] },
+  ];
+  const { tiles: out, changes, estimate } = adaptForAgents(tiles, { hasSource: true, sourceRows: 90, timing: { ...timing, charsPerRow: 150 } });
+  const t = out.find((x) => x.key === 'translate-all');
+  assert.ok(t.splitHint && t.splitHint.by === 'rows' && t.splitHint.parts >= 2);
+  assert.equal(out.find((x) => x.key === 'summary').splitHint, undefined);
+  assert.ok(changes.some((c) => /may be split among agents/.test(c)));
+  assert.deepEqual(estimate.keys, ['translate-all', 'summary']);
+  assert.equal(adaptForAgents(tiles, { hasSource: true, sourceRows: 90, timing: { ...timing, split: false } }).tiles[0].splitHint, undefined, 'not when splitting is off');
+});

@@ -12,6 +12,7 @@ export function fixtureKey(agent, promptVersion, input) {
 /** @param {{ brains?: Record<string, Function>, fixtures?: Record<string, any>, latencyMs?: number }} [opts] */
 export function createMockProvider({ brains = {}, fixtures = {}, latencyMs = 0 } = {}) {
   const queues = new Map();
+  const cached = new Set();
   return {
     name: 'mock',
     fixtures,
@@ -34,8 +35,19 @@ export function createMockProvider({ brains = {}, fixtures = {}, latencyMs = 0 }
         }
       }
       const text = typeof out === 'string' ? out : JSON.stringify(out);
-      const promptText = req.system + req.messages.map((m) => m.content).join('\n');
-      return { text, model: req.model, usage: { inputTokens: estimateTokens(promptText), outputTokens: estimateTokens(text) } };
+      // Blocks marked for the prompt cache are counted as a cache write the first time this mock
+      // sees them and as a read after, as the API would, so the swarm's costs and tests see it.
+      const usage = { inputTokens: estimateTokens(req.system), outputTokens: estimateTokens(text), cacheWriteTokens: 0, cacheReadTokens: 0 };
+      for (const m of req.messages) {
+        if (typeof m.content === 'string') { usage.inputTokens += estimateTokens(m.content); continue; }
+        for (const b of m.content) {
+          const n = estimateTokens(b.text);
+          if (!b.cache) usage.inputTokens += n;
+          else if (cached.has(hashString(b.text))) usage.cacheReadTokens += n;
+          else { cached.add(hashString(b.text)); usage.cacheWriteTokens += n; }
+        }
+      }
+      return { text, model: req.model, usage };
     },
   };
 }

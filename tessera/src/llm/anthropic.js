@@ -20,6 +20,14 @@ function loadSdk() {
 }
 
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
+
+/** Text blocks marked `cache` get a prompt-cache breakpoint (five-minute lifetime); strings pass through. */
+export function apiMessages(messages) {
+  return messages.map((m) => (typeof m.content === 'string' ? m : {
+    role: m.role,
+    content: m.content.map((b) => ({ type: 'text', text: b.text, ...(b.cache ? { cache_control: { type: 'ephemeral' } } : {}) })),
+  }));
+}
 const MAX_CONTINUATIONS = 5;
 
 /** Sources from a response: what the model cited first, then pages it fetched, then search results it saw. */
@@ -105,13 +113,15 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
     name: 'anthropic',
     /**
      * @param {{model: string, system: string, messages: any[], jsonSchema?: object, maxTokens?: number, tools?: any[], effort?: string}} req
+     *   messages: content is a string, or text blocks ({ type: 'text', text, cache? }) where `cache` marks a prompt-cache breakpoint
      */
     async complete(req) {
       const c = await getClient();
       const caps = modelCaps(req.model);
       const tools = req.tools && req.tools.length ? req.tools : null;
       /** @type {any} */
-      const params = { model: req.model, max_tokens: req.maxTokens || 16000, system: req.system, messages: req.messages };
+      const messages = apiMessages(req.messages);
+      const params = { model: req.model, max_tokens: req.maxTokens || 16000, system: req.system, messages };
       const outputConfig = {};
       // Structured output is left off when tools run: web search always cites, and citations
       // can't be combined with a JSON format. Those replies are parsed from the text instead.
@@ -120,13 +130,15 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
       if (Object.keys(outputConfig).length) params.output_config = outputConfig;
       if (tools) params.tools = tools;
 
-      const usage = { inputTokens: 0, outputTokens: 0, webSearches: 0, webFetches: 0 };
+      const usage = { inputTokens: 0, outputTokens: 0, cacheWriteTokens: 0, cacheReadTokens: 0, webSearches: 0, webFetches: 0 };
       let turn = [];
       let res;
       for (let hop = 0; ; hop++) {
-        res = await send(c, turn.length ? { ...params, messages: [...req.messages, { role: 'assistant', content: turn }] } : params);
+        res = await send(c, turn.length ? { ...params, messages: [...messages, { role: 'assistant', content: turn }] } : params);
         usage.inputTokens += res.usage?.input_tokens || 0;
         usage.outputTokens += res.usage?.output_tokens || 0;
+        usage.cacheWriteTokens += res.usage?.cache_creation_input_tokens || 0;
+        usage.cacheReadTokens += res.usage?.cache_read_input_tokens || 0;
         usage.webSearches += res.usage?.server_tool_use?.web_search_requests || 0;
         usage.webFetches += res.usage?.server_tool_use?.web_fetch_requests || 0;
         turn = [...turn, ...res.content];

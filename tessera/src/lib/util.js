@@ -241,3 +241,12 @@ export function extractJson(text) {
   }
   throw new Error('The response did not contain valid JSON.');
 }
+
+/**
+ * A chat message's text. Content is a string, or text blocks ({ type: 'text', text, cache? })
+ * when part of a prompt is marked for the prompt cache.
+ * @param {string|{ text: string }[]} content
+ */
+export function contentText(content) {
+  return typeof content === 'string' ? content : (content || []).map((b) => b.text).join('\n\n');
+}

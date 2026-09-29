@@ -4,10 +4,12 @@
 // other where the plan asks for a person's judgment, and revise failed rounds; the autopilot
 // signs off the delivery. Agents are contributor accounts marked isAgent, so every claim,
 // check, payout and reputation event goes through the same services a person uses.
-import { AGENTS, samplePlaceholder } from '../agents/index.js';
+import { AGENTS, samplePlaceholder, workerFiles } from '../agents/index.js';
+import { joinParts } from '../agents/split.js';
 import { runAgent } from '../llm/run-agent.js';
-import { runCostUsd, modelCaps } from '../llm/prices.js';
+import { runCostUsd, modelCaps, estimateTokens } from '../llm/prices.js';
 import { adaptForAgents } from '../decompose/agents.js';
+import { estimateAgentWork, splitOffer, speedFor, measuredSpeeds, agentSeconds } from '../decompose/agent-time.js';
 import { UserError, must, tilesOf } from './core.js';
 import { respondToOffer, claimFromBoard, explainFit } from './market.js';
 import { submitWork, submitPeerReview, requesterReview, upstreamFiles } from './work.js';
@@ -71,6 +73,17 @@ export function webTools(model, s) {
     { type: 'web_search_20250305', name: 'web_search', max_uses: s.maxSearchesPerTile },
     { type: 'web_fetch_20250910', name: 'web_fetch', max_uses: s.maxFetchesPerTile, max_content_tokens: 20000, citations: { enabled: true } },
   ];
+}
+
+/** The attached table's size, for time estimates: its data rows and the average characters per row. */
+export function sourceShape(c) {
+  const t = (c.files || []).filter((f) => f.summary?.rowCount > 0).sort((a, b) => b.summary.rowCount - a.summary.rowCount)[0];
+  return t ? { sourceRows: t.summary.rowCount, charsPerRow: t.size ? Math.round(t.size / (t.summary.rowCount + 1)) : null } : { sourceRows: null, charsPerRow: null };
+}
+
+/** Writing speed per model, measured from this browser's own worker runs. */
+export function swarmSpeeds(db) {
+  return measuredSpeeds(db.filter('AgentRun', (r) => r.agent === 'worker' && !r.error && r.provider !== 'mock'));
 }
 
 /** Model spend on a commission, in dollars (zero with the mock). */
@@ -393,11 +406,17 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
   function launch(c) {
     const tiles = draftGraph(T.db, c.id).filter((t) => t.status !== 'CANCELLED');
     const hasSource = (c.files || []).some((f) => isTextFile(f.name));
-    const sourceRows = Math.max(0, ...(c.files || []).map((f) => f.summary?.rowCount || 0)) || null;
-    const adapted = adaptForAgents(tiles, { hasSource, sourceRows, web: webReady() });
+    const shape = sourceShape(c);
+    const s = swarmSettings(T.db);
+    const tps = speedFor(s.workerModel, swarmSpeeds(T.db));
+    const adapted = adaptForAgents(tiles, {
+      hasSource, sourceRows: shape.sourceRows, web: webReady(),
+      timing: { ...shape, tps, targetSeconds: s.splitAboveSeconds, maxParts: s.maxParts, split: !!s.split },
+    });
     if (adapted.changes.length || adapted.handoffs.length) replacePlan(T, c.requesterId, c.id, adapted.tiles, 'Adapted the plan for the agent swarm');
     fundCommission(T, c.requesterId, c.id, { acceptOverBudget: true });
-    note(c.id, `The swarm started on ${adapted.tiles.length} tiles.`, { launchedAt: T.clock.now(), changes: adapted.changes, handoffs: adapted.handoffs });
+    const eta = adapted.estimate ? ` Expected time along the longest chain: about ${Math.max(1, Math.round(adapted.estimate.seconds / 60))} min.` : '';
+    note(c.id, `The swarm started on ${adapted.tiles.length} tiles.${eta}`, { launchedAt: T.clock.now(), changes: adapted.changes, handoffs: adapted.handoffs, estimate: adapted.estimate || null });
   }
 
   /** Each tile offered to agents goes to the least busy of them. */
@@ -508,8 +527,26 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     const started = Date.now();
     setActivity(tile.id, { agentId: agent, doing: tile.status === 'REVISION' ? 'revising' : 'working', since: T.clock.now(), model: route.label });
     const input = await workerInput(T, tile);
+    const model = route.shadowModel || route.model;
+    const shape = sourceShape(c);
+    const tps = speedFor(model, swarmSpeeds(T.db));
+    // A long first attempt may be split among several agents when that saves real time for little extra cost.
+    const offer = tile.status === 'REVISION' || tile.revisionCount ? null : offerFor(c, tile, input, { model, tps, shape, s });
+    if (offer) input.delegation = offer.delegation;
     await pace();
-    const res = await runAgent({ agent: AGENTS.worker, input, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 20000, bestEffort: true });
+    const call = (inp, extra = {}) => runAgent({ agent: AGENTS.worker, input: inp, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 20000, bestEffort: true, ...extra });
+    let res = await call(input, { cache: !!offer });
+    let split = null;
+    if (res.output.split) {
+      split = offer && !res.problems?.length ? await runParts(tile, input, res.output, route) : { failed: `the split plan didn't hold up (${(res.problems || ['not offered']).join('; ')})` };
+      if (split.failed) {
+        // The parts couldn't be done or joined: one agent does the whole tile after all.
+        delete input.delegation;
+        res = await call(input, { cache: !!offer });
+      } else {
+        res = { ...res, output: split.output, problems: split.problems };
+      }
+    }
     const cur = T.db.get('Tile', tile.id);
     if (cur.claimedById !== agent || !['CLAIMED', 'REVISION'].includes(cur.status)) return;
     // Placeholder data when the real data was in the inputs is never handed in; the task retries.
@@ -522,10 +559,13 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       ...pre.map((p) => ({ name: p.name, text: p.text })),
     ].slice(0, config.limits.maxFilesPerSubmission);
     if (!files.length) throw new Error('The agent handed in no usable files.');
+    const seconds = Math.round((Date.now() - started) / 1000);
     const notes = [
       res.output.approach.map((a, i) => `${i + 1}. ${a}`).join('\n'),
       res.output.notes,
       input.mergeReport || '',
+      split && !split.failed ? `Split into ${split.parts} parts that ran at the same time (${split.reason}); joined by code: ${split.report.join('; ') || 'one file per part'}.${split.repaired ? ' The joined files failed a check, so the lead agent fixed them.' : ''}` : '',
+      split?.failed ? `Offered a split, but ${split.failed}, so one agent did the whole tile.` : '',
       tile.research && !tile.research.unavailable ? `Web research: ${tile.research.searches || 0} searches, ${tile.research.reads || 0} pages read, ${(tile.research.sources || []).length} sources.` : '',
       res.problems?.length ? `Handed in with known problems after ${config.llm.maxRetries + 1} attempts: ${res.problems.join('; ')}` : '',
     ].filter(Boolean).join('\n\n');
@@ -534,7 +574,88 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       checklist: Object.fromEntries(res.output.checklist.map((x) => [x.criterionId, x.done])),
       modelUsed: `${res.model} (agent)`, handoff: res.output.handoff,
     });
+    const estSeconds = agentSeconds(tile, { ...shape, tps });
+    T.db.tx((tx) => tx.update('Tile', tile.id, { agentTiming: { estSeconds, seconds, parts: split && !split.failed ? split.parts : null, offered: offer ? offer.parts : null, at: T.clock.now() } }));
     setActivity(tile.id, null);
+  }
+
+  /**
+   * Whether this tile may be split, and the offer the lead agent sees: how many parts, how the
+   * work divides, which files the parts share, and the rows they cover.
+   */
+  function offerFor(c, tile, input, { model, tps, shape, s }) {
+    const pre = new Set((input.precomputedFiles || []).map((f) => f.name));
+    const files = (tile.outputs || []).filter((n) => !pre.has(n));
+    if (!files.length) return null;
+    const work = estimateAgentWork(tile, shape);
+    const inputTokens = estimateTokens(AGENTS.worker.prompt.system) + estimateTokens(JSON.stringify(input));
+    const offer = splitOffer({ tile, work, inputTokens, model, tps, settings: s, spentUsd: spentUsd(T.db, c.id) });
+    if (!offer) return null;
+    const rows = tile.part && (tile.part.of > 1 || tile.part.to > tile.part.from) ? { from: tile.part.from, to: tile.part.to } : work.rows ? { from: 1, to: work.rows } : null;
+    return {
+      ...offer,
+      delegation: {
+        maxParts: offer.parts, by: offer.by, files, ...(offer.by === 'rows' && rows ? { rows } : {}),
+        estimate: `About ${offer.estSeconds} s for one agent; about ${offer.splitSeconds} s in ${offer.parts} parts at once.`,
+      },
+    };
+  }
+
+  /**
+   * Does a split tile: every part at once, each by its own worker call that reads the shared
+   * context from the prompt cache the lead agent's call wrote. The parts are joined by code and
+   * checked like one agent's work; if the joined files fail a check, the lead agent fixes them.
+   * @returns {Promise<{ failed?: string, output?: any, parts?: number, reason?: string, report?: string[], repaired?: boolean, problems?: string[] }>}
+   */
+  async function runParts(tile, input, lead, route) {
+    const agent = tile.claimedById;
+    const parts = lead.split.parts;
+    const n = parts.length;
+    const plan = parts.map((p, i) => ({ part: i + 1, brief: p.brief, files: p.files, ...(p.rows ? { rows: p.rows } : {}) }));
+    setActivity(tile.id, { agentId: agent, doing: `working in ${n} parts at once`, parts: n, since: T.clock.now(), model: route.label });
+    const { delegation, ...shared } = input;
+    const settled = await Promise.allSettled(parts.map((p, i) => runAgent({
+      agent: AGENTS.worker, route, log: T.log, maxTokens: 20000, retries: 1, cache: true,
+      input: { ...shared, part: { index: i + 1, of: n, brief: p.brief, files: p.files, ...(p.rows ? { rows: p.rows } : {}), plan } },
+      meta: { commissionId: tile.commissionId, tileId: tile.id, userId: agent, part: `${i + 1}/${n}` },
+    })));
+    const bad = settled.findIndex((r) => r.status === 'rejected' || r.value.problems?.length);
+    if (bad >= 0) {
+      const r = settled[bad];
+      return { failed: `part ${bad + 1} failed (${r.status === 'rejected' ? r.reason?.message || r.reason : r.value.problems.join('; ')})` };
+    }
+    const outs = settled.map((r) => /** @type {any} */ (r).value.output);
+    const idColumn = tile.acceptanceCriteria.map((c) => /^\s*csv_unique\((\w+)\)/.exec(c.rule || '')?.[1]).find(Boolean) || null;
+    const joined = joinParts(outs, { expected: delegation.files, idColumn });
+    if (joined.problems.some((x) => /^no part handed in/.test(x))) return { failed: joined.problems.join('; ') };
+    let output = {
+      approach: [...lead.approach, `Split the tile into ${n} parts that other agents did at the same time: ${plan.map((p) => p.brief).join(' | ')}`],
+      files: joined.files,
+      notes: [lead.notes, ...outs.map((o, i) => `Part ${i + 1}: ${o.notes}`)].filter(Boolean).join('\n\n'),
+      checklist: tile.acceptanceCriteria.map((x) => ({ criterionId: x.id, done: true, note: 'Each part was written against it; the checks ran on the joined files.' })),
+      handoff: [...new Set([lead.handoff, ...outs.map((o) => o.handoff)].filter(Boolean))].join('\n'),
+    };
+    const failing = runAutoChecks(tile.acceptanceCriteria, workerFiles(output, input)).results.filter((r) => !r.pass);
+    const fake = samplePlaceholder(output, input);
+    let repaired = false;
+    let problems = joined.problems;
+    if (failing.length || fake) {
+      // The joined files fail a check: the lead agent fixes them in one pass, as on a revision.
+      setActivity(tile.id, { agentId: agent, doing: 'fixing the joined parts', since: T.clock.now(), model: route.label });
+      const failed = [
+        ...failing.map((r) => ({ criterionId: tile.acceptanceCriteria.find((x) => x.rule === r.rule)?.id || r.rule, criterion: r.rule, reason: r.reason, checkedBy: 'the swarm, on the joined parts' })),
+        ...(fake ? [{ criterionId: 'sample', criterion: 'No placeholder data', reason: fake, checkedBy: 'the swarm, on the joined parts' }] : []),
+      ];
+      const fix = await runAgent({
+        agent: AGENTS.worker, route, log: T.log, maxTokens: 20000, bestEffort: true, cache: true,
+        input: Object.defineProperty({ ...shared, revision: { round: 0, failed, previousFiles: joined.files } }, 'precomputedFiles', { value: input.precomputedFiles || [], enumerable: false }),
+        meta: { commissionId: tile.commissionId, tileId: tile.id, userId: agent },
+      });
+      output = { ...fix.output, approach: [...output.approach, ...fix.output.approach], notes: [output.notes, fix.output.notes].filter(Boolean).join('\n\n') };
+      problems = [...problems, ...(fix.problems || [])];
+      repaired = true;
+    }
+    return { output, parts: n, reason: lead.split.reason, report: joined.report, repaired, problems };
   }
 
   async function reviewInput(target, sub, criteria, c) {

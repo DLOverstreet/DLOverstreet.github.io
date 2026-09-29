@@ -137,8 +137,8 @@ export function SwarmPage() {
     ${jobs.length ? html`<div class="grid-2">${jobs.map((c) => html`<${SwarmJobCard} c=${c} key=${c.id} />`)}</div><${Legend} />` : html`<div class="card"><${Empty} title="No swarm jobs yet">Submit one above, or pick an example to see the whole run.</${Empty}></div>`}
     <div class="grid-3">
       <div class="card"><h3>Every step after yours</h3><p class="small">The autopilot answers the scoping questions from your text and marks what it assumed. Agents take tiles through the same offers, checks, peer reviews and revisions people use, and every call is logged under the job’s Agent runs.</p></div>
-      <div class="card"><h3>Honest about the real world</h3><p class="small">Agents can’t browse, call, record or visit. Tiles that need that become the kit a person needs (scripts, guides, outreach messages), unchecked facts are marked (verify), and missing data is a labeled SAMPLE. The deliverable lists what a person still has to do.</p></div>
-      <div class="card"><h3>Checked, not trusted</h3><p class="small">A worker agent’s files must pass the tile’s automatic checks before it hands them in, then the Reviewer judges the rest. Batch files are merged by code, not by a model, so a 5,000-row merge is exact.</p></div>
+      <div class="card"><h3>Honest about the real world</h3><p class="small">Agents can search and read the web and cite what they found, but can’t call, record or visit. Tiles that need that become the kit a person needs (scripts, guides, outreach messages), unconfirmed facts are marked (verify), and missing data is a labeled SAMPLE. The deliverable lists what a person still has to do.</p></div>
+      <div class="card"><h3>Checked, not trusted</h3><p class="small">A worker agent’s files must pass the tile’s automatic checks before it hands them in, then the Reviewer judges the rest. Batch files are merged by code, not by a model, so a 5,000-row merge is exact. A long tile can be split among agents working at once; the parts are joined by code and checked like one agent’s work.</p></div>
     </div>
   </div>`;
 }
@@ -159,9 +159,15 @@ function activityText(db, t, now) {
   return STATUS_LABEL[t.status] || t.status;
 }
 
+const secsText = (n) => (n < 90 ? `${n} s` : `${Math.round(n / 60)} min`);
+
 /** The one-line note under a tile: what's special about how an agent does it. */
 function tileNote(t) {
   const notes = [];
+  if (t.agentTiming?.parts) notes.push(`Split among ${t.agentTiming.parts} agents working at once`);
+  else if (t.splitHint && t.status !== 'ACCEPTED') notes.push(`May split among up to ${t.splitHint.parts} agents`);
+  if (t.agentTiming?.seconds) notes.push(`Took ${secsText(t.agentTiming.seconds)} (expected ${secsText(t.agentTiming.estSeconds)})`);
+  else if (t.agentEstimate && t.status !== 'ACCEPTED') notes.push(`About ${secsText(t.agentEstimate)} for one agent`);
   const mode = { prepare: 'Prepares a kit for a person', 'sample-data': 'Works on a labeled sample', verify: 'A person confirms the result', researched: 'Facts looked up on the web, with sources' }[t.agentMode];
   if (mode) notes.push(mode);
   if (t.webResearch && !t.agentMode) notes.push('Researches on the web first');
@@ -221,6 +227,7 @@ export function SwarmTab({ c, owner }) {
         <div class="stat"><span class="v">${accepted} / ${planned.length || '—'}</span><span class="l">Tiles accepted</span></div>
         <div class="stat"><span class="v">${agents.size}</span><span class="l">Agents on it</span></div>
         <div class="stat"><span class="v">${runs.length}</span><span class="l">Model calls</span></div>
+        ${c.autopilot?.estimate?.seconds ? html`<div class="stat"><span class="v">~${Math.max(1, Math.round(c.autopilot.estimate.seconds / 60))} min</span><span class="l">Expected agent time, longest chain</span></div>` : ''}
         <div class="stat"><span class="v">${mock ? '$0' : `$${spent.toFixed(2)}`}</span><span class="l">${mock ? html`Model spend (about $${shadow.toFixed(2)} on Claude)` : 'Model spend'}</span></div>
         <div class="stat"><span class="v">${peoplePay ? fmtMoney(peoplePay) : '—'}</span><span class="l">The same tiles paid to people</span></div>
       </div>

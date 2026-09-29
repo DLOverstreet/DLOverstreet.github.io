@@ -711,7 +711,8 @@ function writeContent(p, b, ctx, out, o) {
   if (/show notes|description/.test(ph)) { min = 150 * n; max = 450 * n; skills = ['copywriting']; }
   else if (/email|newsletter/.test(ph)) { min = 120 * n; max = 400 * n; skills = ['copywriting']; }
   else if (/social|post|caption|tweet/.test(ph)) { min = 25 * n; max = 120 * n; skills = ['copywriting']; }
-  else if (/letters? of|support letter/.test(ph)) { min = 180 * (p.qty?.n || 3); max = 450 * (p.qty?.n || 3); skills = ['grant-writing', 'copywriting']; }
+  // A letter each, for this tile's share of the letters (a batch of 2 of the top 10 writes 2).
+  else if (/letters? of|support letter/.test(ph)) { const k = p.qty ? n : 3; min = 180 * k; max = 450 * k; skills = ['grant-writing', 'copywriting']; }
   else if (/summary of each|summaries|one-paragraph/.test(ph)) { min = 60 * n; max = 220 * n; skills = ['technical-writing']; }
   else if (METHODOLOGY.test(ph)) { min = 400; max = 800; heading = 'Sources'; skills = ['technical-writing', 'methodology']; }
   else if (REPORTISH.test(ph)) { min = 500; max = 1400; heading = /recommend|go\/no-go/.test(ph) ? 'Recommendation' : /themes/.test(ph) ? 'Themes' : 'Findings'; }

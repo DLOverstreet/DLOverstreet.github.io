@@ -79,6 +79,12 @@ export const config = Object.freeze({
     web: true,
     maxSearchesPerTile: 5,
     maxFetchesPerTile: 5,
+    /** A tile expected to take one agent longer than splitAboveSeconds may be split into parts done at once. */
+    split: true,
+    splitAboveSeconds: 60,
+    maxParts: 4,
+    /** Most a split may add to the tile's model cost, in percent (the parts reread the cached context and write their own notes). */
+    splitMaxExtraPct: 40,
   }),
 });
 

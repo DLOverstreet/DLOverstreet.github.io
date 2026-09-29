@@ -9,13 +9,14 @@ import * as translatorPrompt from './prompts/translator.v1.js';
 import * as reviewerPrompt from './prompts/reviewer.v1.js';
 import * as assemblerPrompt from './prompts/assembler.v2.js';
 import * as copilotPrompt from './prompts/copilot.v1.js';
-import * as workerPrompt from './prompts/worker.v2.js';
+import * as workerPrompt from './prompts/worker.v3.js';
 import * as researcherPrompt from './prompts/researcher.v1.js';
 import * as autopilotPrompt from './prompts/autopilot.v1.js';
 import { ScopingQuestions, TileGraph, MatcherNotes, Brief, ReviewVerdict, Assembly, WorkResult, ScopingAnswers } from './schemas.js';
 import { runAutoChecks } from '../domain/autochecks.js';
 import { validateGraph } from '../domain/graph.js';
 import { config } from '../domain/config.js';
+import { splitProblems } from './split.js';
 
 export const scoping = {
   name: 'scoping', prompt: scopingPrompt, schema: ScopingQuestions, tier: 'heavy', effort: 'medium',
@@ -107,17 +108,33 @@ export function workerFiles(out, input) {
   return [...made.filter((f) => !pre.some((p) => p.name === f.name)), ...pre.map((p) => ({ name: p.name, size: p.text.length, text: p.text }))];
 }
 
-/** A worker agent does one tile. Its files must pass the tile's AUTO checks before they're handed in. */
+/**
+ * A worker agent does one tile. Its files must pass the tile's AUTO checks before they're handed in.
+ * Offered a split (input.delegation), it may return a split plan instead; doing one part of a split
+ * (input.part), it writes only that part's files, and the checks run later on the joined files.
+ */
 export const worker = {
   name: 'worker', prompt: workerPrompt, schema: WorkResult, tier: 'heavy', effort: 'medium',
   validate(out, input) {
+    if (out.split && !input.part) return splitProblems(out.split, input);
     const problems = [];
+    if (out.split) problems.push('you are doing one part of a split tile: hand in your files and leave split out');
+    if (!out.files.length) problems.push('hand in at least one file');
     const names = new Set();
     for (const f of out.files) {
       if (!TEXT_FILE.test(f.name)) problems.push(`${f.name}: hand in text formats only (csv, md, json, svg, html, js, py and so on)`);
       if (!f.content.trim()) problems.push(`${f.name} is empty`);
       if (names.has(f.name)) problems.push(`${f.name} appears twice`);
       names.add(f.name);
+    }
+    if (input.part) {
+      const extra = out.files.map((f) => f.name).filter((n) => !input.part.files.includes(n));
+      if (extra.length) problems.push(`your part writes only ${input.part.files.join(', ')}, not ${extra.join(', ')}`);
+      const missing = input.part.files.filter((n) => !names.has(n));
+      if (missing.length) problems.push(`your part must hand in ${missing.join(', ')}`);
+      const sample = samplePlaceholder(out, input);
+      if (sample) problems.push(sample);
+      return problems;
     }
     const ids = (input.tile?.acceptanceCriteria || []).map((c) => c.id);
     const got = out.checklist.map((c) => c.criterionId);
@@ -174,7 +191,7 @@ export const AGENT_TABLE = [
   { name: 'Translator', runsIn: 'Contributor’s browser', model: 'Contributor’s own model, shared model as fallback', job: 'Writes the personal brief and powers the tile copilot', version: translatorPrompt.version },
   { name: 'Reviewer', runsIn: 'Worker', model: `Light, escalating to heavy under ${config.reviewConfidenceFloor} confidence`, job: 'Pass or fail per criterion, with a reason', version: reviewerPrompt.version },
   { name: 'Assembler', runsIn: 'Worker', model: 'Heavy', job: 'Merges accepted outputs and writes the credits manifest', version: assemblerPrompt.version },
-  { name: 'Worker agents', runsIn: 'Agent swarm', model: `Set in Settings (default ${config.swarm.workerModel}); checks on ${config.swarm.checkModel}`, job: 'Do tiles, peer-review each other and revise, on jobs you hand to the swarm', version: workerPrompt.version },
+  { name: 'Worker agents', runsIn: 'Agent swarm', model: `Set in Settings (default ${config.swarm.workerModel}); checks on ${config.swarm.checkModel}`, job: 'Do tiles, split long ones among agents working at once, peer-review each other and revise, on jobs you hand to the swarm', version: workerPrompt.version },
   { name: 'Researcher', runsIn: 'Agent swarm', model: 'The worker model, with Anthropic web search and web fetch', job: 'Looks up the outside facts a tile needs (prices, sources, rules, data) and hands the worker notes with URLs', version: researcherPrompt.version },
   { name: 'Autopilot', runsIn: 'Agent swarm', model: 'Light', job: 'Stands in for you on a swarm job: answers the scoping questions, marking assumptions', version: autopilotPrompt.version },
 ];

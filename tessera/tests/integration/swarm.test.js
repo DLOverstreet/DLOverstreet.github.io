@@ -160,3 +160,57 @@ test('when web search is off for the key, research stops after one try and agent
   assert.ok(runs.filter((r) => r.tileId === check.id).every((r) => r.model === 'claude-opus-5-5'), 'the agreement check ran on the check model');
   assert.ok(runs.filter((r) => r.tileId !== check.id).every((r) => r.model === 'claude-sonnet-5-5'), 'the work ran on the worker model');
 });
+
+/** The tenant survey with 120 attached responses: its de-identification step is one long pass over every row. */
+async function surveyWithFile(T) {
+  const rows = ['response_id,response'];
+  for (let i = 1; i <= 120; i++) rows.push(`r${String(i).padStart(3, '0')},The landlord ignored repairs for unit ${i} and the heat was out for weeks at a time this winter`);
+  const r = disaggregate({ ...job('survey'), privacy: 'RESTRICTED' });
+  const plan = { tiles: r.tiles, rationale: r.rationale, source: 'breakdown', pricing: priceGraph(r.tiles) };
+  const c = await T.api.runWithAgents('usr_marisol', { ...job('survey'), privacy: 'RESTRICTED', plan, files: [{ name: 'responses.csv', text: rows.join('\n') }] });
+  await T.swarm.settle();
+  const tile = T.db.find('Tile', (t) => t.commissionId === c.id && t.key === 'deidentify');
+  return { c: T.db.get('Commission', c.id), tile, runs: T.db.filter('AgentRun', (x) => x.tileId === tile.id && x.agent === 'worker'), sub: T.db.get('Submission', tile.acceptedSubmissionId) };
+}
+
+test('a long tile is split among agents working at once, reading the shared context from the prompt cache, and joined by code', async () => {
+  const T = await makeTessera({ crowd: false });
+  const { c, tile, runs, sub } = await surveyWithFile(T);
+  assert.equal(c.status, 'ACCEPTED');
+  assert.ok(tile.splitHint, 'the plan marked the long tile');
+  assert.equal(tile.agentTiming.parts, 2);
+  const lead = runs.find((x) => !x.part);
+  const parts = runs.filter((x) => x.part);
+  assert.deepEqual(parts.map((x) => x.part).sort(), ['1/2', '2/2']);
+  assert.ok(lead.tokensCacheWrite > 0, 'the lead agent’s call wrote the shared context to the cache');
+  assert.ok(parts.every((x) => x.tokensCacheRead === lead.tokensCacheWrite), 'each part read it back instead of paying for it again');
+  assert.match(sub.notes, /Split into 2 parts that ran at the same time/);
+  assert.match(sub.notes, /redacted_responses\.csv: 120 rows from 2 parts/);
+  const file = sub.files.find((f) => f.name === 'redacted_responses.csv');
+  const text = new TextDecoder().decode(await T.blobs.get(file.key));
+  assert.equal(text.trim().split('\n').length, 121);
+  assert.ok(c.autopilot.estimate.seconds > 0, 'the launch note carries the expected time');
+});
+
+test('with splitting off, one agent does every tile', async () => {
+  const T = await makeTessera({ crowd: false });
+  setSwarm(T, { split: false });
+  const { c, tile, runs } = await surveyWithFile(T);
+  assert.equal(c.status, 'ACCEPTED');
+  assert.equal(runs.length, 1);
+  assert.equal(tile.agentTiming.parts, null);
+  assert.equal(tile.splitHint, undefined);
+});
+
+test('a split plan that doesn’t hold up falls back to one agent doing the whole tile', async () => {
+  const T = await makeTessera({ crowd: false });
+  setSwarm(T, { concurrency: 1 });
+  const bad = { approach: ['Split three ways.'], files: [], notes: '', checklist: [], handoff: '', split: { reason: 'Three even parts of the table.', parts: [1, 2, 3].map((i) => ({ brief: `Rows for part ${i} of three.`, files: ['redacted_responses.csv'] })) } };
+  T.mock.queue('worker', [bad, bad, bad]);
+  const { c, tile, runs, sub } = await surveyWithFile(T);
+  assert.equal(c.status, 'ACCEPTED');
+  assert.equal(tile.agentTiming.parts, null);
+  assert.equal(tile.agentTiming.offered, 2);
+  assert.equal(runs.filter((x) => x.part).length, 0);
+  assert.match(sub.notes, /Offered a split, but the split plan didn't hold up \(split into 2 parts, not 3;[^)]*\), so one agent did the whole tile/);
+});

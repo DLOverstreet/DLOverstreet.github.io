@@ -86,15 +86,26 @@ export const ScopingAnswers = s.object({
   })),
 });
 
+/** A lead agent's plan to split a long tile into parts other agents do at the same time. */
+export const SplitPlan = s.object({
+  reason: s.string().min(10).describe('Why the parts are independent and how they divide the work'),
+  parts: s.array(s.object({
+    brief: s.string().min(10).describe('What this part does, clear enough for another agent working alone'),
+    files: s.array(s.string()).min(1).describe('The tile output files this part writes its share of'),
+    rows: s.object({ from: s.int().min(1), to: s.int().min(1) }).optional().describe('For a split by rows: this part’s rows of the table, 1-based and inclusive'),
+  })).min(2).max(8),
+});
+
 export const WorkResult = s.object({
   approach: s.array(s.string().min(3)).min(1).max(10).describe('The steps you took, in order: your own brief'),
   files: s.array(s.object({
     name: s.string().min(3).max(120).describe('Exact file name with extension, e.g. coded_02.csv'),
     content: s.string().describe('The full file content as text'),
-  })).min(1).max(10),
+  })).max(10).describe('The files you hand in; empty only when you return a split plan'),
   notes: s.string().describe('For the reviewer: choices you made, anything uncertain, and any limits of the work'),
   checklist: s.array(s.object({ criterionId: s.string(), done: s.boolean(), note: s.string() })),
   handoff: s.string().default('').describe('What a person must still do in the real world, or an empty string'),
+  split: SplitPlan.optional().describe('Only when input.delegation offers it: split the tile into parts instead of handing in files'),
 });
 
 export const MatcherNotes = s.object({
