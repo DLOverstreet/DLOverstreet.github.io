@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-09-29 (night)
+- Word copies no longer print `****` in empty table header cells.
 - **Planning the manuscript revision, take two.** The run showed three more ways planning failed:
   - A complete 27-tile plan (46,000 tokens, 6.5 minutes, $1.04) was rejected because some tile
     titles ran past 80 characters. Model plans now use a looser tile schema; long titles are clipped
