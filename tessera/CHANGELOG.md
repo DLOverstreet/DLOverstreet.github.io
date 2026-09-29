@@ -1,5 +1,40 @@
 # Changelog
 
+## 2026-09-29 (evening)
+- **The Decomposer no longer stalls on a big job.** In the second real swarm run, every Decomposer
+  call spent about 2.5 minutes and was cut off at the 16,000-token reply limit (adaptive thinking at
+  high effort plus a whole plan in JSON), and each retry repeated the same call. Now:
+  - The Decomposer and its refine pass get 64,000 tokens, the Assembler 32,000; requests allowed
+    more than 16,000 tokens stream (as Anthropic recommends), so no HTTP timeout cuts them off.
+  - A reply cut off at max_tokens retries at the next lower effort instead of repeating itself, and
+    the tokens it spent are logged and priced (those runs showed $0.00 before).
+  - **Staged planning.** When one reply can't hold the plan (after one retry), or the engine's plan
+    has more than 20 tiles, the Decomposer plans in stages: a skeleton of workstreams, tile keys,
+    files and dependencies first (`decomposer-outline.v1`), then every workstream's tiles in full,
+    four at a time, reading the shared job and skeleton from the prompt cache
+    (`decomposer-stream.v1`). The skeleton's wiring holds the streams together.
+  - If staged planning fails too, the engine's own plan is used with a note, so the swarm carries on.
+- **Word, Excel and PDF attachments are read.** The Scoping agent, the Decomposer and the agents
+  used to get "binary file, not shown" for .docx, .xlsx and .pdf files. Their text is now read in
+  the browser with no library: Word documents with headings, lists, tables, footnotes, comments
+  and tracked changes (marked `{+inserted+}` and `[-deleted-]`); every Excel sheet as CSV; PDF text
+  in reading order, with fonts' character maps and real word gaps. The text is stored beside each
+  upload, summarized (headings, sheets, pages, tracked changes, comments), redacted on restricted
+  jobs, and given to the Scoping agent and the Decomposer (the opening of each document) and to the
+  agents in full. File previews show it. Agents now read up to 60,000 characters a file and 150,000
+  in all, so a whole manuscript fits.
+- **Revise-and-respond jobs are planned as revisions.** A manuscript (or paper, chapter, proposal,
+  report) revised in answer to reviewers, with a response letter, was read sentence by sentence
+  ("You can learn from those edits" became an analysis tile, "keep the numbers" a data-cleaning
+  one). The engine now plans it as a revision: triage every reviewer and editor comment into one
+  matrix and a style sheet, revise the manuscript's sections at the same time (from the attached
+  manuscript's own headings), answer every comment point by point, check the whole against the
+  reviews, and assemble. "Keep the numbers" and "in my voice" become criteria on every section.
+- **Word copies in the download.** The deliverable and the final assembly's documents come as .docx
+  too, written with no library; `{+inserted+}` and `[-deleted-]` marks become real tracked changes.
+  A requested tracked-changes version is made with Word's Compare, as the handoff says.
+- Tests: 182 unit and integration tests and 9 end-to-end tests; the revision job joins the corpus.
+
 ## 2026-09-29 (later)
 - **Competing workers and supervisors on swarm jobs**, from the swarm blueprint. Each tile becomes a
   task with a spec written before any work (hard checks, a weighted rubric, a threshold). Three

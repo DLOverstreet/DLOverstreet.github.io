@@ -32,6 +32,8 @@ export function apiMessages(messages) {
   }));
 }
 const MAX_CONTINUATIONS = 5;
+/** Requests allowed more output than this stream, so a long reply never runs into an HTTP timeout. */
+const STREAM_ABOVE_TOKENS = 16000;
 
 /** Sources from a response: what the model cited first, then pages it fetched, then search results it saw. */
 export function sourcesOf(content) {
@@ -90,19 +92,24 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
   }
 
   /**
-   * One request, falling back to a plainer one if the API rejects an optional feature. With
-   * `onStart`, the request streams and onStart fires on its first event: the prompt is read and
-   * any cache entry it writes can be read by requests sent from then on.
+   * One request, falling back to a plainer one if the API rejects an optional feature. A request
+   * with a large output allowance streams (and waits for the final message), so a long reply
+   * isn't cut by an HTTP timeout. With `onStart`, the request streams and onStart fires on its
+   * first event: the prompt is read and any cache entry it writes can be read by requests sent
+   * from then on.
    */
   async function send(c, params, onStart = null) {
     const caps = modelCaps(params.model);
     const withFallback = caps.fallbacks && !fallbacksOff;
+    const streamIt = !!onStart || params.max_tokens > STREAM_ABOVE_TOKENS;
     const call = (p, fb) => {
       const body = fb ? { ...p, betas: [FALLBACK_BETA], fallbacks: 'default' } : p;
-      if (!onStart) return fb ? c.beta.messages.create(body) : c.messages.create(body);
+      if (!streamIt) return fb ? c.beta.messages.create(body) : c.messages.create(body);
       const stream = fb ? c.beta.messages.stream(body) : c.messages.stream(body);
-      let started = false;
-      stream.on('streamEvent', () => { if (!started) { started = true; onStart(); } });
+      if (onStart) {
+        let started = false;
+        stream.on('streamEvent', () => { if (!started) { started = true; onStart(); } });
+      }
       return stream.finalMessage();
     };
     try {
@@ -160,11 +167,13 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
         // A long server-tool turn pauses; sending it back unchanged resumes it.
         if (res.stop_reason !== 'pause_turn' || hop >= MAX_CONTINUATIONS) break;
       }
+      // A reply that can't be used still cost its tokens: they travel with the error to the log.
+      const spent = { usage, model: res.model || req.model };
       if (res.stop_reason === 'refusal') {
-        throw new LlmError(`The model declined this request${res.stop_details?.category ? ` (${res.stop_details.category})` : ''}.`, { retryable: false, code: 'refusal' });
+        throw new LlmError(`The model declined this request${res.stop_details?.category ? ` (${res.stop_details.category})` : ''}.`, { retryable: false, code: 'refusal', ...spent });
       }
-      if (res.stop_reason === 'max_tokens') throw new LlmError('The response hit max_tokens before finishing.', { retryable: true, code: 'max_tokens' });
-      if (res.stop_reason === 'pause_turn') throw new LlmError('The web research turn kept pausing and was stopped.', { retryable: true, code: 'pause_turn' });
+      if (res.stop_reason === 'max_tokens') throw new LlmError(`The response hit max_tokens (${params.max_tokens}) before finishing.`, { retryable: true, code: 'max_tokens', ...spent });
+      if (res.stop_reason === 'pause_turn') throw new LlmError('The web research turn kept pausing and was stopped.', { retryable: true, code: 'pause_turn', ...spent });
       const text = turn.filter((b) => b.type === 'text').map((b) => b.text).join('');
       return { text, model: res.model || req.model, usage, sources: tools ? sourcesOf(turn) : [] };
     },

@@ -121,7 +121,7 @@ export function SwarmPage() {
         <//>
         <div class="inline-fields">
           <${Field} label="Short title (optional)" id="sw-title"><input id="sw-title" type="text" maxlength="120" value=${form.title} onInput=${(e) => setForm({ ...form, title: e.target.value })} placeholder="STEM grant proposal" /><//>
-          <${Field} label="Files the agents work from (optional)" id="sw-files" hint="Text, CSV, Markdown or JSON. Batch tiles get only their rows."><input id="sw-files" type="file" multiple onChange=${onFiles} /><//>
+          <${Field} label="Files the agents work from (optional)" id="sw-files" hint="Word, Excel, PDF, text, CSV, Markdown or JSON: the agents read the text in each (tracked changes and comments included). Batch tiles get only their rows."><input id="sw-files" type="file" multiple onChange=${onFiles} /><//>
         </div>
         ${files.length ? html`<ul class="filelist">${files.map((f, i) => html`<li><span class="name">${f.name}</span><span class="muted small">${fmtBytes(f.bytes.length)}</span><button type="button" class="btn small ghost" aria-label=${`Remove ${f.name}`} onClick=${() => setFiles(files.filter((_, j) => j !== i))}>Remove</button></li>`)}</ul>` : ''}
         <label class="choice"><input type="checkbox" checked=${form.sensitive} onChange=${(e) => setForm({ ...form, sensitive: e.target.checked })} /> <span>The material includes personal or confidential information (it’s redacted before any agent sees it)</span></label>

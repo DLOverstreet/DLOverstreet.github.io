@@ -41,6 +41,28 @@ export const TileGraph = s.object({
   tiles: s.array(TileDraft).min(1),
 });
 
+/** The first stage of a staged plan: workstreams and the skeleton of their tiles. */
+export const PlanOutline = s.object({
+  rationale: s.string().min(10),
+  streams: s.array(s.object({
+    key: s.string().regex(kebab, 'must be kebab-case (a-z, 0-9, -)'),
+    name: s.string().min(2).max(60),
+    purpose: s.string().min(10),
+    tiles: s.array(s.object({
+      key: s.string().regex(kebab, 'must be kebab-case (a-z, 0-9, -)'),
+      title: s.string().min(3).max(80),
+      outputs: s.array(s.string()).min(1).describe('Exact file names this tile makes; each file has one maker'),
+      dependsOn: s.array(s.string()).describe('Keys of the tiles (in any stream) whose files this tile reads'),
+      covers: s.array(s.string()).default([]),
+    })).min(1).max(40),
+  })).min(1).max(20),
+});
+
+/** The second stage: one workstream's tiles in full. */
+export const StreamTiles = s.object({
+  tiles: s.array(TileDraft).min(1),
+});
+
 export const ScopingQuestions = s.object({
   questions: s.array(s.object({
     id: s.string().min(1),

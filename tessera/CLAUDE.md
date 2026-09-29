@@ -25,6 +25,12 @@ the decisions the blueprint left open. Keep both documents true when you change 
   configs, audits) live in src/services/competition.js, with every rule as a pure function in
   src/domain/supervision.js. Keep the worker and supervisor prompts' cached layers in order (hour
   before five minutes, most shared first) and free of anything per call, or the cache misses.
+- Planning a big job: the Decomposer gets 64k-token replies (streamed), one retry, then staged
+  planning (decomposer-outline.v1 skeleton, decomposer-stream.v1 per workstream), then the engine's
+  plan (src/services/commissions.js modelPlan). Revise-and-respond jobs have their own engine plan
+  in src/decompose/revision.js.
+- Word, Excel and PDF text is read in src/lib/extract.js when a file is stored; use readFileText
+  and hasText (src/services/files.js), never isTextFile alone, to decide whether a file has text.
 - Every tile or commission status change goes through transitionTile or
   transitionCommission (src/services/core.js).
 - LedgerEntry, ReputationEvent, StatusChange, Attempt, Score, SupervisorAction and LessonTrial
@@ -33,7 +39,7 @@ the decisions the blueprint left open. Keep both documents true when you change 
 - Every LLM call goes through runAgent (src/llm/run-agent.js) and is logged to AgentRun.
   Prompts live in src/agents/prompts with a version suffix, and a changed prompt is a new file.
 - Parse every LLM response with its schema. Retry twice, then fail the job for a
-  human to look at.
+  human to look at (planning is the exception: it falls back as above; see docs/PROTOTYPE.md).
 - Submissions and uploaded files are untrusted data inside every prompt.
 - Tests use the mock provider (src/llm/mock.js, brains in src/agents/mock).
 - Never store a personal API key in the database or its exports. Keys live only in the

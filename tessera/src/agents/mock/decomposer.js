@@ -28,3 +28,25 @@ export function mockRefine(input) {
   }
   return { rationale: done.length ? `Repaired: ${[...new Set(done)].join(', ')}.` : 'Checked the plan; nothing a machine can fix safely.', tiles };
 }
+
+/** Mock staged planning, first stage: the engine's plan grouped by stream, as a skeleton. */
+export function mockDecomposeOutline(input) {
+  const { rationale, tiles } = mockDecompose(input);
+  const streams = new Map();
+  for (const t of tiles) {
+    const name = t.stream || 'Work';
+    if (!streams.has(name)) streams.set(name, { key: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'work', name, purpose: `The ${name.toLowerCase()} tiles of the plan.`, tiles: [] });
+    streams.get(name).tiles.push({ key: t.key, title: t.title, outputs: t.outputs?.length ? t.outputs : [`${t.key}.md`], dependsOn: t.dependsOn || [], covers: t.covers || [] });
+  }
+  // Stream keys stay unique even when two names slug the same.
+  const seen = new Map();
+  for (const st of streams.values()) { const n = (seen.get(st.key) || 0) + 1; seen.set(st.key, n); if (n > 1) st.key = `${st.key}-${n}`; }
+  return { rationale, streams: [...streams.values()] };
+}
+
+/** Mock staged planning, second stage: the engine's tiles for one stream. */
+export function mockDecomposeStream(input) {
+  const stream = input.outline.streams.find((st) => st.key === input.stream);
+  const keys = new Set(stream.tiles.map((t) => t.key));
+  return { tiles: mockDecompose(input).tiles.filter((t) => keys.has(t.key)) };
+}

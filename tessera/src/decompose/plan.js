@@ -2,6 +2,7 @@
 // a workable size and to budget, explain the split, and grade how separable it is.
 import { analyzeJob } from './analyze.js';
 import { buildTiles } from './builder.js';
+import { isRevisionJob, revisionTiles } from './revision.js';
 import { FRAME_LABELS } from './pieces.js';
 import { assessQuality } from './quality.js';
 import { dropTile, splitTile, mergeTiles, addEdge, repairGraph, integrationTile, OpError } from './ops.js';
@@ -24,7 +25,9 @@ export function groupTitle(title) {
  */
 export function disaggregate(job, { maxTotalCents = null, rush = false, maxTiles = MAX_TILES } = {}) {
   const analysis = analyzeJob(job);
-  const built = buildTiles(analysis);
+  // A revision in answer to reviews has a plan of its own; everything else is read piece by piece.
+  const revision = isRevisionJob(job) ? revisionTiles(analysis, job) : null;
+  const built = revision ? { tiles: revision.tiles, pieces: [] } : buildTiles(analysis);
   let tiles = built.tiles;
   const deferred = [];
   const cuts = [];
@@ -35,7 +38,7 @@ export function disaggregate(job, { maxTotalCents = null, rush = false, maxTiles
   consolidate(deferred);
   tiles = alignPhase(tiles, deferred);
   const quality = assessQuality(tiles, analysis);
-  const rationale = explain(analysis, tiles, built.pieces, deferred, cuts, quality);
+  const rationale = revision ? `${revision.rationale} ${sizeLine(tiles, quality)}` : explain(analysis, tiles, built.pieces, deferred, cuts, quality);
   return { analysis, tiles, rationale, deferred, cuts, quality, pricing: priceGraph(tiles, { rush }) };
 }
 
@@ -141,6 +144,12 @@ function fitBudget(tiles, max, rush, deferred, cuts) {
 
 const hours = (m) => (m < 90 ? `${Math.round(m)} minutes` : `${(m / 60).toFixed(m < 600 ? 1 : 0)} hours`);
 
+/** How big the plan is and how much of it runs at once. */
+function sizeLine(tiles, quality) {
+  const m = quality.metrics;
+  return `${tiles.length} tiles, ${hours(m.totalMinutes)} of work; if everyone starts as soon as their inputs exist, the longest chain is ${hours(m.spanMinutes)} and up to ${m.width} ${m.width === 1 ? 'person works' : 'people work'} at once.`;
+}
+
 function explain(a, tiles, pieces, deferred, cuts, quality) {
   const parts = [];
   const named = a.components.filter((c) => c.role !== 'conventions');
@@ -158,8 +167,7 @@ function explain(a, tiles, pieces, deferred, cuts, quality) {
   const layers = tiles.filter((t) => t.phase === 'layer' || t.phase === 'check');
   if (layers.length) parts.push(`Checks and layers: ${[...new Set(layers.map((t) => t.title.replace(/:.*$/, '')))].slice(0, 4).join('; ')}.`);
   if (tiles.some((t) => t.kind === 'INTEGRATION')) parts.push('One person assembles the finished pieces at the end.');
-  const m = quality.metrics;
-  parts.push(`${tiles.length} tiles, ${hours(m.totalMinutes)} of work; if everyone starts as soon as their inputs exist, the longest chain is ${hours(m.spanMinutes)} and up to ${m.width} ${m.width === 1 ? 'person works' : 'people work'} at once.`);
+  parts.push(sizeLine(tiles, quality));
   if (deferred.length) {
     const d = deferred[0];
     const same = deferred.every((x) => x.from === d.from && x.to === d.to);

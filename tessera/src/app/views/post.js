@@ -90,7 +90,7 @@ export function PostCommission({ example }) {
           </div>
         </div>
         <div class="card">
-          <${Field} label="Source files (optional)" id="c-files" hint="CSV, text, Markdown or JSON are summarized for the agents (redacted if restricted). Up to 5 MB each."><input id="c-files" type="file" multiple onChange=${onFiles} /><//>
+          <${Field} label="Source files (optional)" id="c-files" hint="Word, Excel, PDF, CSV, text, Markdown or JSON: their text is read and summarized for the agents (redacted if restricted). Up to 5 MB each."><input id="c-files" type="file" multiple onChange=${onFiles} /><//>
           ${files.length ? html`<ul class="filelist">${files.map((f, i) => html`<li><span class="name">${f.name}</span><span class="muted small">${fmtBytes(f.bytes.length)}</span><button type="button" class="btn small ghost" aria-label=${`Remove ${f.name}`} onClick=${() => setFiles(files.filter((_, j) => j !== i))}>Remove</button></li>`)}</ul>` : ''}
         </div>
         <${AsyncButton} class="primary" type="button" onClick=${submit}>Post commission<//>

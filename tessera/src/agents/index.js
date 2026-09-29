@@ -4,6 +4,8 @@
 import * as scopingPrompt from './prompts/scoping.v1.js';
 import * as decomposerPrompt from './prompts/decomposer.v2.js';
 import * as refinePrompt from './prompts/decomposer-refine.v1.js';
+import * as outlinePrompt from './prompts/decomposer-outline.v1.js';
+import * as streamPrompt from './prompts/decomposer-stream.v1.js';
 import * as matcherPrompt from './prompts/matcher-note.v1.js';
 import * as translatorPrompt from './prompts/translator.v1.js';
 import * as reviewerPrompt from './prompts/reviewer.v1.js';
@@ -16,9 +18,9 @@ import * as resplitPrompt from './prompts/resplit.v1.js';
 import * as rootPrompt from './prompts/supervisor-root.v1.js';
 import * as researcherPrompt from './prompts/researcher.v1.js';
 import * as autopilotPrompt from './prompts/autopilot.v1.js';
-import { ScopingQuestions, TileGraph, MatcherNotes, Brief, ReviewVerdict, Assembly, WorkResult, ScopingAnswers, SupervisorVerdict, Lessons, RootVerdict, SplitPlan } from './schemas.js';
+import { ScopingQuestions, TileGraph, MatcherNotes, Brief, ReviewVerdict, Assembly, WorkResult, ScopingAnswers, SupervisorVerdict, Lessons, RootVerdict, SplitPlan, PlanOutline, StreamTiles } from './schemas.js';
 import { runAutoChecks } from '../domain/autochecks.js';
-import { validateGraph } from '../domain/graph.js';
+import { validateGraph, findCycle } from '../domain/graph.js';
 import { config } from '../domain/config.js';
 import { splitProblems } from './split.js';
 
@@ -30,8 +32,9 @@ export const scoping = {
   },
 };
 
+// A whole plan is a long reply: the Decomposer gets room for its thinking and every tile.
 export const decomposer = {
-  name: 'decomposer', prompt: decomposerPrompt, schema: TileGraph, tier: 'heavy', effort: 'high',
+  name: 'decomposer', prompt: decomposerPrompt, schema: TileGraph, tier: 'heavy', effort: 'high', maxTokens: 64000,
   validate(out) {
     return validateGraph(out.tiles).map((i) => i.message);
   },
@@ -39,9 +42,56 @@ export const decomposer = {
 
 /** Second pass on a plan whose separability report found problems. */
 export const decomposerRefine = {
-  name: 'decomposer-refine', prompt: refinePrompt, schema: TileGraph, tier: 'heavy', effort: 'high',
+  name: 'decomposer-refine', prompt: refinePrompt, schema: TileGraph, tier: 'heavy', effort: 'high', maxTokens: 64000,
   validate(out) {
     return validateGraph(out.tiles).map((i) => i.message);
+  },
+};
+
+/** Problems with a plan skeleton: keys unique across streams, dependencies that exist, no loops, one maker per file. */
+export function outlineProblems(out) {
+  const problems = [];
+  const tiles = out.streams.flatMap((st) => st.tiles);
+  const keys = new Set();
+  for (const t of tiles) {
+    if (keys.has(t.key)) problems.push(`tile key "${t.key}" appears twice; keys are unique across the whole plan`);
+    keys.add(t.key);
+  }
+  const streams = out.streams.map((st) => st.key);
+  if (new Set(streams).size !== streams.length) problems.push('stream keys must be unique');
+  for (const t of tiles) for (const d of t.dependsOn) if (!keys.has(d)) problems.push(`"${t.key}" depends on "${d}", which isn't in the skeleton`);
+  const cycle = findCycle(tiles);
+  if (cycle) problems.push(`dependency loop: ${cycle.join(' → ')}`);
+  const makers = new Map();
+  for (const t of tiles) for (const f of t.outputs) { if (makers.has(f)) problems.push(`${f} is made by both "${makers.get(f)}" and "${t.key}"; each file has one maker`); else makers.set(f, t.key); }
+  return problems;
+}
+
+/** Staged planning, first stage: the skeleton of a big plan (streams, tile keys, files, dependencies). */
+export const decomposerOutline = {
+  name: 'decomposer-outline', prompt: outlinePrompt, schema: PlanOutline, tier: 'heavy', effort: 'high', maxTokens: 32000,
+  validate(out) { return outlineProblems(out); },
+};
+
+/** Staged planning, second stage: one stream's tiles in full, exactly as the skeleton lists them. */
+export const decomposerStream = {
+  name: 'decomposer-stream', prompt: streamPrompt, schema: StreamTiles, tier: 'heavy', effort: 'medium', maxTokens: 32000,
+  validate(out, input) {
+    const stream = input.outline.streams.find((st) => st.key === input.stream);
+    const want = stream.tiles.map((t) => t.key);
+    const got = out.tiles.map((t) => t.key);
+    const all = new Set(input.outline.streams.flatMap((st) => st.tiles.map((t) => t.key)));
+    const problems = [];
+    const missing = want.filter((k) => !got.includes(k));
+    const extra = got.filter((k) => !want.includes(k));
+    if (missing.length) problems.push(`write every tile of stream "${input.stream}": missing ${missing.join(', ')}`);
+    if (extra.length) problems.push(`only the skeleton's tiles for this stream: ${extra.join(', ')} ${extra.length > 1 ? "aren't" : "isn't"} in it`);
+    for (const t of out.tiles) for (const d of t.dependsOn) if (!all.has(d)) problems.push(`"${t.key}" depends on "${d}", which isn't in the plan`);
+    for (const t of out.tiles) {
+      const ids = t.acceptanceCriteria.map((c) => c.id);
+      if (new Set(ids).size !== ids.length) problems.push(`"${t.key}" repeats a criterion id`);
+    }
+    return problems;
   },
 };
 
@@ -87,7 +137,7 @@ export const reviewer = {
 };
 
 export const assembler = {
-  name: 'assembler', prompt: assemblerPrompt, schema: Assembly, tier: 'heavy', effort: 'medium',
+  name: 'assembler', prompt: assemblerPrompt, schema: Assembly, tier: 'heavy', effort: 'medium', maxTokens: 32000,
   validate(out, input) {
     const problems = [];
     const want = new Map(input.tiles.map((t) => [t.key, t.contributor.id]));
@@ -230,11 +280,12 @@ export const rootSupervisor = {
   name: 'supervisor-root', prompt: rootPrompt, schema: RootVerdict, tier: 'heavy', effort: 'medium',
 };
 
-export const AGENTS = { scoping, decomposer, decomposerRefine, matcherNote, translator, reviewer, assembler, copilot, worker, autopilot, researcher, supervisor, reflection, resplit, rootSupervisor };
+export const AGENTS = { scoping, decomposer, decomposerRefine, decomposerOutline, decomposerStream, matcherNote, translator, reviewer, assembler, copilot, worker, autopilot, researcher, supervisor, reflection, resplit, rootSupervisor };
 
 export const AGENT_TABLE = [
   { name: 'Scoping', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Asks the requester up to five clarifying questions', version: scopingPrompt.version },
   { name: 'Decomposer', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Splits the job into separable tiles, starting from the rule-based engine’s reading and reference plan', version: decomposerPrompt.version },
+  { name: 'Decomposer, staged', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'For a big job, or when one reply can’t hold the whole plan: a skeleton of workstreams first, then every workstream in full at the same time', version: `${outlinePrompt.version}, ${streamPrompt.version}` },
   { name: 'Decomposer refine', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Fixes the problems the separability report finds in a model-made plan (only when it grades below C)', version: refinePrompt.version },
   { name: 'Matcher', runsIn: 'Worker', model: `Light (${config.llm.lightModel}), for the note only`, job: 'Scores contributors with a fixed formula and sends offers', version: matcherPrompt.version },
   { name: 'Translator', runsIn: 'Contributor’s browser', model: 'Contributor’s own model, shared model as fallback', job: 'Writes the personal brief and powers the tile copilot', version: translatorPrompt.version },
