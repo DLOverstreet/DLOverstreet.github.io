@@ -413,7 +413,8 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       hasSource, sourceRows: shape.sourceRows, web: webReady(),
       timing: { ...shape, tps, targetSeconds: s.splitAboveSeconds, maxParts: s.maxParts, split: !!s.split },
     });
-    if (adapted.changes.length || adapted.handoffs.length) replacePlan(T, c.requesterId, c.id, adapted.tiles, 'Adapted the plan for the agent swarm');
+    // Saved whenever the plan changed or gained expected agent times, which the Swarm tab shows per tile.
+    if (adapted.changes.length || adapted.handoffs.length || adapted.estimate) replacePlan(T, c.requesterId, c.id, adapted.tiles, 'Adapted the plan for the agent swarm');
     fundCommission(T, c.requesterId, c.id, { acceptOverBudget: true });
     const eta = adapted.estimate ? ` Expected time along the longest chain: about ${Math.max(1, Math.round(adapted.estimate.seconds / 60))} min.` : '';
     note(c.id, `The swarm started on ${adapted.tiles.length} tiles.${eta}`, { launchedAt: T.clock.now(), changes: adapted.changes, handoffs: adapted.handoffs, estimate: adapted.estimate || null });
