@@ -34,6 +34,11 @@ export function apiMessages(messages) {
 const MAX_CONTINUATIONS = 5;
 /** Requests allowed more output than this stream, so a long reply never runs into an HTTP timeout. */
 const STREAM_ABOVE_TOKENS = 16000;
+/**
+ * A long reply (a whole plan can be tens of thousands of tokens, written over many minutes) gets this long, and the SDK doesn't retry it on its own: a silent retry of a ten-minute call
+ * doubles the wait. runAgent decides what to retry, and how.
+ */
+const LONG_CALL = { timeout: 30 * 60 * 1000, maxRetries: 0 };
 
 /** Sources from a response: what the model cited first, then pages it fetched, then search results it saw. */
 export function sourcesOf(content) {
@@ -76,18 +81,25 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
 
   function mapError(e) {
     if (!Anthropic) return new LlmError(e.message || String(e));
+    const wait = () => {
+      const v = e.headers?.get ? e.headers.get('retry-after') : e.headers?.['retry-after'];
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? Math.min(300, n) * 1000 : null;
+    };
     if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) {
       return new LlmError('The Anthropic API key was rejected. Check it in settings.', { retryable: false, code: 'auth' });
     }
     if (e instanceof Anthropic.NotFoundError) return new LlmError(`Model not found: ${e.message}`, { retryable: false, code: 'not_found' });
-    if (e instanceof Anthropic.RateLimitError) return new LlmError('Anthropic rate limit reached. Retrying later.', { retryable: true, code: 'rate_limit' });
+    if (e instanceof Anthropic.RateLimitError) return new LlmError(`Anthropic rate limit reached (429): ${e.message}`, { retryable: true, code: 'rate_limit', retryAfterMs: wait() });
+    if (e instanceof Anthropic.APIConnectionTimeoutError) return new LlmError('The request ran past its time limit before the reply finished.', { retryable: true, code: 'timeout' });
     if (e instanceof Anthropic.BadRequestError) {
       // An organization can switch the web tools off in the Claude Console.
       if (/web[ _-]?(search|fetch)/i.test(e.message || '')) return new LlmError(`Web access isn't available for this key: ${e.message}`, { retryable: false, code: 'web_disabled' });
       return new LlmError(`Request rejected: ${e.message}`, { retryable: false, code: 'bad_request' });
     }
     if (e instanceof Anthropic.APIConnectionError) return new LlmError('Could not reach api.anthropic.com from this browser.', { retryable: true, code: 'connection' });
-    if (e instanceof Anthropic.APIError) return new LlmError(`Anthropic API error ${e.status ?? ''}: ${e.message}`, { retryable: true, code: 'api' });
+    if (e instanceof Anthropic.APIError && (e.status === 529 || /overloaded/i.test(e.message || ''))) return new LlmError(`Anthropic is overloaded (${e.status ?? 529}): ${e.message}`, { retryable: true, code: 'overloaded', retryAfterMs: wait() });
+    if (e instanceof Anthropic.APIError) return new LlmError(`Anthropic API error ${e.status ?? ''}: ${e.message}`, { retryable: true, code: 'api', retryAfterMs: wait() });
     return new LlmError(e.message || String(e));
   }
 
@@ -102,10 +114,11 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
     const caps = modelCaps(params.model);
     const withFallback = caps.fallbacks && !fallbacksOff;
     const streamIt = !!onStart || params.max_tokens > STREAM_ABOVE_TOKENS;
+    const long = params.max_tokens > STREAM_ABOVE_TOKENS ? LONG_CALL : undefined;
     const call = (p, fb) => {
       const body = fb ? { ...p, betas: [FALLBACK_BETA], fallbacks: 'default' } : p;
       if (!streamIt) return fb ? c.beta.messages.create(body) : c.messages.create(body);
-      const stream = fb ? c.beta.messages.stream(body) : c.messages.stream(body);
+      const stream = fb ? c.beta.messages.stream(body, long) : c.messages.stream(body, long);
       if (onStart) {
         let started = false;
         stream.on('streamEvent', () => { if (!started) { started = true; onStart(); } });

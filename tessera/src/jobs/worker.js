@@ -34,6 +34,12 @@ export function createWorker(T, { concurrency = 3, pollMs = 300, tickMs = 2500 }
   const running = new Set();
   let timer = null;
   let lastTick = 0;
+  // A job still marked running belongs to a page that was closed or reloaded mid-job: nothing will
+  // finish it, so it starts again.
+  const stale = T.db.filter('Job', (j) => j.status === 'RUNNING');
+  if (stale.length) {
+    T.db.tx((tx) => { for (const j of stale) tx.update('Job', j.id, { status: 'PENDING', runAfter: tx.now(), lastError: 'Restarted: the page closed or reloaded while it ran.' }); });
+  }
 
   function dueJobs() {
     const now = T.clock.now();

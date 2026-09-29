@@ -362,7 +362,7 @@ export function RunsTable({ runs, showCommission }) {
         ${showCommission ? html`<td class="small">${truncate(T.db.get('Commission', r.commissionId)?.title || '—', 30)}</td>` : ''}
         <td class="money small">${r.tokensIn ?? '—'} / ${r.tokensOut ?? '—'}</td><td class="money small">${r.latencyMs} ms</td>
         <td class="money small">${r.provider === 'mock' ? html`<span title="What this call would cost on the model it stands in for">$0 <span class="muted">(${'$' + shadowCostUsd(r).toFixed(4)})</span></span>` : '$' + runCostUsd(r).toFixed(4)}</td>
-        <td>${r.error ? html`<span class="badge bad" title=${r.error}>rejected</span>` : html`<span class="badge good">ok</span>`}</td>
+        <td>${r.error ? html`<span class="badge bad" title=${r.error}>rejected</span><div class="tiny muted" style=${{ maxWidth: '22rem' }}>${r.error.length > 140 ? `${r.error.slice(0, 140)}…` : r.error}</div>` : html`<span class="badge good">ok</span>`}</td>
       </tr>`)}</tbody></table></div>
     ${open && html`<${Modal} wide title=${`${open.agent} · ${open.promptVersion}`} onClose=${() => setOpen(null)}>
       <dl class="kv"><dt>Provider</dt><dd>${open.provider}</dd><dt>Model</dt><dd>${open.model}${open.shadowModel ? ` (stands in for ${open.shadowModel})` : ''}</dd><dt>Attempt</dt><dd>${open.attempt}</dd><dt>Latency</dt><dd>${open.latencyMs} ms</dd>${open.error ? html`<dt>Rejected because</dt><dd style=${{ color: 'var(--bad)' }}>${open.error}</dd>` : ''}</dl>

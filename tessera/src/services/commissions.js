@@ -164,8 +164,17 @@ export function decomposerInput(c, { instruction = null, ratios = {}, rush = fal
   return { input, analysis, referenceTiles };
 }
 
-/** A reference plan bigger than this is planned in stages from the start. */
-const STAGED_ABOVE_TILES = 20;
+/** How much text the job's attachments hold in all (the full files, not the excerpts a prompt shows). */
+function attachedChars(c) {
+  return (c.files || []).filter(hasText).reduce((n, f) => n + (f.textChars || f.size || 0), 0);
+}
+
+/**
+ * Planned in stages from the start: a reference plan bigger than this, or attached documents longer
+ * than this (a job built on long documents writes long specs, and one reply of that takes minutes).
+ */
+const STAGED_ABOVE_TILES = 12;
+const STAGED_ABOVE_DOC_CHARS = 20000;
 /** Stream calls running at once in a staged plan. */
 const STREAMS_AT_ONCE = 4;
 
@@ -205,19 +214,23 @@ export async function stagedDecompose(T, input, route, meta = {}) {
 }
 
 /**
- * The model's plan, however it can be had: one reply when the plan is small enough (retried once),
- * in stages when it's big or the one reply failed, and the engine's own plan if both fail, so a
- * job never stalls on planning. `notes` says what happened.
+ * The model's plan, however it can be had: one reply when the job is small, in stages when it's big
+ * or the one reply failed, and the engine's own plan if both fail, so a job never stalls on
+ * planning. A failed one-shot plan isn't asked for again: rewriting a whole plan takes as long as
+ * writing it, and the staged calls are shorter and run at once. `notes` says what happened.
  */
-async function modelPlan(T, input, route, meta, { referenceTiles = 0, fallback }) {
+async function modelPlan(T, input, route, meta, { referenceTiles = 0, docChars = 0, fallback }) {
   const notes = [];
-  if (referenceTiles <= STAGED_ABOVE_TILES) {
+  const big = referenceTiles > STAGED_ABOVE_TILES || docChars > STAGED_ABOVE_DOC_CHARS;
+  if (!big) {
     try {
-      const res = await runAgent({ agent: AGENTS.decomposer, input: { ...input, skillVocabulary }, route, log: T.log, meta, retries: 1 });
+      const res = await runAgent({ agent: AGENTS.decomposer, input: { ...input, skillVocabulary }, route, log: T.log, meta, retries: 0 });
       return { graph: res.output, source: route.providerName === 'mock' ? 'engine' : 'model', notes };
     } catch (e) {
-      notes.push(`The plan didn't fit in one reply (${e.message}), so the Decomposer planned it in stages.`);
+      notes.push(`The plan didn't come back in one reply (${e.message}), so the Decomposer planned it in stages.`);
     }
+  } else {
+    notes.push(`A big job (${referenceTiles > STAGED_ABOVE_TILES ? `${referenceTiles} tiles in the engine's plan` : `${Math.round(docChars / 1000)}k characters of attached documents`}), so the Decomposer planned it in stages.`);
   }
   try {
     const graph = await stagedDecompose(T, input, route, meta);
@@ -301,7 +314,7 @@ export async function runDecomposeJob(T, { commissionId, instruction = null }) {
   for (;;) {
     const maxTotalCents = input.scopeInstruction?.maxTotalCents ?? null;
     planned = await modelPlan(T, input, route, { commissionId }, {
-      referenceTiles,
+      referenceTiles, docChars: attachedChars(c),
       fallback: () => { const r = disaggregate(jobOf(c, { instruction }), { maxTotalCents: maxTotalCents ?? c.budgetCents, rush }); return { rationale: r.rationale, tiles: r.tiles }; },
     });
     graph = planned.graph;
@@ -450,6 +463,24 @@ export function redecompose(T, actorId, commissionId, instruction = '') {
     transitionCommission(tx, commissionId, 'SCOPING', actorId, { note: 'Asked for a new plan', patch: { planState: 'DECOMPOSING', planError: null } });
     tx.enqueue('decompose', { commissionId, instruction: String(instruction || '').slice(0, 1000) || null }, { dedupeKey: `decompose:${c.id}` });
   }, { actor: actorId });
+}
+
+/** Plans a job again after planning failed or stopped (the swarm's Resume does this too). */
+export function retryPlanning(T, actorId, commissionId) {
+  return T.db.tx((tx) => {
+    const c = must(tx.get('Commission', commissionId), 'Commission not found.');
+    const u = must(tx.get('User', actorId), 'Unknown user.');
+    if (c.requesterId !== actorId && !u.isAdmin) throw new UserError('Only the requester can plan this job again.');
+    queuePlanning(tx, c);
+  }, { actor: actorId });
+}
+
+/** Queues planning for a job in scoping whose questions are answered (or had none). */
+export function queuePlanning(tx, c) {
+  if (c.status !== 'SCOPING') throw new UserError('This job is past planning.');
+  if (c.clarifications?.questions?.length && !c.clarifications.answeredAt) throw new UserError('Answer the scoping questions first.');
+  tx.update('Commission', c.id, { planState: 'DECOMPOSING', planError: null });
+  tx.enqueue('decompose', { commissionId: c.id }, { dedupeKey: `decompose:${c.id}` });
 }
 
 /** Approves the plan: funds escrow for pay, fees and the review reserve, then opens tiles. */
