@@ -9,6 +9,8 @@ export function createOpenAiCompatibleProvider({ baseUrl, apiKey = '', fetchImpl
   return {
     name: 'openai-compatible',
     async complete(req) {
+      // No prompt cache to warm here, so anything waiting on this call's start can go now.
+      if (req.onStart) req.onStart();
       const body = {
         model: req.model,
         messages: [{ role: 'system', content: req.system }, ...req.messages.map((m) => ({ role: m.role, content: contentText(m.content) }))],

@@ -16,15 +16,17 @@ export function createMockProvider({ brains = {}, fixtures = {}, latencyMs = 0 }
   return {
     name: 'mock',
     fixtures,
-    /** Queue raw responses (strings or objects) for an agent; they are served before the brain runs. */
+    /** Queue raw responses (strings, objects, or functions of the input) for an agent; they are served before the brain runs. */
     queue(agent, responses) { queues.set(agent, [...(queues.get(agent) || []), ...responses]); },
     clearQueues() { queues.clear(); },
     async complete(req) {
+      if (req.onStart) req.onStart();
       if (latencyMs) await new Promise((r) => setTimeout(r, latencyMs));
       const q = queues.get(req.agent);
       let out;
       if (q && q.length) {
         out = q.shift();
+        if (typeof out === 'function') out = out(req.input);
       } else {
         const key = fixtureKey(req.agent, req.promptVersion, req.input);
         if (fixtures[key] !== undefined) out = fixtures[key];
@@ -37,14 +39,14 @@ export function createMockProvider({ brains = {}, fixtures = {}, latencyMs = 0 }
       const text = typeof out === 'string' ? out : JSON.stringify(out);
       // Blocks marked for the prompt cache are counted as a cache write the first time this mock
       // sees them and as a read after, as the API would, so the swarm's costs and tests see it.
-      const usage = { inputTokens: estimateTokens(req.system), outputTokens: estimateTokens(text), cacheWriteTokens: 0, cacheReadTokens: 0 };
+      const usage = { inputTokens: estimateTokens(req.system), outputTokens: estimateTokens(text), cacheWriteTokens: 0, cacheWrite1hTokens: 0, cacheReadTokens: 0 };
       for (const m of req.messages) {
         if (typeof m.content === 'string') { usage.inputTokens += estimateTokens(m.content); continue; }
         for (const b of m.content) {
           const n = estimateTokens(b.text);
           if (!b.cache) usage.inputTokens += n;
           else if (cached.has(hashString(b.text))) usage.cacheReadTokens += n;
-          else { cached.add(hashString(b.text)); usage.cacheWriteTokens += n; }
+          else { cached.add(hashString(b.text)); usage.cacheWriteTokens += n; if (b.cache === '1h') usage.cacheWrite1hTokens += n; }
         }
       }
       return { text, model: req.model, usage };

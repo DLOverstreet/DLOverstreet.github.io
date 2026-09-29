@@ -21,11 +21,14 @@ function loadSdk() {
 
 const FALLBACK_BETA = 'server-side-fallback-2026-07-01';
 
-/** Text blocks marked `cache` get a prompt-cache breakpoint (five-minute lifetime); strings pass through. */
+/**
+ * Text blocks marked `cache` get a prompt-cache breakpoint: five minutes by default, an hour for
+ * `cache: '1h'` (hour-long entries must come before five-minute ones). Strings pass through.
+ */
 export function apiMessages(messages) {
   return messages.map((m) => (typeof m.content === 'string' ? m : {
     role: m.role,
-    content: m.content.map((b) => ({ type: 'text', text: b.text, ...(b.cache ? { cache_control: { type: 'ephemeral' } } : {}) })),
+    content: m.content.map((b) => ({ type: 'text', text: b.text, ...(b.cache ? { cache_control: b.cache === '1h' ? { type: 'ephemeral', ttl: '1h' } : { type: 'ephemeral' } } : {}) })),
   }));
 }
 const MAX_CONTINUATIONS = 5;
@@ -86,11 +89,22 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
     return new LlmError(e.message || String(e));
   }
 
-  /** One request, falling back to a plainer one if the API rejects an optional feature. */
-  async function send(c, params) {
+  /**
+   * One request, falling back to a plainer one if the API rejects an optional feature. With
+   * `onStart`, the request streams and onStart fires on its first event: the prompt is read and
+   * any cache entry it writes can be read by requests sent from then on.
+   */
+  async function send(c, params, onStart = null) {
     const caps = modelCaps(params.model);
     const withFallback = caps.fallbacks && !fallbacksOff;
-    const call = (p, fb) => (fb ? c.beta.messages.create({ ...p, betas: [FALLBACK_BETA], fallbacks: 'default' }) : c.messages.create(p));
+    const call = (p, fb) => {
+      const body = fb ? { ...p, betas: [FALLBACK_BETA], fallbacks: 'default' } : p;
+      if (!onStart) return fb ? c.beta.messages.create(body) : c.messages.create(body);
+      const stream = fb ? c.beta.messages.stream(body) : c.messages.stream(body);
+      let started = false;
+      stream.on('streamEvent', () => { if (!started) { started = true; onStart(); } });
+      return stream.finalMessage();
+    };
     try {
       return await call(params, withFallback);
     } catch (e) {
@@ -112,7 +126,7 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
   return {
     name: 'anthropic',
     /**
-     * @param {{model: string, system: string, messages: any[], jsonSchema?: object, maxTokens?: number, tools?: any[], effort?: string}} req
+     * @param {{model: string, system: string, messages: any[], jsonSchema?: object, maxTokens?: number, tools?: any[], effort?: string, onStart?: () => void}} req
      *   messages: content is a string, or text blocks ({ type: 'text', text, cache? }) where `cache` marks a prompt-cache breakpoint
      */
     async complete(req) {
@@ -130,14 +144,15 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
       if (Object.keys(outputConfig).length) params.output_config = outputConfig;
       if (tools) params.tools = tools;
 
-      const usage = { inputTokens: 0, outputTokens: 0, cacheWriteTokens: 0, cacheReadTokens: 0, webSearches: 0, webFetches: 0 };
+      const usage = { inputTokens: 0, outputTokens: 0, cacheWriteTokens: 0, cacheWrite1hTokens: 0, cacheReadTokens: 0, webSearches: 0, webFetches: 0 };
       let turn = [];
       let res;
       for (let hop = 0; ; hop++) {
-        res = await send(c, turn.length ? { ...params, messages: [...messages, { role: 'assistant', content: turn }] } : params);
+        res = await send(c, turn.length ? { ...params, messages: [...messages, { role: 'assistant', content: turn }] } : params, hop === 0 ? req.onStart || null : null);
         usage.inputTokens += res.usage?.input_tokens || 0;
         usage.outputTokens += res.usage?.output_tokens || 0;
         usage.cacheWriteTokens += res.usage?.cache_creation_input_tokens || 0;
+        usage.cacheWrite1hTokens += res.usage?.cache_creation?.ephemeral_1h_input_tokens || 0;
         usage.cacheReadTokens += res.usage?.cache_read_input_tokens || 0;
         usage.webSearches += res.usage?.server_tool_use?.web_search_requests || 0;
         usage.webFetches += res.usage?.server_tool_use?.web_fetch_requests || 0;

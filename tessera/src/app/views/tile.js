@@ -5,6 +5,7 @@ import { html, useState, useEffect, useRef } from '../../../vendor/preact.js';
 import { useT, useDbVersion, useNow, navigate, currentUser, act, toast, downloadBytes } from '../state.js';
 import { StatusBadge, Money, Countdown, Empty, AsyncButton, Modal, Field, Rate, Markdown, UserName, ago, STATUS_LABEL } from '../ui.js';
 import { latestBrief, upstreamFiles } from '../../services/work.js';
+import { CompetitionCard } from './supervision.js';
 import { explainFit } from '../../services/market.js';
 import { generateSampleWork } from '../../agents/mock/sample-work.js';
 import { config } from '../../domain/config.js';
@@ -424,6 +425,7 @@ export function TileView({ id }) {
       <div class="stack">
         ${owner ? html`<${RequesterActions} t=${t} me=${me} />` : ''}
         ${owner || onPanel ? html`<${Submissions} t=${t} />` : worked ? html`<${Submissions} t=${t} onlyUserId=${me.id} />` : ''}
+        <${CompetitionCard} t=${t} />
         <${CriteriaCard} t=${t} />
       </div>
       <div class="stack">

@@ -123,6 +123,8 @@ export function createDb(world, clock) {
     snapshot() { return world; },
     replaceWorld(next) {
       world = next;
+      // An imported world from before a table existed gets the table, empty.
+      for (const t of TABLES) world.tables[t] ||= {};
       version += 1;
       for (const l of listeners) l({ version, tables: new Set([...TABLES, 'meta']) });
     },

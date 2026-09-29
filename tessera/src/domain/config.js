@@ -85,6 +85,27 @@ export const config = Object.freeze({
     maxParts: 4,
     /** Most a split may add to the tile's model cost, in percent (the parts reread the cached context and write their own notes). */
     splitMaxExtraPct: 40,
+    /**
+     * Competing workers: 'on' gives each work tile to several worker configs and a supervisor keeps
+     * the best; 'auto' also lets a config that wins nearly every task of a type work alone (still
+     * supervised); 'off' gives each tile to one agent, checked by the Reviewer as before.
+     */
+    competition: 'on',
+    competitors: 3,
+    /** The reveal round, where workers see each other's blind drafts and revise: 'auto' (only when the blind round wasn't a clean accept), 'always' or 'never'. */
+    reveal: 'auto',
+    /** The rubric score (0 to 1) the best attempt must reach. */
+    threshold: 0.7,
+    /** Two compete instead of three on a task type one config clearly dominates. */
+    routing: true,
+    /** Reflection writes lessons after each task; lessons stay only if they raise scores over lessonTrials tasks. */
+    learning: true,
+    lessonTrials: 20,
+    /** Share of accepted tasks sampled for your review, in percent, to measure how often you agree with the supervisors. */
+    reviewSamplePct: 15,
+    /** Most re-splits per job, and how deep a re-split task may be split again. */
+    maxResplitsPerJob: 3,
+    maxDepth: 2,
   }),
 });
 

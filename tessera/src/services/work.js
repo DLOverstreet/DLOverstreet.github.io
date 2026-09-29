@@ -109,7 +109,11 @@ export async function askCopilot(T, actorId, tileId, question, history = []) {
 
 // ---------------------------------------------------------------- submissions
 
-export async function submitWork(T, actorId, tileId, { files = [], notes = '', minutesSpent, checklist = {}, modelUsed = null, handoff = '' }) {
+/**
+ * A submission. `supervised`, on a swarm job, is the supervisor's verdict on the winning attempt
+ * (or your choice on an escalated task); verification uses it instead of running the Reviewer again.
+ */
+export async function submitWork(T, actorId, tileId, { files = [], notes = '', minutesSpent, checklist = {}, modelUsed = null, handoff = '', supervised = null }) {
   const tile = requireHolder(T.db, tileId, actorId);
   if (tile.kind === 'REVIEW' && tile.dynamic) throw new UserError('Peer review tiles are submitted with the review form.');
   if (!files.length) throw new UserError('Attach at least one file.');
@@ -129,6 +133,7 @@ export async function submitWork(T, actorId, tileId, { files = [], notes = '', m
     const sub = tx.insert('Submission', {
       tileId, commissionId: cur.commissionId, contributorId: actorId, round, notes: String(notes).slice(0, 4000),
       minutesSpent: minutes, files: refs, checklist, modelUsed, ...(handoff ? { handoff: String(handoff).slice(0, 2000) } : {}),
+      ...(supervised && agent ? { supervised } : {}),
     });
     transitionTile(tx, tileId, 'SUBMITTED', actorId, { submissionId: sub.id, patch: { lastSubmissionId: sub.id }, note: `Round ${round}` });
     return sub;
@@ -156,7 +161,11 @@ export async function runVerifyJob(T, { submissionId }) {
   const auto = runAutoChecks(tile.acceptanceCriteria, files);
   const llmCriteria = [...tile.acceptanceCriteria.filter((c) => c.check === 'LLM'), ...auto.deferred];
   let llm = null;
-  if (llmCriteria.length) {
+  if (sub.supervised) {
+    // The supervisor scored every criterion a person or model judges, PEER ones included.
+    const judged = [...llmCriteria, ...tile.acceptanceCriteria.filter((c) => c.check === 'PEER')];
+    if (judged.length) llm = supervisedVerdict(sub.supervised, judged);
+  } else if (llmCriteria.length) {
     const input = {
       tile: { title: tile.title, spec: restricted ? redactText(tile.spec) : tile.spec, deliverableFormat: tile.deliverableFormat },
       criteria: llmCriteria.map((c) => ({ id: c.id, text: c.text })),
@@ -187,7 +196,7 @@ export async function runVerifyJob(T, { submissionId }) {
     }
     if (llm) {
       tx.insert('Review', {
-        submissionId: sub.id, tileId: tile.id, source: 'LLM', reviewerId: null, verdict: llm.overall === 'PASS' ? 'PASS' : 'FAIL',
+        submissionId: sub.id, tileId: tile.id, source: llm.source || 'LLM', reviewerId: llm.reviewerId || null, verdict: llm.overall === 'PASS' ? 'PASS' : 'FAIL',
         criteria: llm.criteria, confidence: llm.confidence, model: llm.model, escalated: llm.escalated, lightConfidence: llm.lightConfidence ?? null,
       });
     }
@@ -195,10 +204,26 @@ export async function runVerifyJob(T, { submissionId }) {
       failTile(tx, cur, sub, 'verifier');
       return;
     }
-    const decision = peerReviewDecision({ tile: cur, priorAcceptedWork: priorAcceptedWork(tx, sub.contributorId), round: sub.round, agent: !!tx.get('User', sub.contributorId)?.isAgent });
+    const decision = peerReviewDecision({ tile: cur, priorAcceptedWork: priorAcceptedWork(tx, sub.contributorId), round: sub.round, agent: !!tx.get('User', sub.contributorId)?.isAgent, supervised: !!sub.supervised });
     if (decision.required) createPeerReviewTile(tx, cur, sub, decision.reason);
     else acceptTile(tx, cur.id, sub.id, 'verifier', decision.reason);
   });
+}
+
+/**
+ * The verdict on a swarm submission a supervisor already scored: its marks on the tile's own
+ * criteria (2 of 4 or better passes), or, for a task you settled yourself, your acceptance.
+ */
+function supervisedVerdict(sv, criteria) {
+  const mine = sv.by === 'requester';
+  const verdicts = criteria.map((c) => {
+    const v = mine ? null : (sv.verdicts || []).find((x) => x.criterionId === c.id);
+    return v || { criterionId: c.id, pass: true, reason: mine ? 'Accepted by the requester from an escalated task.' : `Within the supervisor’s accepted score of ${sv.score}.` };
+  });
+  return {
+    criteria: verdicts, overall: verdicts.every((v) => v.pass) ? 'PASS' : 'FAIL', confidence: mine ? 1 : sv.confidence ?? 1,
+    model: mine ? null : `supervisor (${sv.model})`, escalated: false, source: mine ? 'REQUESTER' : 'LLM', reviewerId: mine ? sv.actorId : null,
+  };
 }
 
 export function acceptTile(tx, tileId, submissionId, actor, note) {

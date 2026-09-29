@@ -21,14 +21,18 @@ test('a job handed to the swarm is scoped, split, done, checked, assembled and s
   assert.equal(done.status, 'ACCEPTED');
   assert.equal(done.autopilot.state, 'DONE');
   const runs = T.db.filter('AgentRun', (r) => r.commissionId === c.id && !r.error);
-  for (const agent of ['scoping', 'autopilot', 'decomposer', 'worker', 'reviewer', 'assembler']) assert.ok(runs.some((r) => r.agent === agent), `${agent} ran`);
+  for (const agent of ['scoping', 'autopilot', 'decomposer', 'worker', 'supervisor', 'reflection', 'assembler', 'supervisor-root']) assert.ok(runs.some((r) => r.agent === agent), `${agent} ran`);
+  assert.ok(!runs.some((r) => r.agent === 'reviewer'), 'the supervisor’s scores stand in for the Reviewer on competed tiles');
   const tiles = T.db.filter('Tile', (t) => t.commissionId === c.id);
   assert.ok(tiles.length >= 5);
   for (const t of tiles) {
     assert.equal(t.status, 'ACCEPTED', t.title);
     assert.ok(T.db.get('User', t.claimedById).isAgent, `${t.title} was done by an agent`);
     const sub = T.db.get('Submission', t.acceptedSubmissionId);
-    if (!t.dynamic) assert.match(sub.modelUsed, /\(agent\)/);
+    if (!t.dynamic) {
+      assert.match(sub.modelUsed, /\(agent\)/);
+      assert.ok(sub.supervised?.specId, `${t.title} was competed and supervised`);
+    }
   }
   // Every status change after submission was made by an agent, the autopilot's requester account or the platform.
   const people = new Set(T.db.filter('User', (u) => u.isContributor && !u.isAgent).map((u) => u.id));
@@ -55,7 +59,7 @@ test('agents and people are matched apart: agents never get a person’s job, pe
 
 test('an agent whose files fail the checks gets the failures back and revises', async () => {
   const T = await makeTessera({ crowd: false });
-  setSwarm(T, { concurrency: 1 });
+  setSwarm(T, { concurrency: 1, competition: 'off' });
   const weak = { approach: ['Skimmed it.'], files: [{ name: 'draft.txt', content: 'todo' }], notes: '', checklist: [], handoff: '' };
   T.mock.queue('worker', [weak, weak, weak]);
   const c = await T.api.runWithAgents('usr_marisol', job('grant'));
@@ -175,6 +179,7 @@ async function surveyWithFile(T) {
 
 test('a long tile is split among agents working at once, reading the shared context from the prompt cache, and joined by code', async () => {
   const T = await makeTessera({ crowd: false });
+  setSwarm(T, { competition: 'off' });
   const { c, tile, runs, sub } = await surveyWithFile(T);
   assert.equal(c.status, 'ACCEPTED');
   assert.ok(tile.splitHint, 'the plan marked the long tile');
@@ -194,7 +199,7 @@ test('a long tile is split among agents working at once, reading the shared cont
 
 test('with splitting off, one agent does every tile', async () => {
   const T = await makeTessera({ crowd: false });
-  setSwarm(T, { split: false });
+  setSwarm(T, { split: false, competition: 'off' });
   const { c, tile, runs } = await surveyWithFile(T);
   assert.equal(c.status, 'ACCEPTED');
   assert.equal(runs.length, 1);
@@ -204,7 +209,7 @@ test('with splitting off, one agent does every tile', async () => {
 
 test('a split plan that doesn’t hold up falls back to one agent doing the whole tile', async () => {
   const T = await makeTessera({ crowd: false });
-  setSwarm(T, { concurrency: 1 });
+  setSwarm(T, { concurrency: 1, competition: 'off' });
   const bad = { approach: ['Split three ways.'], files: [], notes: '', checklist: [], handoff: '', split: { reason: 'Three even parts of the table.', parts: [1, 2, 3].map((i) => ({ brief: `Rows for part ${i} of three.`, files: ['redacted_responses.csv'] })) } };
   T.mock.queue('worker', [bad, bad, bad]);
   const { c, tile, runs, sub } = await surveyWithFile(T);

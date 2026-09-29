@@ -6,8 +6,10 @@
 import { config } from './config.js';
 import { unitHash } from '../lib/util.js';
 
-export function peerReviewDecision({ tile, priorAcceptedWork, round, agent = false, cfg = config }) {
+export function peerReviewDecision({ tile, priorAcceptedWork, round, agent = false, supervised = false, cfg = config }) {
   if (tile.kind === 'REVIEW') return { required: false, reason: 'Review tiles are checked automatically' };
+  // Competing agents' work was scored by a supervisor on every criterion, PEER ones included.
+  if (agent && supervised && !tile.highStakes) return { required: false, reason: 'Scored by the swarm’s supervisor against every criterion' };
   if ((tile.acceptanceCriteria || []).some((c) => c.check === 'PEER')) return { required: true, reason: 'The tile has criteria only a person can judge' };
   if (tile.highStakes) return { required: true, reason: 'The requester flagged this tile as high stakes' };
   if (agent) return { required: false, reason: 'Agent work: checked automatically and by the Reviewer' };

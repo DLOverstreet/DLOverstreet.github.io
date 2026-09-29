@@ -1,7 +1,7 @@
 // createTessera wires the database, clock, storage, LLM router, worker and crowd together.
 // The browser app and the Node tests both start here; only the storage adapters differ.
 import { createDb } from '../db/db.js';
-import { emptyWorld, WORLD_VERSION } from '../db/schema.js';
+import { emptyWorld, WORLD_VERSION, TABLES } from '../db/schema.js';
 import { createClock } from '../lib/clock.js';
 import { createMockProvider } from '../llm/mock.js';
 import { createLlmRouter } from '../llm/router.js';
@@ -9,6 +9,7 @@ import { mockBrains } from '../agents/mock/index.js';
 import { createWorker } from '../jobs/worker.js';
 import { createCrowd } from './crowd.js';
 import { createSwarm, runWithAgents, pauseSwarmJob, resumeSwarmJob } from './swarm.js';
+import { resolveEscalation, reviewAudit, setWorkerConfigStatus } from './competition.js';
 import { seedWorld } from './seed.js';
 import { config } from '../domain/config.js';
 import * as commissions from './commissions.js';
@@ -44,7 +45,7 @@ const API = {
   disputeDelivery: delivery.disputeDelivery,
   castPanelVote: delivery.castPanelVote,
   buildDeliverableZip: delivery.buildDeliverableZip,
-  runWithAgents, pauseSwarmJob, resumeSwarmJob,
+  runWithAgents, pauseSwarmJob, resumeSwarmJob, resolveEscalation, reviewAudit, setWorkerConfigStatus,
   updateProfile: profiles.updateProfile,
   exportReputation: profiles.exportReputation,
   ensureSigningKey: profiles.ensureSigningKey,
@@ -71,6 +72,8 @@ export async function createTessera({ worldStore, blobs, keystore, secrets, seed
   let world = await worldStore.load();
   const fresh = !world || world.version !== WORLD_VERSION;
   if (fresh) world = emptyWorld({ seed, now: frozenAt ?? Date.now() });
+  // A world saved before a table existed gets the table, empty.
+  for (const t of TABLES) world.tables[t] ||= {};
   const clock = createClock(world.meta.clock);
   const db = createDb(world, clock);
   const mock = createMockProvider({ brains: mockBrains, fixtures });

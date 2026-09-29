@@ -67,7 +67,7 @@ export function swarmStage(db, c) {
     return parts.join(', ');
   }
   if (c.status === 'ASSEMBLING') return 'The Assembler is putting the deliverable together';
-  if (c.status === 'DELIVERED') return 'The autopilot is signing off';
+  if (c.status === 'DELIVERED') return c.autopilot?.rootCheck?.deliveredAt === c.deliveredAt ? 'The autopilot is signing off' : 'The root supervisor is judging the whole delivery';
   if (c.status === 'ACCEPTED') return 'Done';
   return STATUS_LABEL[c.status] || c.status;
 }
@@ -138,7 +138,7 @@ export function SwarmPage() {
     <div class="grid-3">
       <div class="card"><h3>Every step after yours</h3><p class="small">The autopilot answers the scoping questions from your text and marks what it assumed. Agents take tiles through the same offers, checks, peer reviews and revisions people use, and every call is logged under the job’s Agent runs.</p></div>
       <div class="card"><h3>Honest about the real world</h3><p class="small">Agents can search and read the web and cite what they found, but can’t call, record or visit. Tiles that need that become the kit a person needs (scripts, guides, outreach messages), unconfirmed facts are marked (verify), and missing data is a labeled SAMPLE. The deliverable lists what a person still has to do.</p></div>
-      <div class="card"><h3>Checked, not trusted</h3><p class="small">A worker agent’s files must pass the tile’s automatic checks before it hands them in, then the Reviewer judges the rest. Batch files are merged by code, not by a model, so a 5,000-row merge is exact. A long tile can be split among agents working at once; the parts are joined by code and checked like one agent’s work.</p></div>
+      <div class="card"><h3>Competed, then checked</h3><p class="small">Several worker configs do each tile blind, and a supervisor on a different model scores their drafts after the automatic checks, on criteria written before the work. It accepts the best, sends weak rounds back, re-splits what keeps failing, and brings what it can’t judge to you on the <a href="#/supervision">Supervision</a> page. Batch files are merged by code, so a 5,000-row merge is exact, and a long tile can be split among agents working at once.</p></div>
     </div>
   </div>`;
 }
@@ -147,6 +147,7 @@ export function SwarmPage() {
 
 function activityText(db, t, now) {
   const a = t.agentActivity;
+  if (t.supervision?.state === 'escalated' && ['CLAIMED', 'REVISION'].includes(t.status)) return html`<a href="#/supervision" class="bad-text" title=${t.supervision.reason}>Needs you: ${truncate(t.supervision.reason, 60)}</a>`;
   if (a?.error && ['CLAIMED', 'REVISION', 'OPEN'].includes(t.status)) return html`<span class="bad-text" title=${a.error}>Failed: ${truncate(a.error, 70)}</span>`;
   if (a?.doing && ['CLAIMED', 'REVISION'].includes(t.status)) return html`<span><span class="spinner" style=${{ width: '12px', height: '12px' }}></span> ${a.doing} · ${ago(a.since, now)}</span>`;
   if (t.status === 'CLAIMED' || t.status === 'REVISION') return t.status === 'REVISION' ? 'Waiting to revise' : 'Waiting for a slot';
@@ -162,8 +163,13 @@ function activityText(db, t, now) {
 const secsText = (n) => (n < 90 ? `${n} s` : `${Math.round(n / 60)} min`);
 
 /** The one-line note under a tile: what's special about how an agent does it. */
-function tileNote(t) {
+function tileNote(db, t) {
   const notes = [];
+  const sub = t.acceptedSubmissionId ? db.get('Submission', t.acceptedSubmissionId) : null;
+  const sv = sub?.supervised;
+  if (sv?.by === 'requester') notes.push('Settled by you from an escalation');
+  else if (sv?.winner) notes.push(`${sv.winner.configName} won the competition with ${sv.score.toFixed(2)}${sv.flagged ? ' · flagged: the workers disagreed' : ''}`);
+  else if (sv) notes.push(`Parts competed; joined parts scored ${sv.score.toFixed(2)}${sv.flagged ? ' · flagged' : ''}`);
   if (t.agentTiming?.parts) notes.push(`Split among ${t.agentTiming.parts} agents working at once`);
   else if (t.splitHint && t.status !== 'ACCEPTED') notes.push(`May split among up to ${t.splitHint.parts} agents`);
   if (t.agentTiming?.seconds) notes.push(`Took ${secsText(t.agentTiming.seconds)} (expected ${secsText(t.agentTiming.estSeconds)})`);
@@ -240,7 +246,7 @@ export function SwarmTab({ c, owner }) {
         ${sorted.length ? html`<div class="table-wrap"><table>
           <thead><tr><th>Tile</th><th>Agent</th><th>Status</th><th>Now</th></tr></thead>
           <tbody>${sorted.map((t) => html`<tr class="clickable" tabindex="0" onClick=${() => navigate(`#/t/${t.id}`)} onKeyDown=${(e) => e.key === 'Enter' && navigate(`#/t/${t.id}`)}>
-            <td><b>${truncate(t.title, 70)}</b>${tileNote(t) ? html`<div class="tiny muted">${tileNote(t)}</div>` : ''}</td>
+            <td><b>${truncate(t.title, 70)}</b>${tileNote(T.db, t) ? html`<div class="tiny muted">${tileNote(T.db, t)}</div>` : ''}</td>
             <td class="small nowrap">${t.claimedById ? T.db.get('User', t.claimedById)?.name : '—'}</td>
             <td><${StatusBadge} status=${t.status} /></td>
             <td class="small">${activityText(T.db, t, now)}</td>

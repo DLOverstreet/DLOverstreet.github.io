@@ -9,6 +9,7 @@ import { mockCopilot } from './copilot.js';
 import { mockWorker } from './worker.js';
 import { mockAutopilot } from './autopilot.js';
 import { mockResearcher } from './researcher.js';
+import { mockSupervisor, mockReflection, mockResplit, mockRootSupervisor } from './supervision.js';
 
 export const mockBrains = {
   scoping: mockScoping,
@@ -22,4 +23,8 @@ export const mockBrains = {
   worker: mockWorker,
   autopilot: mockAutopilot,
   researcher: mockResearcher,
+  supervisor: mockSupervisor,
+  reflection: mockReflection,
+  resplit: mockResplit,
+  'supervisor-root': mockRootSupervisor,
 };

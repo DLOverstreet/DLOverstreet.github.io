@@ -19,12 +19,16 @@ the decisions the blueprint left open. Keep both documents true when you change 
   combine web tools with a JSON output format.
 - Agent time estimates and split offers live in src/decompose/agent-time.js; split plans are
   checked and joined in src/agents/split.js. A split's parts must share the lead call's cached
-  prefix byte for byte (same model, effort, system prompt and first message block), so keep the
-  worker prompt's shared block first and deterministic.
+  prefix byte for byte (same model, effort, system prompt and first message blocks), so keep the
+  worker prompt's shared blocks first and deterministic.
+- Competition and supervision (competing worker configs, the supervisor's actions, lessons,
+  configs, audits) live in src/services/competition.js, with every rule as a pure function in
+  src/domain/supervision.js. Keep the worker and supervisor prompts' cached layers in order (hour
+  before five minutes, most shared first) and free of anything per call, or the cache misses.
 - Every tile or commission status change goes through transitionTile or
   transitionCommission (src/services/core.js).
-- LedgerEntry, ReputationEvent and StatusChange are append-only. The database refuses
-  updates and deletes; never work around that.
+- LedgerEntry, ReputationEvent, StatusChange, Attempt, Score, SupervisorAction and LessonTrial
+  are append-only. The database refuses updates and deletes; never work around that.
 - Money is integer cents everywhere.
 - Every LLM call goes through runAgent (src/llm/run-agent.js) and is logged to AgentRun.
   Prompts live in src/agents/prompts with a version suffix, and a changed prompt is a new file.

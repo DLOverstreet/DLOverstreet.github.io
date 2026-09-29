@@ -33,6 +33,8 @@ export async function runAssembleJob(T, { commissionId }) {
     inputTiles.push({
       key: t.key, title: t.title, kind: t.kind, contributor: { id: u.id, name: u.name },
       notes: sub?.notes || '', files: files.map((f) => ({ name: f.name, excerpt: excerptFor(f, { restricted, max: 3000 }) })),
+      // A swarm supervisor's flag goes forward with the tile: its workers disagreed sharply.
+      ...(sub?.supervised?.flagged ? { flagged: sub.supervised.disagreements?.length ? sub.supervised.disagreements : ['The competing workers disagreed sharply.'] } : {}),
     });
   }
   const input = { commission: { title: c.title, goal: c.goal }, tiles: inputTiles };
@@ -47,7 +49,9 @@ export async function runAssembleJob(T, { commissionId }) {
   }));
   const manifest = [...output.manifest, ...reviewers].map((m) => ({ ...m, contributorName: T.db.get('User', m.contributorId)?.name || m.contributorId, tileTitle: tilesOf(T.db, commissionId).find((t) => t.key === m.tileKey)?.title || m.tileKey }));
   const product = await finishedDocument(T, tiles);
-  const report = renderReport(c, output, manifest, gaps, conflicts, handoffsOf(T.db, commissionId), product, sourcesOf(T.db, commissionId));
+  const flags = inputTiles.filter((it) => it.flagged).map((it) => `${it.title} (${it.key}): the competing agents disagreed (${it.flagged.slice(0, 2).join('; ')}); the supervisor kept the best attempt.`);
+  const supervised = tiles.some((t) => T.db.get('Submission', t.acceptedSubmissionId)?.supervised);
+  const report = renderReport(c, output, manifest, gaps, conflicts, handoffsOf(T.db, commissionId), product, sourcesOf(T.db, commissionId), { flags, supervised });
   const key = `deliverables/${commissionId}/${Date.now().toString(36)}/deliverable.md`;
   await T.blobs.put(key, textToBytes(report));
   T.db.tx((tx) => {
@@ -56,7 +60,7 @@ export async function runAssembleJob(T, { commissionId }) {
     const history = [...(cur.delivery?.history || []), ...(cur.delivery ? [{ deliveredAt: cur.deliveredAt, deliverableKey: cur.deliverableKey }] : [])];
     tx.update('Commission', commissionId, {
       deliverableKey: key,
-      delivery: { title: output.title, summary: output.summary, sections: output.sections, manifest, gaps, conflicts, model, history },
+      delivery: { title: output.title, summary: output.summary, sections: output.sections, manifest, gaps, conflicts, flags, model, history },
     });
     transitionCommission(tx, commissionId, 'DELIVERED', 'assembler', { note: gaps.length || conflicts.length ? `${gaps.length} gap(s), ${conflicts.length} conflict(s) flagged` : 'Assembled' });
   });
@@ -107,7 +111,7 @@ export function handoffsOf(db, commissionId) {
  * The deliverable leads with the product: the finished document when there is one, then what
  * a person still needs to do and what was flagged, the sources, and last, how it was made.
  */
-function renderReport(c, out, manifest, gaps, conflicts, handoffs = [], product = null, sources = []) {
+function renderReport(c, out, manifest, gaps, conflicts, handoffs = [], product = null, sources = [], { flags = [], supervised = false } = {}) {
   const lines = [`# ${out.title}`, '', out.summary, ''];
   if (c.workforce === 'agents') {
     lines.push(sources.length
@@ -126,10 +130,11 @@ function renderReport(c, out, manifest, gaps, conflicts, handoffs = [], product 
     for (const h of handoffs) lines.push(`- **${h.title}** (${h.key}): ${h.handoff}`);
     lines.push('');
   }
-  if (gaps.length || conflicts.length) {
+  if (gaps.length || conflicts.length || flags.length) {
     lines.push('## Flagged for the requester', '');
     for (const g of gaps) lines.push(`- Gap: ${g}`);
     for (const x of conflicts) lines.push(`- Conflict: ${x}`);
+    for (const x of flags) lines.push(`- Disagreement: ${x}`);
     lines.push('');
   }
   if (sources.length) {
@@ -144,7 +149,7 @@ function renderReport(c, out, manifest, gaps, conflicts, handoffs = [], product 
   lines.push('## Credits', '', '| Tile | Contributor | Role | Files |', '| --- | --- | --- | --- |');
   for (const m of manifest) lines.push(`| ${m.tileTitle} | ${m.contributorName} | ${m.role} | ${m.files.join(', ') || '—'} |`);
   lines.push('', c.workforce === 'agents'
-    ? 'Commissioned through Tessera and done by its agent swarm: every tile above was written by an AI agent, checked automatically and by the Reviewer, and accepted.'
+    ? `Commissioned through Tessera and done by its agent swarm: every tile above was written by an AI agent, checked automatically and ${supervised ? 'scored by a supervisor against competing attempts' : 'by the Reviewer'}, and accepted.`
     : `Commissioned by ${c.title ? 'the requester' : ''} through Tessera. Every contributor above was paid when their tile was accepted.`, '');
   return lines.join('\n');
 }

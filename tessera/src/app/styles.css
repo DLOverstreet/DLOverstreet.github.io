@@ -122,6 +122,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 1.25rem 1rem 4rem; }
 .right { text-align: right; }
 .nowrap { white-space: nowrap; }
 .num { font-variant-numeric: tabular-nums; }
+tr.win td { background: var(--good-bg); }
 hr { border: 0; border-top: 1px solid var(--line); margin: 1rem 0; }
 
 /* ---------- cards ---------- */

@@ -16,6 +16,7 @@ import { SettingsView } from './views/settings.js';
 import { VerifyView } from './views/verify.js';
 import { BreakdownPage } from './views/breakdown.js';
 import { SwarmPage } from './views/swarm.js';
+import { SupervisionPage } from './views/supervision.js';
 import { Guide } from './guide.js';
 
 function useOutside(ref, onOut) {
@@ -105,6 +106,7 @@ function Nav({ route }) {
     ${link('#/', 'Home', '')}
     ${link('#/breakdown', 'Break down a job', 'breakdown')}
     ${link('#/swarm', 'Agent swarm', 'swarm')}
+    ${T.db.count('Commission', (c) => c.workforce === 'agents') ? link('#/supervision', 'Supervision', 'supervision', T.db.count('Tile', (t) => t.supervision?.state === 'escalated' && ['CLAIMED', 'REVISION'].includes(t.status))) : ''}
     ${me?.isRequester ? html`${link('#/post', 'Post a commission', 'post')}` : ''}
     ${me?.isContributor ? html`${link('#/offers', 'Offers', 'offers', offers)}${link('#/board', 'Open board', 'board')}${link('#/work', 'My tiles', 'work')}${link('#/earnings', 'Earnings', 'earnings')}${link('#/reputation', 'Reputation', 'reputation')}${link('#/profile', 'Profile', 'profile')}` : ''}
     ${me?.isAdmin ? link('#/admin', 'Admin', 'admin') : ''}
@@ -124,6 +126,7 @@ function Routes({ route }) {
     case 'how': return html`<${HowItWorks} />`;
     case 'breakdown': return html`<${BreakdownPage} key=${route.query.example || ''} example=${route.query.example} />`;
     case 'swarm': return html`<${SwarmPage} />`;
+    case 'supervision': return html`<${SupervisionPage} />`;
     case 'personas': return html`<${PersonaPage} />`;
     case 'post': return needPersona(html`<${PostCommission} example=${route.query.example} />`);
     case 'c': return html`<${CommissionView} id=${b} tab=${c} />`;

@@ -14,6 +14,7 @@ import { UserError, must, tilesOf } from './core.js';
 import { respondToOffer, claimFromBoard, explainFit } from './market.js';
 import { submitWork, submitPeerReview, requesterReview, upstreamFiles } from './work.js';
 import { acceptDelivery } from './delivery.js';
+import { createCompetition, competes } from './competition.js';
 import { answerScoping, fundCommission, replacePlan, draftGraph, postCommission } from './commissions.js';
 import { loadFileTexts } from './files.js';
 import { config } from '../domain/config.js';
@@ -360,6 +361,11 @@ export async function workerInput(T, tile) {
   return input;
 }
 
+/** The rows a tile covers: its batch range, or every row of the table it makes. */
+function rowRange(tile, work) {
+  return tile.part && (tile.part.of > 1 || tile.part.to > tile.part.from) ? { from: tile.part.from, to: tile.part.to } : work.rows ? { from: 1, to: work.rows } : null;
+}
+
 // ---------------------------------------------------------------- the swarm
 
 /**
@@ -399,6 +405,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     if (T.db.get('Tile', tileId)) T.db.tx((tx) => tx.update('Tile', tileId, { agentActivity: activity }));
   }
   const pace = () => (paceMs && T.llm.platform('light').providerName === 'mock' ? new Promise((r) => setTimeout(r, paceMs * (0.6 + Math.random() * 0.8))) : null);
+  const competition = createCompetition(T, { setActivity, pace });
 
   // --- synchronous steps: bookkeeping the autopilot and agents do without a model
 
@@ -462,8 +469,10 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
 
   function signOff(c) {
     const gaps = (c.delivery?.gaps || []).length;
-    acceptDelivery(T, c.requesterId, c.id, 'Signed off by the autopilot on the requester’s behalf');
-    note(c.id, gaps ? `Signed off by the autopilot with ${gaps} gap${gaps > 1 ? 's' : ''} flagged in the deliverable.` : 'Signed off by the autopilot.', { state: 'DONE', doneAt: T.clock.now() });
+    const root = c.autopilot?.rootCheck;
+    acceptDelivery(T, c.requesterId, c.id, root ? `Signed off by the autopilot after the root supervisor’s review${root.accept ? '' : ' (you overrode its concerns)'}` : 'Signed off by the autopilot on the requester’s behalf');
+    const by = root ? (root.accept ? ` The root supervisor accepted it: ${root.note}` : ' You overrode the root supervisor’s concerns.') : '';
+    note(c.id, `${gaps ? `Signed off by the autopilot with ${gaps} gap${gaps > 1 ? 's' : ''} flagged in the deliverable.` : 'Signed off by the autopilot.'}${by}`, { state: 'DONE', doneAt: T.clock.now() });
   }
 
   // --- model tasks
@@ -533,19 +542,39 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     const tps = speedFor(model, swarmSpeeds(T.db));
     // A long first attempt may be split among several agents when that saves real time for little extra cost.
     const offer = tile.status === 'REVISION' || tile.revisionCount ? null : offerFor(c, tile, input, { model, tps, shape, s });
-    if (offer) input.delegation = offer.delegation;
-    await pace();
-    const call = (inp, extra = {}) => runAgent({ agent: AGENTS.worker, input: inp, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 20000, bestEffort: true, ...extra });
-    let res = await call(input, { cache: !!offer });
+    /** @type {any} */
+    let res;
+    /** @type {any} */
     let split = null;
-    if (res.output.split) {
-      split = offer && !res.problems?.length ? await runParts(tile, input, res.output, route) : { failed: `the split plan didn't hold up (${(res.problems || ['not offered']).join('; ')})` };
-      if (split.failed) {
-        // The parts couldn't be done or joined: one agent does the whole tile after all.
-        delete input.delegation;
-        res = await call(input, { cache: !!offer });
-      } else {
-        res = { ...res, output: split.output, problems: split.problems };
+    /** @type {any} */
+    let won = null;
+    if (competes(tile, s)) {
+      // Competing workers do the tile and a supervisor on another model keeps the best (competition.js).
+      const checkRoute = T.llm.agent(tile.independentCheck ? s.workerModel : s.checkModel);
+      won = await competition.compete(tile, input, { route, checkRoute, s, offer, rows: rowRange(tile, estimateAgentWork(tile, shape)), userFeedback: tile.supervision?.state === 'retry' ? tile.supervision.feedback : null });
+      const now = T.db.get('Tile', tile.id);
+      if (now.claimedById !== agent || !['CLAIMED', 'REVISION'].includes(now.status)) return;
+      if (won.status === 'escalated') {
+        T.db.tx((tx) => tx.update('Tile', tile.id, { supervision: { ...(now.supervision || {}), state: 'escalated', specId: won.spec.id, reason: won.reason, at: tx.now() }, agentActivity: null }));
+        note(c.id, `“${tile.title}” needs you: ${won.reason} Settle it on the Supervision page; the other tiles carry on.`);
+        return;
+      }
+      res = { output: won.output, model: won.model, problems: [] };
+      if (won.split) split = { parts: won.split.parts, reason: won.split.reason, report: won.split.report || [], competed: true };
+    } else {
+      if (offer) input.delegation = offer.delegation;
+      await pace();
+      const call = (inp, extra = {}) => runAgent({ agent: AGENTS.worker, input: inp, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 20000, bestEffort: true, ...extra });
+      res = await call(input, { cache: !!offer });
+      if (res.output.split) {
+        split = offer && !res.problems?.length ? await runParts(tile, input, res.output, route) : { failed: `the split plan didn't hold up (${(res.problems || ['not offered']).join('; ')})` };
+        if (split.failed) {
+          // The parts couldn't be done or joined: one agent does the whole tile after all.
+          delete input.delegation;
+          res = await call(input, { cache: !!offer });
+        } else {
+          res = { ...res, output: split.output, problems: split.problems };
+        }
       }
     }
     const cur = T.db.get('Tile', tile.id);
@@ -565,7 +594,8 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       res.output.approach.map((a, i) => `${i + 1}. ${a}`).join('\n'),
       res.output.notes,
       input.mergeReport || '',
-      split && !split.failed ? `Split into ${split.parts} parts that ran at the same time (${split.reason}); joined by code: ${split.report.join('; ') || 'one file per part'}.${split.repaired ? ' The joined files failed a check, so the lead agent fixed them.' : ''}` : '',
+      won ? competitionNote(won) : '',
+      split && !split.failed ? `Split into ${split.parts} parts that ran at the same time (${split.reason})${split.competed ? ', each competed on its own' : ''}; joined by code: ${split.report.join('; ') || 'one file per part'}.${split.repaired ? ' The joined files failed a check, so the lead agent fixed them.' : ''}` : '',
       split?.failed ? `Offered a split, but ${split.failed}, so one agent did the whole tile.` : '',
       tile.research && !tile.research.unavailable ? `Web research: ${tile.research.searches || 0} searches, ${tile.research.reads || 0} pages read, ${(tile.research.sources || []).length} sources.` : '',
       res.problems?.length ? `Handed in with known problems after ${config.llm.maxRetries + 1} attempts: ${res.problems.join('; ')}` : '',
@@ -574,10 +604,25 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       files, notes, minutesSpent: Math.max(1, Math.round((Date.now() - started) / 60000)),
       checklist: Object.fromEntries(res.output.checklist.map((x) => [x.criterionId, x.done])),
       modelUsed: `${res.model} (agent)`, handoff: res.output.handoff,
+      supervised: won ? {
+        specId: won.spec.id, score: won.score, threshold: won.spec.threshold, flagged: won.flagged, disagreements: won.disagreements,
+        model: won.supervisorId, confidence: won.confidence, verdicts: won.verdicts, winner: won.winner,
+      } : null,
     });
     const estSeconds = agentSeconds(tile, { ...shape, tps });
-    T.db.tx((tx) => tx.update('Tile', tile.id, { agentTiming: { estSeconds, seconds, parts: split && !split.failed ? split.parts : null, offered: offer ? offer.parts : null, at: T.clock.now() } }));
+    T.db.tx((tx) => tx.update('Tile', tile.id, {
+      agentTiming: { estSeconds, seconds, parts: split && !split.failed ? split.parts : null, offered: offer ? offer.parts : null, at: T.clock.now() },
+      ...(won && cur.supervision ? { supervision: { ...cur.supervision, state: 'resolved', resolvedAt: T.clock.now() } } : {}),
+    }));
     setActivity(tile.id, null);
+  }
+
+  /** What the submission notes say about the competition behind it. */
+  function competitionNote(won) {
+    const names = (won.spec.competitors || []).map((x) => x.name);
+    const who = won.split ? `Each part competed on its own (${names.length} configs)` : names.length > 1 ? `${names.length} worker configs competed (${names.join(', ')})` : `${names[0] || 'One config'} worked alone`;
+    const how = won.winner && !won.split ? `; ${won.winner.configName} won with ${won.score.toFixed(2)}` : `; the joined parts scored ${won.score.toFixed(2)}`;
+    return `${who}${how} (threshold ${won.spec.threshold}), scored by ${won.supervisorId || 'the supervisor'}.${won.flagged ? ` Flagged: the workers disagreed sharply${won.disagreements.length ? ` (${won.disagreements.slice(0, 3).join('; ')})` : ''}.` : ''}`;
   }
 
   /**
@@ -592,7 +637,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     const inputTokens = estimateTokens(AGENTS.worker.prompt.system) + estimateTokens(JSON.stringify(input));
     const offer = splitOffer({ tile, work, inputTokens, model, tps, settings: s, spentUsd: spentUsd(T.db, c.id) });
     if (!offer) return null;
-    const rows = tile.part && (tile.part.of > 1 || tile.part.to > tile.part.from) ? { from: tile.part.from, to: tile.part.to } : work.rows ? { from: 1, to: work.rows } : null;
+    const rows = rowRange(tile, work);
     return {
       ...offer,
       delegation: {
@@ -709,6 +754,9 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       if (cap > 0 && spentUsd(T.db, c.id) >= cap) { pause(c.id, `Paused at the $${cap} spend cap. Raise it in Settings, then resume.`); continue; }
       try {
         acted += retryFailedJobs(c);
+        // Lessons from each scored task are written in the background while the job goes on.
+        const reflecting = T.db.filter('TaskSpec', (x) => x.commissionId === c.id && x.reflect === 'pending');
+        for (const sp of reflecting) tasks.push({ key: `reflect:${sp.id}`, commissionId: c.id, run: () => competition.reflect(sp.id) });
         if (c.status === 'SCOPING' && c.clarifications?.scopedAt && !c.clarifications.answeredAt && c.planState !== 'DECOMPOSING' && c.clarifications.questions.length) {
           tasks.push({ key: `answer:${c.id}`, commissionId: c.id, run: () => answer(c) });
         } else if (c.status === 'PLANNED') {
@@ -719,15 +767,22 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
           const stuck = T.db.find('Tile', (t) => t.commissionId === c.id && (t.reopenCount || 0) >= 2 && t.reopenCount > (cleared[t.id] || 0));
           if (stuck) { pause(c.id, `Paused: “${stuck.title}” failed review with ${stuck.reopenCount} agents in a row. Read its reviews, then resume to give it to another agent.`); continue; }
           acted += takeOffers(c) + claimOpen(c);
-          for (const t of T.db.filter('Tile', (x) => x.commissionId === c.id && ['CLAIMED', 'REVISION'].includes(x.status) && isAgent(x.claimedById))) {
-            const key = `${t.dynamic ? 'review' : 'work'}:${t.id}:${t.status}:${t.revisionCount || 0}:${t.reopenCount || 0}`;
+          // A task the supervisor escalated waits for you on the Supervision page.
+          for (const t of T.db.filter('Tile', (x) => x.commissionId === c.id && ['CLAIMED', 'REVISION'].includes(x.status) && isAgent(x.claimedById) && x.supervision?.state !== 'escalated')) {
+            const key = `${t.dynamic ? 'review' : 'work'}:${t.id}:${t.status}:${t.revisionCount || 0}:${t.reopenCount || 0}:${t.supervision?.retries || 0}`;
             tasks.push({ key, commissionId: c.id, tileId: t.id, run: () => (t.dynamic && t.reviewOf ? peerReview(t) : work(t)) });
           }
           for (const t of T.db.filter('Tile', (x) => x.commissionId === c.id && x.dynamic && x.status === 'OPEN' && x.matchSummary && x.matchSummary.eligible === 0)) {
             tasks.push({ key: `self-review:${t.id}`, commissionId: c.id, run: () => selfReview(t) });
           }
         } else if (c.status === 'DELIVERED') {
-          signOff(c); acted++;
+          // With competition on, the root supervisor judges the whole job first (after the last lessons are written).
+          const root = c.autopilot?.rootCheck;
+          if (swarmSettings(T.db).competition === 'off') { signOff(c); acted++; }
+          else if (reflecting.length) { /* the last reflections finish first */ }
+          else if (!root || root.deliveredAt !== c.deliveredAt) tasks.push({ key: `root:${c.id}:${c.deliveredAt}`, commissionId: c.id, run: () => competition.rootCheck(c) });
+          else if (root.accept || root.overridden === c.deliveredAt) { signOff(c); acted++; }
+          else pause(c.id, `Paused before sign-off: the root supervisor wants you to look first. ${root.concerns.join(' ')} Accept the delivery yourself, or resume to let the autopilot sign off.`);
         }
       } catch (e) {
         if (!(e instanceof UserError)) throw e;
@@ -841,7 +896,10 @@ export function resumeSwarmJob(T, actorId, commissionId) {
     if (['ACCEPTED', 'CANCELLED'].includes(c.status)) throw new UserError('This job is finished.');
     // Resuming gives each tile that stalled the swarm one more agent.
     const cleared = Object.fromEntries(tilesOf(tx, commissionId).filter((t) => t.reopenCount).map((t) => [t.id, t.reopenCount]));
-    return tx.update('Commission', commissionId, { autopilot: { ...(c.autopilot || {}), state: 'RUNNING', note: 'Resumed.', notedAt: tx.now(), cleared } });
+    // Resuming a job the root supervisor held back lets the autopilot sign it off.
+    const root = c.autopilot?.rootCheck;
+    const rootCheck = root && !root.accept && c.status === 'DELIVERED' ? { ...root, overridden: c.deliveredAt } : root;
+    return tx.update('Commission', commissionId, { autopilot: { ...(c.autopilot || {}), state: 'RUNNING', note: 'Resumed.', notedAt: tx.now(), cleared, ...(rootCheck ? { rootCheck } : {}) } });
   }, { actor: actorId });
   T.swarm?.reset();
   return out;

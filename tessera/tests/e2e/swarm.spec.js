@@ -35,6 +35,46 @@ test('a visitor hands a job to the agent swarm and gets it back done, with the s
   expect((await download).suggestedFilename()).toMatch(/\.zip$/);
   await page.getByRole('tab', { name: 'Delivery' }).click();
   await expect(page.getByText(/Done by Tessera’s agent swarm/)).toBeVisible();
+
+  // Each tile was competed: its page shows the rounds, and the Supervision page the record.
+  await page.getByRole('tab', { name: 'Swarm' }).click();
+  await expect(page.getByText(/won the competition with/).first()).toBeVisible();
+  await page.locator('table tbody tr.clickable').first().click();
+  await expect(page.getByRole('heading', { name: 'Competition' })).toBeVisible();
+  await expect(page.getByText('Blind round').first()).toBeVisible();
+  await page.getByRole('link', { name: 'Supervision' }).click();
+  await expect(page.getByRole('heading', { name: 'Supervision', level: 1 })).toBeVisible();
+  await expect(page.getByText('Nothing escalated')).toBeVisible();
+  for (const name of ['How tasks end', 'Leaderboard by task type', 'Lessons', 'Supervisors', 'Worker configs']) await expect(page.getByRole('heading', { name })).toBeVisible();
+  await page.screenshot({ path: 'test-results/supervision.png', fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test('a task the supervisor can’t judge comes to you, and accepting an attempt finishes the job', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await boot(page, '#/swarm');
+  // The supervisor on the first task says it can't judge it (the mock is told so for this test).
+  await page.evaluate(async () => {
+    const T = window.tessera;
+    const brains = './src/agents/mock/supervision.js'; // loaded by the page, relative to the app
+    const { mockSupervisor } = await import(brains);
+    T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, swarm: { ...(tx.meta.settings.swarm || {}), concurrency: 1 } } }));
+    T.mock.queue('supervisor', [(input) => ({ ...mockSupervisor(input), canJudge: false, rationale: 'The survey sample size isn’t in the inputs.' })]);
+  });
+  await page.getByRole('button', { name: 'Market research' }).click();
+  await page.getByRole('button', { name: 'Hand it to the swarm' }).click();
+  await expect(page).toHaveURL(/#\/c\/[^/]+\/swarm/);
+  await expect(page.getByText(/Needs you:/).first()).toBeVisible({ timeout: 240000 });
+  await page.getByRole('link', { name: /Supervision/ }).click();
+  await expect(page.getByRole('heading', { name: /Needs you \(1\)/ })).toBeVisible();
+  await expect(page.getByText(/can’t judge this task/).first()).toBeVisible();
+  await page.screenshot({ path: 'test-results/escalation.png', fullPage: true });
+  await page.getByRole('button', { name: 'Accept this one' }).nth(1).click();
+  await expect(page.getByText('Nothing escalated')).toBeVisible();
+  await page.waitForFunction(() => window.tessera.db.filter('Commission', (c) => c.workforce === 'agents').every((c) => c.status === 'ACCEPTED'), null, { timeout: 240000 });
+  const settled = await page.evaluate(() => window.tessera.db.filter('SupervisorAction', (a) => a.by === 'requester').map((a) => a.action));
+  expect(settled).toEqual(['accept']);
   expect(errors).toEqual([]);
 });
 

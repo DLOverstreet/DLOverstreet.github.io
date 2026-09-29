@@ -20,8 +20,9 @@ export const ANTHROPIC_MODELS = Object.keys(MODEL_PRICES);
 /** Web search is billed per search on top of tokens; web fetch costs only its tokens. */
 export const WEB_SEARCH_USD = 10 / 1000;
 
-/** Writing a prompt-cache entry (five-minute lifetime) costs this much more than plain input. */
+/** Writing a prompt-cache entry costs this much more than plain input: five-minute and hour-long lifetimes. */
 export const CACHE_WRITE = 1.25;
+export const CACHE_WRITE_1H = 2;
 
 /** @param {string} model */
 export function modelCaps(model) {
@@ -30,7 +31,8 @@ export function modelCaps(model) {
 
 function costAt(p, run) {
   if (!p) return 0;
-  const cached = (run.tokensCacheWrite || 0) * p.in * CACHE_WRITE + (run.tokensCacheRead || 0) * (p.cacheRead ?? p.in * 0.1);
+  const hour = run.tokensCacheWrite1h || 0;
+  const cached = ((run.tokensCacheWrite || 0) - hour) * p.in * CACHE_WRITE + hour * p.in * CACHE_WRITE_1H + (run.tokensCacheRead || 0) * (p.cacheRead ?? p.in * 0.1);
   return ((run.tokensIn || 0) * p.in + cached + (run.tokensOut || 0) * p.out) / 1e6 + (run.webSearches || 0) * WEB_SEARCH_USD;
 }
 

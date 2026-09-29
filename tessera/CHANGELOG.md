@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-09-29 (later)
+- **Competing workers and supervisors on swarm jobs**, from the swarm blueprint. Each tile becomes a
+  task with a spec written before any work (hard checks, a weighted rubric, a threshold). Three
+  worker configs (one model, three strategy hints) do it blind; a supervisor on the check model
+  scores every draft after the checks, and a draft that fails a check can't win. When the blind
+  round isn't a clean accept the workers see each other's drafts and revise, and the swarm tracks
+  herding toward the weakest draft. The supervisor accepts, flags a sharp disagreement (it reaches
+  later supervisors, the root supervisor and the deliverable), sends back with feedback (twice),
+  re-splits a task that fails a third time into parts that each compete, or escalates to you.
+- **Supervision page** (`#/supervision`): settle escalated tasks (accept an attempt, send back with
+  your note, or give it to one agent), and see the leaderboard by config and task type, lessons with
+  their measured lift, each supervisor's agreement with the checks and with your reviews of sampled
+  accepted tasks, the configs' lineage, the latest actions, the cache hit rate and the herding rate.
+  Tiles show their competition, and the Swarm tab says who won and what needs you.
+- **Learning.** A reflection agent writes lessons after each task; shared lessons form a cached
+  playbook per task type that one competitor per task runs without, so each lesson is promoted or
+  retired on its lift after 20 trials. Losing configs are retired and winners cloned with a new
+  strategy; a config that dominates a task type gets one rival (or, on "auto", works alone).
+- **Root supervisor** judges the whole delivery with every flag before the autopilot signs off, and
+  can hold it for you (resuming overrides it).
+- **Layered prompt cache.** The worker prompt (`worker.v4`) is laid out job (1-hour cache), playbook
+  (1 hour), task (5 minutes), round (5 minutes), then an uncached suffix; the first competitor starts
+  alone and the rest start once its response begins streaming, so they read the cache. Hour-long
+  writes are logged and priced at 2×. A long tile's lead decides whether to split before anyone works.
+- New prompts `supervisor.v1`, `reflection.v1`, `resplit.v1`, `supervisor-root.v1`; nine new tables.
+  Settings: competition (on, auto, off), competitors, reveal round, score to accept, learning, and
+  the share of tasks sampled for your review. Where this departs from the blueprint is in
+  docs/PROTOTYPE.md.
+- Tests: 167 unit and integration tests and 8 end-to-end tests; all 26 corpus jobs reach sign-off
+  with competition on.
+
 ## 2026-09-29
 - **Long tiles split among agents working at once.** When a tile would take one agent much longer
   than the rest (60 s by default), its agent is offered a split: it either does the tile or returns

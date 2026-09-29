@@ -9,10 +9,14 @@ import * as translatorPrompt from './prompts/translator.v1.js';
 import * as reviewerPrompt from './prompts/reviewer.v1.js';
 import * as assemblerPrompt from './prompts/assembler.v2.js';
 import * as copilotPrompt from './prompts/copilot.v1.js';
-import * as workerPrompt from './prompts/worker.v3.js';
+import * as workerPrompt from './prompts/worker.v4.js';
+import * as supervisorPrompt from './prompts/supervisor.v1.js';
+import * as reflectionPrompt from './prompts/reflection.v1.js';
+import * as resplitPrompt from './prompts/resplit.v1.js';
+import * as rootPrompt from './prompts/supervisor-root.v1.js';
 import * as researcherPrompt from './prompts/researcher.v1.js';
 import * as autopilotPrompt from './prompts/autopilot.v1.js';
-import { ScopingQuestions, TileGraph, MatcherNotes, Brief, ReviewVerdict, Assembly, WorkResult, ScopingAnswers } from './schemas.js';
+import { ScopingQuestions, TileGraph, MatcherNotes, Brief, ReviewVerdict, Assembly, WorkResult, ScopingAnswers, SupervisorVerdict, Lessons, RootVerdict, SplitPlan } from './schemas.js';
 import { runAutoChecks } from '../domain/autochecks.js';
 import { validateGraph } from '../domain/graph.js';
 import { config } from '../domain/config.js';
@@ -117,6 +121,8 @@ export const worker = {
   name: 'worker', prompt: workerPrompt, schema: WorkResult, tier: 'heavy', effort: 'medium',
   validate(out, input) {
     if (out.split && !input.part) return splitProblems(out.split, input);
+    // Asked only whether to split: no split means "keep it whole", and the work comes later.
+    if (input.delegation?.decideOnly) return [];
     const problems = [];
     if (out.split) problems.push('you are doing one part of a split tile: hand in your files and leave split out');
     if (!out.files.length) problems.push('hand in at least one file');
@@ -181,7 +187,50 @@ export const copilot = {
   name: 'copilot', prompt: copilotPrompt, format: 'text', tier: 'light', effort: 'low',
 };
 
-export const AGENTS = { scoping, decomposer, decomposerRefine, matcherNote, translator, reviewer, assembler, copilot, worker, autopilot, researcher };
+/**
+ * Scores competing attempts at one task against its rubric. It must score every attempt on every
+ * rubric item; it doesn't see the automatic checks, so its scores can be audited against them.
+ */
+export const supervisor = {
+  name: 'supervisor', prompt: supervisorPrompt, schema: SupervisorVerdict, tier: 'heavy', effort: 'medium',
+  validate(out, input) {
+    const problems = [];
+    const labels = input.attempts.map((a) => a.label);
+    const got = out.attempts.map((a) => a.label);
+    const missing = labels.filter((l) => !got.includes(l));
+    if (missing.length) problems.push(`score every attempt: missing ${missing.join(', ')}`);
+    if (new Set(got).size !== got.length) problems.push('each attempt is scored once');
+    const items = input.task.rubric.map((r) => r.id);
+    for (const a of out.attempts) {
+      const ids = a.items.map((i) => i.id);
+      const gap = items.filter((id) => !ids.includes(id));
+      if (gap.length) problems.push(`attempt ${a.label}: score every rubric item (missing ${gap.join(', ')})`);
+    }
+    return problems;
+  },
+};
+
+/** Turns a scored task's winning and losing attempts into short, testable lessons. */
+export const reflection = {
+  name: 'reflection', prompt: reflectionPrompt, schema: Lessons, tier: 'light', effort: 'low',
+  validate(out, input) {
+    const labels = new Set([input.winner.label, ...input.others.map((o) => o.label)]);
+    return out.lessons.filter((l) => !labels.has(l.attempt)).map((l) => `lesson "${l.text.slice(0, 40)}" names attempt ${l.attempt}, which isn't in the task`);
+  },
+};
+
+/** The disaggregator's second look at a task that failed or is too big: smaller tasks that compete on their own. */
+export const resplit = {
+  name: 'resplit', prompt: resplitPrompt, schema: SplitPlan, tier: 'heavy', effort: 'medium',
+  validate(out, input) { return splitProblems(out, input); },
+};
+
+/** Judges a finished swarm job as a whole before the autopilot signs it off. */
+export const rootSupervisor = {
+  name: 'supervisor-root', prompt: rootPrompt, schema: RootVerdict, tier: 'heavy', effort: 'medium',
+};
+
+export const AGENTS = { scoping, decomposer, decomposerRefine, matcherNote, translator, reviewer, assembler, copilot, worker, autopilot, researcher, supervisor, reflection, resplit, rootSupervisor };
 
 export const AGENT_TABLE = [
   { name: 'Scoping', runsIn: 'Worker', model: `Heavy (${config.llm.heavyModel})`, job: 'Asks the requester up to five clarifying questions', version: scopingPrompt.version },
@@ -194,4 +243,8 @@ export const AGENT_TABLE = [
   { name: 'Worker agents', runsIn: 'Agent swarm', model: `Set in Settings (default ${config.swarm.workerModel}); checks on ${config.swarm.checkModel}`, job: 'Do tiles, split long ones among agents working at once, peer-review each other and revise, on jobs you hand to the swarm', version: workerPrompt.version },
   { name: 'Researcher', runsIn: 'Agent swarm', model: 'The worker model, with Anthropic web search and web fetch', job: 'Looks up the outside facts a tile needs (prices, sources, rules, data) and hands the worker notes with URLs', version: researcherPrompt.version },
   { name: 'Autopilot', runsIn: 'Agent swarm', model: 'Light', job: 'Stands in for you on a swarm job: answers the scoping questions, marking assumptions', version: autopilotPrompt.version },
+  { name: 'Supervisor', runsIn: 'Agent swarm', model: `The check model (default ${config.swarm.checkModel})`, job: 'Scores competing workers’ attempts at a task on a rubric written before the work; the swarm accepts, flags, sends back, re-splits or escalates on its scores', version: supervisorPrompt.version },
+  { name: 'Reflection', runsIn: 'Agent swarm', model: 'Light', job: 'Turns winning and losing attempts into short lessons, which stay only if they raise scores against a control group', version: reflectionPrompt.version },
+  { name: 'Re-split', runsIn: 'Agent swarm', model: 'Heavy', job: 'Splits a task that failed three times (or is too big, or mixes two jobs) into smaller tasks that compete on their own', version: resplitPrompt.version },
+  { name: 'Root supervisor', runsIn: 'Agent swarm', model: 'Heavy', job: 'Judges the whole deliverable, with every flag raised on the way, before the autopilot signs off', version: rootPrompt.version },
 ];

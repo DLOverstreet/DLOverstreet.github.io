@@ -218,7 +218,8 @@ export function runTick(T) {
       tx.update('Offer', o.id, { response: 'EXPIRED', respondedAt: now });
       afterOfferClosed(tx, o.tileId, 'system');
     }
-    for (const t of tx.filter('Tile', (x) => ['CLAIMED', 'REVISION'].includes(x.status) && x.claimExpiresAt && x.claimExpiresAt <= now)) {
+    // A swarm task escalated to the requester waits for them, not for the agent holding it.
+    for (const t of tx.filter('Tile', (x) => ['CLAIMED', 'REVISION'].includes(x.status) && x.claimExpiresAt && x.claimExpiresAt <= now && x.supervision?.state !== 'escalated')) {
       const holder = t.claimedById;
       const prior = tx.filter('ReputationEvent', (e) => e.userId === holder && (e.reason === 'CLAIM_EXPIRED' || e.reason === 'CLAIM_EXPIRED_FIRST'));
       const first = prior.length === 0;

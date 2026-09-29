@@ -26,13 +26,15 @@ function clip(value, max = 24000) {
  * @param {any[]} [p.tools] server tools for the call (web search, web fetch); providers without them ignore them
  * @param {string} [p.effort] overrides the agent's effort level
  * @param {boolean} [p.cache] keep the prompt-cache breakpoints the prompt marks (render() returning
- *   blocks with `cache: true`), for calls that share a long prefix with calls right after them
+ *   blocks with `cache: true` or `cache: '1h'`), for calls that share a long prefix with calls after them
+ * @param {() => void} [p.onStart] called once the first attempt's prompt has been read (the provider
+ *   streams to know), so calls sharing its cached prefix can start and read the cache
  */
-export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort, cache = false }) {
+export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort, cache = false, onStart }) {
   const system = agent.prompt.system;
   const format = agent.format || 'json';
   const rendered = agent.prompt.render(input);
-  const content = typeof rendered === 'string' ? rendered : rendered.map((b) => ({ type: 'text', text: b.text, ...(cache && b.cache ? { cache: true } : {}) }));
+  const content = typeof rendered === 'string' ? rendered : rendered.map((b) => ({ type: 'text', text: b.text, ...(cache && b.cache ? { cache: b.cache } : {}) }));
   const baseMessages = [...history, { role: 'user', content }];
   let messages = baseMessages;
   let lastError = 'unknown error';
@@ -49,7 +51,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
         agent: agent.name, promptVersion: agent.prompt.version, input, attempt, feedback,
         model: route.model, system, messages, maxTokens,
         jsonSchema: format === 'json' && agent.schema ? agent.schema.jsonSchema() : undefined,
-        tools, effort: effort || agent.effort,
+        tools, effort: effort || agent.effort, onStart: attempt === 0 ? onStart : undefined,
       });
       if (format === 'text') {
         output = String(res.text || '').trim();
@@ -77,6 +79,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       tokensIn: res?.usage?.inputTokens ?? null,
       tokensOut: res?.usage?.outputTokens ?? null,
       ...(res?.usage?.cacheWriteTokens ? { tokensCacheWrite: res.usage.cacheWriteTokens } : {}),
+      ...(res?.usage?.cacheWrite1hTokens ? { tokensCacheWrite1h: res.usage.cacheWrite1hTokens } : {}),
       ...(res?.usage?.cacheReadTokens ? { tokensCacheRead: res.usage.cacheReadTokens } : {}),
       webSearches: res?.usage?.webSearches || 0,
       webFetches: res?.usage?.webFetches || 0,
@@ -87,6 +90,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       tileId: meta.tileId || null,
       userId: meta.userId || null,
       ...(meta.part ? { part: meta.part } : {}),
+      ...(meta.competitor ? { competitor: meta.competitor } : {}),
     });
     if (!error) return { output, model: res.model, provider: route.providerName, sources: res.sources || [], usage: res.usage || null };
     lastError = String(error.message || error);

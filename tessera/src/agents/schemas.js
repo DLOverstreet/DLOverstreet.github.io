@@ -111,3 +111,42 @@ export const WorkResult = s.object({
 export const MatcherNotes = s.object({
   notes: s.array(s.object({ userId: s.string(), note: s.string().min(10).max(200) })),
 });
+
+/** A supervisor's scores for every attempt on a task, on the task's rubric. */
+export const SupervisorVerdict = s.object({
+  attempts: s.array(s.object({
+    label: s.string().describe('The attempt label, e.g. "A"'),
+    items: s.array(s.object({
+      id: s.string().describe('A rubric item id'),
+      score: s.int().min(0).max(4).describe('0 fails it, 2 partly meets it, 4 fully meets it'),
+      note: s.string().describe('Why, in one sentence, pointing at the output'),
+    })),
+    summary: s.string().describe('The attempt’s main strength and main problem'),
+  })).min(1),
+  agreement: s.enum(['high', 'mixed', 'low']).describe('How much the attempts agree on substance (facts, numbers, conclusions), not on style'),
+  disagreements: s.array(s.string()).describe('Each substantive point where the attempts disagree'),
+  feedback: s.string().describe('What the best attempt still needs to clear the bar, specific enough to act on'),
+  tooBig: s.boolean().describe('The task is too big for one worker to do well in one pass'),
+  mixesJobs: s.boolean().describe('The task mixes two different jobs that should be separate tasks'),
+  canJudge: s.boolean().describe('False when you cannot judge the attempts with the inputs you have'),
+  confidence: s.number().min(0).max(1),
+  rationale: s.string().describe('How you compared the attempts'),
+});
+
+/** Lessons a reflection agent draws from one scored task. */
+export const Lessons = s.object({
+  lessons: s.array(s.object({
+    scope: s.enum(['shared', 'personal']).describe('shared: from the winner, for every worker on this task type; personal: for one attempt’s own config'),
+    attempt: s.string().describe('The label of the attempt the lesson comes from'),
+    text: s.string().min(20).max(300).describe('The behavior, as advice: "On data-cleaning tasks, compare row counts before and after."'),
+    evidence: s.string().min(10).max(400).describe('What in this task shows it'),
+  })).max(3),
+});
+
+/** The root supervisor's judgment of a finished job before sign-off. */
+export const RootVerdict = s.object({
+  accept: s.boolean(),
+  concerns: s.array(s.string()).describe('Each problem a person should look at before this is signed off'),
+  confidence: s.number().min(0).max(1),
+  note: s.string().describe('One or two sentences for the requester'),
+});
