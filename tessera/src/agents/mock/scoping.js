@@ -53,7 +53,7 @@ const BANK = {
   ],
   survey: [
     ['codebook', 'Do you have an existing codebook, or should contributors build one?', 'An existing codebook removes the first tile.', 'Build a new one from the responses.', /codebook/i],
-    ['count', 'About how many responses are there?', 'Sets how many coding batches the job needs.', 'About 120 responses.', /\b\d{2,5}\s+responses/i],
+    ['count', 'About how many responses are there?', 'Sets how many coding batches the job needs.', 'About 120 responses.', /\b\d{2,5}\s+(?:[\w-]+\s+){0,3}?(?:responses|comments|answers|transcripts)\b/i],
   ],
   literature: [
     ['question', 'What is the exact research question?', 'Every screening decision is made against it.', 'What happens to eviction rates when a city adds right-to-counsel?', /question/i],

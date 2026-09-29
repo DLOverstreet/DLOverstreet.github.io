@@ -1,6 +1,21 @@
 # Changelog
 
 ## 2026-09-28
+- **Long jobs read cleanly.** The engine no longer turns the details of a long sentence into tiles of
+  their own ("Code the definition", "Code the response_id", "Prepare the each with a rough cost…"):
+  a "with" list ending in "for each" is a detail of the piece before it; a data file named with its
+  columns ("a coded_all.csv with response_id, branch and theme(s)") sets the id and code columns of
+  every coding batch and of the merge; "…, each with …" stays with its part; "no more than 3
+  recommendations" is a part capped at three (checked with `csv_max_rows`); "Then" and "Finally,"
+  are dropped. A consistency check on coding becomes the agreement check, and a table of counts by
+  group is analysis that waits for the coded data. The parts listed for a short document are what
+  its writer covers (shared out page by page), while costs, charts and counts stay tiles of their
+  own; costed recommendations follow the findings and show their arithmetic. A piece that names
+  its language ("a one-page Spanish summary") is written in that language with no translator, and
+  a summary of the report waits for the report. Word ranges follow the length asked for (a 2-page
+  report asks 270–590 words a page; this also fixes a 900-word post that asked for 11,250+ words).
+  Lists no longer split inside a number ("12,000 donor records" was read as "000 donor records").
+  The first swarm test job is now in the corpus with these expectations.
 - **Agents can use the web.** Tiles that need outside facts (prices, venues, caterers, funders,
   public data sources, rules, research) get a research step first: the new research agent
   (prompt `researcher.v1`) runs Anthropic's server-side web search and web fetch

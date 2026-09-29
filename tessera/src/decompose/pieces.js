@@ -108,6 +108,8 @@ function needsOf(p, frame, all) {
     case 'finance':
       if (/\breconcil/i.test(phrase)) return ['books'];
       if (/\b(statement|p&l|profit|balance sheet|cash flow|report)\b/i.test(phrase)) return ['books', 'reconciled'];
+      // Recommendations follow from what the analysis found.
+      if (/\brecommend/i.test(phrase)) return ['findings', 'coded', 'research'];
       return frame === 'event' ? ['research'] : [];
     case 'test': return /\baudit|\breview|\bassess/.test(phrase) ? [] : ['build'];
     default: return [];
@@ -297,7 +299,7 @@ export function planPieces(a) {
       }
     } else {
       const c = (CONVENTIONS[frame] || CONVENTIONS.generic)(a);
-      conv.push(piece({ id: 'conventions', role: 'conventions', archetype: c.archetype, phrase: conventionsFromJob ? conventionsFromJob.phrase : c.title, title: c.title, fixes: c.fixes, covers: conventionsFromJob ? reqFor(conventionsFromJob.id) : [] }));
+      conv.push(piece({ id: 'conventions', role: 'conventions', archetype: c.archetype, phrase: conventionsFromJob ? conventionsFromJob.phrase : c.title, title: c.title, fixes: c.fixes, covers: conventionsFromJob ? reqFor(conventionsFromJob.id) : [], details: conventionsFromJob?.details || [] }));
     }
   }
   pieces.splice(pieces.findIndex((p) => p.role !== 'prep') === -1 ? pieces.length : pieces.findIndex((p) => p.role !== 'prep'), 0, ...conv);
@@ -317,11 +319,25 @@ export function planPieces(a) {
     pieces.push(piece({ id: 'edit-voice', archetype: 'edit', role: 'check', phrase: 'Edit the sections for one voice', priority: 2, covers: reqKind(['tone']) }));
   }
   // Every target language gets its own translator, after the source text is final.
-  if (frame !== 'translation' && a.languages.targets.length) {
+  // A piece that names its language ("a one-page Spanish summary") is written in that language, so
+  // that language needs no translator.
+  const namedLang = new Set();
+  for (const t of frame === 'translation' ? [] : a.languages.targets) {
+    const re = new RegExp(`\\b${LANGUAGE_NAMES[t] || t}\\b`, 'i');
+    const source = new RegExp(`\\b${LANGUAGE_NAMES[a.languages.source] || 'English'}\\b`, 'i');
+    const own = pieces.filter((p) => p.role === 'work' && p.archetype === 'write' && re.test(p.phrase) && !source.test(p.phrase));
+    if (!own.length) continue;
+    namedLang.add(t);
+    for (const p of own) {
+      p.lang = t;
+      p.covers.push(...a.requirements.filter((r) => r.kind === 'language' && r.ref === t).map((r) => r.id));
+    }
+  }
+  if (frame !== 'translation' && a.languages.targets.some((t) => !namedLang.has(t))) {
     const texty = pieces.filter((p) => p.role === 'work' && p.archetype === 'design' && /\b(flyer|poster|brochure|invitations?|signs?|signage|banner|slides?|infographic|leaflet|postcard|handout|menu)\b/i.test(p.phrase));
-    const sources = PRODUCT_FRAMES.has(frame) ? pieces.filter((p) => p.role === 'work' && ['write', 'visualize'].includes(p.archetype) && !p.internal) : [...text, ...texty];
+    const sources = (PRODUCT_FRAMES.has(frame) ? pieces.filter((p) => p.role === 'work' && ['write', 'visualize'].includes(p.archetype) && !p.internal) : [...text, ...texty]).filter((p) => !p.lang);
     if (sources.length) {
-      for (const t of a.languages.targets) {
+      for (const t of a.languages.targets.filter((x) => !namedLang.has(x))) {
         const lang = LANGUAGE_NAMES[t] || t;
         pieces.push(piece({ id: `translate-${t}`, archetype: 'translate', role: 'layer', phrase: `Translate the ${PRODUCT_FRAMES.has(frame) ? 'page text' : 'final text'} into ${lang}`, lang: t, sourcesOf: sources.map((s) => s.id), covers: a.requirements.filter((r) => r.kind === 'language' && r.ref === t).map((r) => r.id) }));
         // A designed piece with words on it needs its translated text laid out in the same design.
@@ -427,6 +443,10 @@ export function wirePieces(pieces, a) {
     }
     // Parts of one asset follow their parent ("slides for each lesson" after the lesson).
     if (p.parent && byId.get(p.parent)?.assetUnit) { deps.get(p.id).add(p.parent); continue; }
+    // "A summary of the report" is written from the report.
+    const ofDoc = /\b(?:summary|version|digest|recap|translation) of (?:the|our) (report|memo|proposal|brief|plan|review|findings)\b/i.exec(p.phrase);
+    const docs = ofDoc ? work.filter((x) => x !== p && x.archetype === 'write' && !x.parent && new RegExp(`\\b${ofDoc[1]}\\b`, 'i').test(x.phrase) && !new RegExp(`\\bof (?:the|our) ${ofDoc[1]}\\b`, 'i').test(x.phrase)) : [];
+    if (docs.length) { for (const d of docs) deps.get(p.id).add(d.id); continue; }
     // A report that gathers everything waits for everything upstream of it.
     if (p.archetype === 'write' && REPORTISH.test(p.phrase) && !METHODOLOGY.test(p.phrase)) {
       const kids = pieces.filter((x) => x.parent === p.id);

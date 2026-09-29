@@ -307,7 +307,7 @@ export function adaptForAgents(input, { hasSource = true, sourceRows = null, web
   }
   if (handoffs.length) changes.push(`${handoffs.length} tile${handoffs.length > 1 ? 's' : ''} end with a step for a person; each says what it is.`);
   const researched = tiles.filter((t) => t.webResearch).length;
-  if (researched) changes.push(`${researched} tile${researched > 1 ? 's' : ''} look${researched > 1 ? '' : 's'} up outside facts on the web first and cite ${researched > 1 ? 'their' : 'its'} sources.`);
+  if (researched) changes.push(`${researched} tile${researched > 1 ? 's' : ''} look${researched > 1 ? '' : 's'} up outside facts on the web first and cite${researched > 1 ? '' : 's'} ${researched > 1 ? 'their' : 'its'} sources.`);
   const checks = tiles.filter((t) => t.independentCheck).length;
   if (checks) changes.push(`${checks} check${checks > 1 ? 's' : ''} of other tiles' work run${checks > 1 ? '' : 's'} on a different model from the work ${checks > 1 ? 'they check' : 'it checks'}.`);
   return { tiles, changes, handoffs };

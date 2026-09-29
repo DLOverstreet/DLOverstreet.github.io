@@ -20,6 +20,13 @@ export function slugOf(phrase, max = 3) {
 }
 const fileBase = (phrase, max = 2) => slugOf(phrase, max).replace(/-/g, '_');
 
+/** The code column and the columns carried through, from the merged file the requester named. */
+function codedColumns(a, idCol) {
+  const cols = (a.namedFiles || []).flatMap((f) => f.columns).filter((c) => c !== idCol);
+  const code = cols.find((c) => /^(?:themes?|codes?|categor(?:y|ies)|labels?|tags?)$/.test(c)) || null;
+  return { code, carry: cols.filter((c) => c !== code) };
+}
+
 /** The id column for rows of this noun: "product listings" → listing_id. */
 function idColumn(noun) {
   const last = words(noun || 'record').filter((w) => !/^(?:hours?|of)$/.test(w)).pop() || 'record';
@@ -100,13 +107,15 @@ function sizePiece(p, a, byId, pieces) {
   }
   const assetsN = (() => {
     if (p.assetUnit && p.qty) return p.qty.n;
-    if (p.parent && byId.get(p.parent)?.qty) return byId.get(p.parent).qty.n;
+    // A part of each asset (slides for each lesson) follows the assets; a part of a 2-page report doesn't follow its pages.
+    if (p.parent && byId.get(p.parent)?.qty && byId.get(p.parent).qty.kind !== 'length') return byId.get(p.parent).qty.n;
     if (p.perAsset && a.primary.assets) return a.primary.assets.n;
     return 0;
   })();
   if (assetsN > 1 || p.assetUnit) {
     const perUnit = sizeHint(p.phrase, p.archetype);
-    const unit = p.assetUnit ? p.qty : (p.parent && byId.get(p.parent)?.qty) || a.primary.assets;
+    const parentQty = p.parent && byId.get(p.parent)?.qty?.kind !== 'length' ? byId.get(p.parent)?.qty : null;
+    const unit = p.assetUnit ? p.qty : parentQty || a.primary.assets;
     const noun = unit?.noun || 'items';
     batch(assetsN || 1, perUnit, `asset-${unit?.unit || 'x'}-${assetsN}`, noun, { target: 75 });
     p.perAssetMinutes = perUnit;
@@ -221,7 +230,11 @@ function contentFor(p, b, ctx) {
   const lead = cap(p.phrase.replace(/[.:]+$/, ''));
   const titled = (t) => (range ? `${t}: ${range}` : t);
 
-  if (p.role === 'conventions') return conventionsContent(p, ctx, out);
+  if (p.role === 'conventions') {
+    const c = conventionsContent(p, ctx, out);
+    if (p.details?.length) c.what += ` The requester asked for: ${p.details.map((d) => d.toLowerCase()).join('; ')}.`;
+    return c;
+  }
   if (p.role === 'prep') {
     const file = `redacted_${(words(noun).pop() || 'data').replace(/[^a-z]/g, '')}.csv`;
     out.title = cap(p.phrase);
@@ -269,14 +282,18 @@ function contentFor(p, b, ctx) {
         return out;
       }
       const file = `coded${suffix || ''}.csv`.replace('coded.csv', `coded_${fileBase(noun, 1)}.csv`);
-      const codeCol = frame === 'coding' ? 'code' : 'category';
+      // The columns the requester named for the merged file ("response_id, branch and theme(s)") are every batch's columns.
+      const named = codedColumns(a, idCol);
+      const codeCol = named.code || (frame === 'coding' ? 'code' : 'category');
+      const cols = [idCol, ...named.carry, codeCol];
+      const several = /\bone or more\b|\bmultiple\b|\ball that apply\b|\(s\)|\bthemes\b/i.test(`${p.phrase} ${codeCol}`);
       out.title = titled(frame === 'coding' ? `Code ${noun.split(' ').pop()}` : lead);
       out.what = frame === 'coding'
-        ? `Apply the codebook to ${range || `all ${noun}`}${a.sensitive.redact ? ' of the redacted file' : ''}. Give each ${one} one code (use OTHER when nothing fits and say why in a notes column). Do not change the codebook; list proposed changes at the end of your notes instead.`
+        ? `Apply the codebook to ${range || `all ${noun}`}${a.sensitive.redact ? ' of the redacted file' : ''}. Give each ${one} ${several ? `every code that applies in ${codeCol} (separate several with a semicolon)` : 'one code'} and use OTHER when nothing fits, saying why in a notes column.${named.carry.length ? ` Copy ${named.carry.join(', ')} through from the source file.` : ''} Do not change the codebook; list proposed changes at the end of your notes instead.`
         : `${lead} for ${range || `every ${one}`}. Use only the categories in the conventions file; flag any ${one} that fits none as UNSURE in the notes column.`;
       out.outputs = [file];
-      out.deliverableFormat = file;
-      out.criteria = [A(`The file has ${idCol} and ${codeCol}`, `csv_columns(${idCol}, ${codeCol})`), A(`Every ${one} has a ${codeCol}`, `csv_no_blank(${codeCol})`), A(`Each ${one} appears once`, `csv_unique(${idCol})`)];
+      out.deliverableFormat = named.carry.length ? `${file} with ${cols.join(', ')}` : file;
+      out.criteria = [A(`The file has ${cols.join(', ')}`, `csv_columns(${cols.join(', ')})`), A(`Every ${one} has ${/s$/.test(codeCol) ? `at least one ${singularWord(codeCol)}` : `a ${codeCol}`}`, `csv_no_blank(${codeCol})`), A(`Each ${one} appears once`, `csv_unique(${idCol})`)];
       if (b.count > 1 && !p.subset) out.criteria.push(A(`All ${nice(b.count)} ${noun.split(' ').pop()} in the range are coded`, `csv_min_rows(${b.count})`));
       out.criteria.push(L(frame === 'coding' ? 'Codes follow the codebook definitions' : 'Categories follow the list in the conventions file'));
       out.skills = frame === 'coding' ? ['survey-coding'] : ['data-entry', 'excel'];
@@ -337,10 +354,11 @@ function contentFor(p, b, ctx) {
       return out;
     }
     case 'visualize': {
-      const base = `chart_${fileBase(p.phrase, 2)}${suffix}`;
+      const subject = p.phrase.replace(/^(?:a|an|the)?\s*(?:[\w-]+\s+)?(?:chart|graph|plot)s?\s+(?:of|showing|for)\s+/i, '');
+      const base = `chart_${fileBase(subject, 2) || fileBase(p.phrase, 2)}${suffix}`;
       const isMap = GEO.test(p.phrase);
       out.title = `Design the ${lead.replace(/^(?:a|an|the)\s+/i, '').toLowerCase()} ${isMap ? '' : /chart|graph/i.test(p.phrase) ? '' : 'chart'}`.replace(/\s+$/, '').replace(/^Design the (.)/, (m, c) => `Design the ${c}`);
-      out.what = `${isMap ? 'Map' : 'Chart'} ${lead.replace(/^(?:a|an|the)\s+/i, '').toLowerCase()} ${aud}, from the upstream data. Deliver an SVG and a JSON spec with title, source and series. The title states the finding in plain words; follow the colors and fonts in the style file${isMap ? ', and use a colorblind-safe sequential palette with a legend' : ''}.`;
+      out.what = `${/\b(?:chart|graph|plot)s?\b/i.test(lead) && !isMap ? `Make ${lead.replace(/^(?:a|an|the)\s+/i, 'the ').replace(/^The /, 'the ')}` : `${isMap ? 'Map' : 'Chart'} ${lead.replace(/^(?:a|an|the)\s+/i, '').toLowerCase()}`} ${aud}, from the upstream data. Deliver an SVG and a JSON spec with title, source and series. The title states the finding in plain words; follow the colors and fonts in the style file${isMap ? ', and use a colorblind-safe sequential palette with a legend' : ''}.`;
       out.outputs = [`${base}.svg`, `${base}.json`];
       out.deliverableFormat = `${base}.svg plus ${base}.json`;
       out.criteria = [A('The chart is delivered as SVG', 'file_ext(svg)'), A('The JSON spec has title, source and series', 'json_keys(title, source, series)'), L('The title states the finding rather than naming the metric'), P('The chart is legible for a general audience at phone width')];
@@ -357,6 +375,18 @@ function contentFor(p, b, ctx) {
         out.criteria = [A('tracker.csv has date, channel, reach, responses and amount', 'csv_columns(date, channel, reach, responses, amount)'), L('The how-to lets someone else keep it up to date')];
         out.skills = ['excel', 'data-entry'];
         out.tier = 1;
+        return out;
+      }
+      if (/\b(?:table|counts?|totals?|tall(?:y|ies)|crosstab|frequenc\w+)\b/i.test(p.phrase) && !/\b(?:model|regression|forecast|predict)/i.test(p.phrase)) {
+        // A table of counts is counted from the rows themselves, not estimated.
+        const base = `table_${fileBase(p.phrase.replace(/^(?:a|an|the)\s+table\s+of\s+/i, ''), 3) || 'counts'}${suffix}`;
+        out.title = titled(cap(p.phrase));
+        out.what = `${lead} from the upstream files. Count from the rows themselves (one row per group, plus a total), say in ${base}_note.md which file each count comes from, and say how a row with several codes was counted.`;
+        out.outputs = [`${base}.csv`, `${base}_note.md`];
+        out.deliverableFormat = `${base}.csv plus ${base}_note.md`;
+        out.criteria = [A('The table is a CSV', 'file_ext(csv)'), A('The table has a row for each group', 'csv_min_rows(2)'), L('Every count can be reproduced from the upstream files'), L('The note says how the counts were made')];
+        out.skills = ['statistics', 'excel'];
+        out.tier = 2;
         return out;
       }
       out.title = titled(cap(p.phrase.length > 70 ? `Analyze ${slugOf(p.phrase, 3).replace(/-/g, ' ')}` : p.phrase));
@@ -534,13 +564,27 @@ function contentFor(p, b, ctx) {
       return out;
     }
     case 'finance': {
-      const file = `${fileBase(p.phrase, 2) || 'finance'}${suffix}.csv`;
+      let file = `${fileBase(p.phrase, 2) || 'finance'}${suffix}.csv`;
       out.title = titled(cap(p.phrase.replace(/\b12 months of\b/i, '').replace(/^\s+/, '')).replace(/^Transactions categorized/i, 'Categorize transactions'));
       if (/\bcategori|\btransactions?\b/i.test(p.phrase)) {
         out.what = `Categorize every transaction ${range ? `in ${range}` : ''} using the chart of accounts and rules. Flag anything that fits no rule as UNSURE with a note.`;
         out.outputs = [file];
         out.deliverableFormat = `${file} with date, description, amount, category`;
         out.criteria = [A('The file has date, description, amount and category', 'csv_columns(date, description, amount, category)'), A('Every transaction has a category', 'csv_no_blank(category)'), L('Categories follow the chart of accounts')];
+      } else if (/\brecommend/i.test(p.phrase)) {
+        const core = p.phrase.replace(/,?\s+each\b.*$/i, '');
+        const n = /\bup to (\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b/i.exec(core);
+        const max = n ? ({ one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 }[n[1].toLowerCase()] || Number(n[1])) : null;
+        const budget = /\b((?:the |our )?[\w-]+ budget)\b/i.exec(p.phrase)?.[1];
+        out.title = `Write ${core.replace(/^(?:a|an|the)\s+/i, '').replace(/^[A-Z]/, (c) => c.toLowerCase())} with rough costs`;
+        out.keepTitle = true;
+        file = `recommendations${suffix}.csv`;
+        out.what = `${cap(p.phrase)}. Base each recommendation on the findings in the upstream files and cite the finding it answers. Give each a rough cost as quantity × unit rate = total, say where each rate comes from, and show that the total fits ${budget ? budget.replace(/^(?:the|our)\s+/i, 'the ') : 'the budget the requester named'}.`;
+        out.outputs = [file, 'recommendations.md'];
+        out.deliverableFormat = `${file} with recommendation, finding, cost, basis plus recommendations.md`;
+        out.criteria = [A('The table has recommendation, finding, cost and basis', 'csv_columns(recommendation, finding, cost, basis)'), ...(max ? [A(`No more than ${max} recommendations`, `csv_max_rows(${max})`)] : []), L('Each recommendation follows from a finding it cites'), L(`Each cost shows its arithmetic and the basis for its rate${budget ? ', and the total fits the budget' : ''}`)];
+        out.skills = ['research', 'excel'];
+        return out;
       } else if (/\breconcil/i.test(p.phrase)) {
         out.what = `Reconcile each bank account ${range ? `for ${range}` : 'month by month'} against its statements: match every transaction, list unmatched items and explain each difference.`;
         out.outputs = [file];
@@ -676,8 +720,18 @@ function writeContent(p, b, ctx, out, o) {
   else if (/descriptions?/.test(ph) && p.qty) { min = 25 * n; max = 90 * n; skills = ['copywriting']; }
   if (a.frame === 'document' && /\b(grant|proposal|application)\b/i.test(a.title)) skills = ['grant-writing', 'technical-writing'];
   if (p.skills) skills = p.skills;
+  // "A 2-page report", "a 900-word post": the length the requester asked for sets the word range.
+  if (p.qty?.kind === 'length' && ['page', 'word'].includes(p.qty.unit) && !/\b(book|story|stories|manuscript|script|poem)\b/i.test(ph)) {
+    // Split by page or word, a tile writes its share; split by asset, it writes that length for each asset it holds.
+    const split = /^(?:page|word)-/.test(p.axis || '');
+    const target = (p.qty.unit === 'page' ? 450 : 1) * (split ? n : p.qty.n) * (/^asset-/.test(p.axis || '') ? n : 1);
+    min = Math.round((target * 0.6) / 10) * 10;
+    max = Math.round((target * 1.3) / 10) * 10;
+  }
   if (p.words) { min = Math.round(p.words * 0.7); max = Math.round(p.words * 1.4); }
   if (p.sectionName) heading = p.sectionName;
+  // Text in another language has its headings in that language too.
+  if (p.lang) heading = null;
   const bulkRows = p.qty && ['items'].includes(p.qty.kind) && a.frame === 'bulk';
   if (bulkRows) {
     const idCol = ctx.idCol;
@@ -695,14 +749,24 @@ function writeContent(p, b, ctx, out, o) {
   if (out.title.length > 78) out.title = `${out.title.slice(0, 75)}…`;
   const parts = p.folded ? ` Cover each of: ${p.folded.map((f) => f.toLowerCase()).join('; ')}.` : '';
   const kids = ctx.pieces.filter((x) => x.parent === p.id);
-  out.what = `${verbPhrase(p).replace(/\s+for (?:our|the) \w+$/i, '')}${range ? ` (${range})` : ''} ${aud}, following the shared conventions.${parts}${kids.length ? ` Build on the upstream ${kids.map((k) => k.phrase.toLowerCase()).join(' and ')}.` : ''}${REPORTISH.test(ph) ? ' Every number and claim must come from an upstream file; cite which.' : ''}`;
+  // The parts the requester listed for the document, shared out when it is written page by page.
+  const per = p.details?.length ? Math.ceil(p.details.length / Math.max(1, b.of)) : 0;
+  const mine = p.details?.length ? (b.of > 1 && /^page-/.test(p.axis || '') ? p.details.slice((b.index - 1) * per, b.index * per) : p.details) : [];
+  const covers = mine.length ? ` Cover: ${mine.map((d) => lowerFirst(d.replace(/[.]$/, ''))).join('; ')}.` : '';
+  const inLang = p.lang ? ` Write it in ${lang(p.lang)}${/\bsummary|version\b/i.test(ph) ? ', from the final upstream text' : ''}.` : '';
+  const vp = verbPhrase(p).replace(/\s+for (?:our|the) \w+$/i, '');
+  const ownAudience = /\bfor (?:our |the |local )?[a-z-]+s\b/i.test(vp);
+  out.what = `${vp}${range ? ` (${range})` : ''}${ownAudience ? '' : ` ${aud}`}, following the shared conventions.${inLang}${parts}${covers}${kids.length ? ` Bring in ${kids.map((k) => lowerFirst(shortPhrase(k.phrase))).join(' and ')} from the upstream tiles.` : ''}${REPORTISH.test(ph) ? ' Every number and claim must come from an upstream file; cite which.' : ''}`;
   out.outputs = [file];
   out.deliverableFormat = `${file} (${min.toLocaleString('en-US')}–${max.toLocaleString('en-US')} words)`;
   out.criteria = [A(`The text is ${min.toLocaleString('en-US')} to ${max.toLocaleString('en-US')} words`, `word_count(${min}, ${max})`)];
   if (heading) out.criteria.push(A(`It has a ${heading} section`, `has_heading("${heading}")`));
   out.criteria.push(L(REPORTISH.test(ph) ? 'Every number and claim traces to an upstream file' : 'It covers everything the outline assigns to it'));
+  if (mine.length) out.criteria.push(L(`It covers ${mine.map((d) => lowerFirst(d.replace(/[.]$/, ''))).join('; ')}`.slice(0, 200)));
+  if (p.lang) out.criteria.push(L(`It reads as natural ${lang(p.lang)} for its audience`));
   out.criteria = withTone(out.criteria);
-  out.skills = skills;
+  out.skills = p.lang ? [...skills.slice(0, 1), `translation-${p.lang}`] : skills;
+  if (p.lang) out.languages = [a.languages.source || 'en', p.lang];
   return out;
 }
 
@@ -870,13 +934,18 @@ function integrationContent(p, ctx, out) {
       out.languages = [a.languages.source || 'en', ...a.languages.targets];
       return out;
     }
-    case 'coding':
-      out.what = `Merge the coded batches into coded_all.csv and combine the codebook, the agreement results and the themes memo into report.md with a Codebook section. ${common}`;
-      out.outputs = ['report.md', 'coded_all.csv'];
-      out.deliverableFormat = 'report.md plus coded_all.csv';
-      out.criteria = [A('The report includes the codebook', 'contains("Codebook")'), A(`The merged file has ${ctx.idCol} and code`, `csv_columns(${ctx.idCol}, code)`), ...(a.primary.items?.n ? [A(`All ${nice(a.primary.items.n)} rows are merged`, `csv_min_rows(${a.primary.items.n})`)] : []), L('The report reads as one document, not pasted pieces')];
+    case 'coding': {
+      const merged = a.namedFiles?.find((f) => /\.csv$/i.test(f.name))?.name || 'coded_all.csv';
+      const named = codedColumns(a, ctx.idCol);
+      const cols = [ctx.idCol, ...named.carry, named.code || 'code'];
+      const parts = ['the codebook', 'the agreement results', ...ctx.pieces.filter((x) => x.role === 'work' && x.archetype === 'write').map((x) => lowerFirst(shortPhrase(x.phrase).replace(/^(?:write|draft)\s+/i, '').replace(/^(?:a|an)\s+/i, 'the ')))];
+      out.what = `Merge the coded batches into ${merged}${named.carry.length || named.code ? ` with ${cols.join(', ')}` : ''} and combine ${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]} into report.md with a Codebook section. ${common}`;
+      out.outputs = ['report.md', merged];
+      out.deliverableFormat = `report.md plus ${merged}`;
+      out.criteria = [A('The report includes the codebook', 'contains("Codebook")'), A(`The merged file has ${cols.join(', ')}`, `csv_columns(${cols.join(', ')})`), ...(a.primary.items?.n ? [A(`All ${nice(a.primary.items.n)} rows are merged`, `csv_min_rows(${a.primary.items.n})`)] : []), L('The report reads as one document, not pasted pieces')];
       out.skills = ['project-integration', 'editing'];
       return out;
+    }
     case 'literature':
       out.what = `Combine the protocol, a PRISMA-style count of papers found, screened and included, the synthesis and the reference list into review.md. ${common}`;
       out.outputs = ['review.md'];
@@ -931,7 +1000,7 @@ function shortPhrase(phrase) {
   let t = phrase.replace(/\s+(?:for|to) the ones .*$|\s+that (?:have|lack|are missing) .*$|\s+(?:where|if) (?:needed|missing).*$/i, '')
     .replace(/\s+to (?:create|see|find|show|help|let|make|get|track|manage|allow|keep|sign)\b.*$/i, '');
   t = t.replace(/\s+(?:to find|to show|so that|so|in order to|that will|for (?:our|the|your) (?:board|committee|council|city council|policy committee|staff|funders?|donors?|members?|volunteers|families|teens|students))\b.*$/i, '');
-  if (t.length > 60) t = t.replace(/\s+(?:for|to|that|which|with|from)\s+.*$/i, '');
+  if (t.length > 60) t = t.replace(/(?<!^up)\s+(?:for|to|that|which|with|from)\s+.*$/i, '').replace(/,\s*each\b.*$/i, '');
   return t.replace(/^\d[\d,]*\s+/, '').replace(/\s+/g, ' ').trim();
 }
 
@@ -947,7 +1016,8 @@ function verbPhrase(p) {
   const sp = shortPhrase(p.phrase);
   const lead = leadVerbOf(sp);
   const verb = p.verb && /^[a-z]+(?: up| in| out)?$/.test(p.verb) && !/^(?:a|an|the)$/.test(p.verb) ? cap(p.verb) : VERB_FOR[p.archetype] || 'Do';
-  let vp = lead ? cap(sp).replace(/^(\S+(?: up| in| out)?) (?:a|an) /i, '$1 the ') : `${verb} the ${lowerFirst(sp.replace(/^(?:a|an|the|our|some|its|their|your)\s+/i, ''))}`;
+  const obj = lowerFirst(sp.replace(/^(?:a|an|the|our|some|its|their|your)\s+/i, ''));
+  let vp = lead ? cap(sp).replace(/^(\S+(?: up| in| out)?) (?:a|an) /i, '$1 the ') : `${verb} ${/^(?:every|each|all|both|up to)\b/i.test(obj) ? '' : 'the '}${obj}`;
   // A bare topic in a document is a section: "Safety" → "Write the safety section".
   if (!lead && p.archetype === 'write' && p.ctxFrame === 'document' && words(sp).length <= 3 && !ARCHETYPES.write.nouns.test(sp.toLowerCase())) vp += ' section';
   if (p.archetype === 'visualize' && !/\b(chart|map|graph|plot|table|infographic|dashboard)s?\b/i.test(vp)) vp += ' chart';
@@ -994,6 +1064,10 @@ function titleFor(p, b) {
   const rangeNoun = range.split(' ')[0];
   const tail = new RegExp(`\\b(?:every |each |all |the )?${singularWord(rangeNoun)}s?$`, 'i');
   if (tail.test(v)) return `${v.replace(tail, '').trim()} ${range}`;
+  // "Code every response with one or more themes" → "Code comments 1–45 with one or more themes".
+  const unitNames = [singularWord(rangeNoun), p.qty?.unit].filter((x) => x && /^[a-z-]+$/i.test(x));
+  const every = unitNames.length ? new RegExp(`\\b(?:every|each|all(?: the)?|the) (?:${unitNames.join('|')})s?\\b`, 'i') : null;
+  if (every?.test(v)) return v.replace(every, range);
   return `${v}: ${range}`;
 }
 
@@ -1006,9 +1080,14 @@ function keyBase(p) {
   if (/\bextract/i.test(p.phrase) && p.archetype === 'research') return 'extract-studies';
   if (/\bsynthes/i.test(p.phrase) && p.archetype === 'research') return 'write-synthesis';
   if (!/^(?:p\d+|d\d+|x\d+)(?:-|$)/.test(p.id)) return p.id.replace(/^p\d+-/, '');
-  const sp = shortPhrase(p.phrase);
-  const verb = (leadVerbOf(sp) || VERB_FOR[p.archetype] || 'do').toLowerCase().split(' ')[0];
-  const obj = words(sp).filter((w) => !STOP.has(w) && !/\d/.test(w) && !/^(?:one|two|three|four|five|six|seven|eight|nine|ten|twelve)-/.test(w) && !w.startsWith(verb.slice(0, 4)));
+  const full = shortPhrase(p.phrase);
+  const objOf = (sp, verb) => words(sp).filter((w) => !STOP.has(w) && !/\d/.test(w) && !/^(?:one|two|three|four|five|six|seven|eight|nine|ten|twelve)-/.test(w) && !w.startsWith(verb.slice(0, 4)));
+  const verbOf = (sp) => (leadVerbOf(sp) || VERB_FOR[p.archetype] || 'do').toLowerCase().split(' ')[0];
+  // "Code every response with one or more themes" is keyed by what it works on, not the "with" tail.
+  const bare = full.replace(/\s+with\s+.*$/i, '');
+  const sp = objOf(bare, verbOf(bare)).length ? bare : full;
+  const verb = verbOf(sp);
+  const obj = objOf(sp, verb);
   return kebab(`${verb}-${obj.slice(-2).join('-') || slugOf(p.phrase, 2)}`);
 }
 
@@ -1051,7 +1130,8 @@ export function buildTiles(a) {
     }
   }
   const itemNoun = a.primary.items?.noun;
-  const idCol = itemNoun ? idColumn(itemNoun) : /\bfilings\b/i.test(a.text) ? 'filing_id' : /\bcases?\b/i.test(a.text) ? 'case_id' : 'record_id';
+  const namedId = (a.namedFiles || []).flatMap((f) => f.columns).find((c) => /_id$/.test(c));
+  const idCol = namedId || (itemNoun ? idColumn(itemNoun) : /\bfilings\b/i.test(a.text) ? 'filing_id' : /\bcases?\b/i.test(a.text) ? 'case_id' : 'record_id');
   const ctx = { a, pieces, idCol };
 
   // Pieces in dependency order.
