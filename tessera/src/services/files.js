@@ -1,6 +1,7 @@
 // File storage for uploads, submissions and deliverables, with the summaries and text
 // excerpts that go into prompts. Restricted commissions get redacted excerpts only.
 import { isTextFile, bytesToText, textToBytes, mimeFor, fileExt, hashString } from '../lib/util.js';
+import { canExtract, extractText } from '../lib/extract.js';
 import { parseCsv } from '../lib/csv.js';
 import { redactText, redactCsv } from '../lib/redact.js';
 
@@ -21,14 +22,30 @@ export async function storeFiles(T, prefix, files) {
     uploadSeq += 1;
     const key = `${prefix}/${(Date.now() + uploadSeq).toString(36)}${hashString(name + uploadSeq).toString(36).slice(0, 4)}/${name}`;
     await T.blobs.put(key, bytes);
-    refs.push({ name, size: bytes.length, type: f.type || mimeFor(name), key });
+    const ref = { name, size: bytes.length, type: f.type || mimeFor(name), key };
+    // Word, Excel and PDF files get their text read out and kept beside them, so prompts can show it.
+    if (canExtract(name)) {
+      const got = await extractText(name, bytes);
+      if (got?.text) {
+        await T.blobs.put(`${key}.txt`, textToBytes(got.text));
+        Object.assign(ref, { textKey: `${key}.txt`, textChars: got.text.length, extracted: got.info });
+      } else {
+        ref.extracted = { ...(got?.info || { from: fileExt(name) }), none: true };
+      }
+    }
+    refs.push(ref);
   }
   return refs;
 }
 
+/** Whether a stored file has text to show: a text format, or text read out of a Word, Excel or PDF file. */
+export function hasText(ref) {
+  return isTextFile(ref.name) || !!ref.textKey;
+}
+
 export async function readFileText(T, ref, { maxChars = 200000 } = {}) {
-  if (!isTextFile(ref.name)) return null;
-  const bytes = await T.blobs.get(ref.key);
+  if (!hasText(ref)) return null;
+  const bytes = await T.blobs.get(isTextFile(ref.name) ? ref.key : ref.textKey);
   if (!bytes) return null;
   return bytesToText(bytes).slice(0, maxChars);
 }
@@ -54,6 +71,25 @@ export function summarizeText(name, text, { restricted = false, sensitiveColumns
 export function summarizeUpload(name, bytes, opts) {
   if (isTextFile(name)) return summarizeText(name, bytesToText(bytes), opts);
   return { kind: 'binary', type: mimeFor(name), size: bytes.length };
+}
+
+/**
+ * A stored file's summary for prompts. A Word, Excel or PDF file whose text was read out is a
+ * "document": its length, headings or sheets, tracked changes and comments, and the opening text.
+ */
+export async function summarizeStored(T, ref, bytes, { restricted = false } = {}) {
+  if (!ref.textKey) {
+    const base = summarizeUpload(ref.name, bytes, { restricted });
+    return ref.extracted?.none ? { ...base, note: ref.extracted.error ? `Its text couldn't be read (${ref.extracted.error}).` : 'No text found in it (a scanned or image-only file?).' } : base;
+  }
+  const raw = (await readFileText(T, ref)) || '';
+  const text = restricted ? redactText(raw) : raw;
+  const x = ref.extracted || {};
+  return {
+    kind: 'document', from: x.from, type: mimeFor(ref.name), words: (text.match(/\S+/g) || []).length, excerpt: text.slice(0, 1200),
+    ...(x.headings?.length ? { headings: x.headings } : {}), ...(x.sheets ? { sheets: x.sheets } : {}), ...(x.pages ? { pages: x.pages } : {}),
+    ...(x.trackedChanges ? { trackedChanges: x.trackedChanges } : {}), ...(x.comments ? { comments: x.comments } : {}), redacted: restricted,
+  };
 }
 
 /** A short excerpt of a file for a prompt, redacted when the commission is restricted. */

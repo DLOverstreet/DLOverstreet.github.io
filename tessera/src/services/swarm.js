@@ -16,7 +16,7 @@ import { submitWork, submitPeerReview, requesterReview, upstreamFiles } from './
 import { acceptDelivery } from './delivery.js';
 import { createCompetition, competes } from './competition.js';
 import { answerScoping, fundCommission, replacePlan, draftGraph, postCommission } from './commissions.js';
-import { loadFileTexts } from './files.js';
+import { loadFileTexts, hasText } from './files.js';
 import { config } from '../domain/config.js';
 import { runAutoChecks } from '../domain/autochecks.js';
 import { redactText, redactCsv } from '../lib/redact.js';
@@ -314,7 +314,7 @@ export async function workerInput(T, tile) {
     input.inputs.push({ name: f.name, content: take(restricted ? redactText(f.text) : f.text) });
   }
   for (const f of sources) {
-    if (typeof f.text !== 'string') { input.attachments.push({ name: f.name, note: isTextFile(f.name) ? 'Empty.' : 'Binary file, not shown.' }); continue; }
+    if (typeof f.text !== 'string') { input.attachments.push({ name: f.name, note: isTextFile(f.name) ? 'Empty.' : 'Binary file with no readable text, not shown.' }); continue; }
     const text = scrub(f.name, f.text);
     // A batch tile (one of several over the file) gets only its own rows.
     const slice = tile.part?.of > 1 && /\.(csv|tsv)$/i.test(f.name) ? sliceCsv(text, tile.part.from, tile.part.to) : null;
@@ -412,7 +412,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
   /** The plan is ready: adapt it for agents, then fund it. */
   function launch(c) {
     const tiles = draftGraph(T.db, c.id).filter((t) => t.status !== 'CANCELLED');
-    const hasSource = (c.files || []).some((f) => isTextFile(f.name));
+    const hasSource = (c.files || []).some(hasText);
     const shape = sourceShape(c);
     const s = swarmSettings(T.db);
     const tps = speedFor(s.workerModel, swarmSpeeds(T.db));

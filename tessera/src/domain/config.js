@@ -73,8 +73,9 @@ export const config = Object.freeze({
     /** Consistency and agreement checks run on a different model from the work they check. */
     checkModel: 'claude-opus-5-5',
     spendCapUsd: 15,
-    maxInputChars: 60000,
-    maxFileChars: 16000,
+    /** What a worker reads, in characters: whole documents fit (a 10,000-word manuscript is about 60,000). The prompt cache makes rereading them cheap. */
+    maxInputChars: 150000,
+    maxFileChars: 60000,
     /** Agents may search and read the web when a tile needs current or outside facts. */
     web: true,
     maxSearchesPerTile: 5,

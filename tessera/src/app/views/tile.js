@@ -16,7 +16,7 @@ import { fmtMoney, fmtMinutes, fmtBytes, fmtDateTime, isTextFile, mimeFor, fileE
 
 // ---------------------------------------------------------------- files
 
-function FilePreviewModal({ file, bytes, onClose }) {
+function FilePreviewModal({ file, bytes, text = null, onClose }) {
   const ext = fileExt(file.name);
   const [url, setUrl] = useState(null);
   useEffect(() => {
@@ -34,7 +34,8 @@ function FilePreviewModal({ file, bytes, onClose }) {
     body = html`<p class="small muted">${rows.length} rows · ${columns.length} columns</p><div class="table-wrap" style=${{ maxHeight: '60vh' }}><table><thead><tr>${columns.map((c) => html`<th>${c}</th>`)}</tr></thead><tbody>${rows.slice(0, 100).map((r) => html`<tr>${r.map((v) => html`<td class="small">${v}</td>`)}</tr>`)}</tbody></table></div>`;
   } else if (ext === 'md' || ext === 'markdown') body = html`<div class="card flat"><${Markdown} text=${new TextDecoder().decode(bytes)} /></div>`;
   else if (isTextFile(file.name)) body = html`<pre>${new TextDecoder().decode(bytes).slice(0, 200000)}</pre>`;
-  else body = html`<p class="small">No preview for .${ext} files. Download it instead.</p>`;
+  else if (text) body = html`<p class="small muted">The text read from this .${ext} file, as the agents see it. Download it for the original.</p><pre>${text.slice(0, 200000)}</pre>`;
+  else body = html`<p class="small">No preview for .${ext} files${file.extracted?.none ? ' (no text could be read from it)' : ''}. Download it instead.</p>`;
   return html`<${Modal} wide title=${file.name} onClose=${onClose}>${body}
     <div class="row" style=${{ marginTop: '.8rem' }}><button class="btn" onClick=${() => downloadBytes(bytes, file.name, mimeFor(file.name))}>Download</button></div><//>`;
 }
@@ -43,15 +44,23 @@ function FilePreviewModal({ file, bytes, onClose }) {
 export function StoredFile({ file, from }) {
   const T = useT();
   const [open, setOpen] = useState(null);
+  const [text, setText] = useState(null);
   const load = async () => {
     const bytes = await T.blobs.get(file.key);
     if (!bytes) { toast('That file is missing from this browser’s storage.', 'err'); return null; }
     return bytes;
   };
-  return html`<li><span class="name">${file.name}</span>${from ? html`<span class="tiny muted">from ${from}</span>` : ''}<span class="tiny muted">${fmtBytes(file.size)}</span>
-    <button class="btn small" onClick=${async () => { const b = await load(); if (b) setOpen(b); }}>Preview</button>
+  const preview = async () => {
+    const b = await load();
+    if (!b) return;
+    // A Word, Excel or PDF file shows the text read out of it.
+    if (file.textKey) { const t = await T.blobs.get(file.textKey); setText(t ? new TextDecoder().decode(t) : null); }
+    setOpen(b);
+  };
+  return html`<li><span class="name">${file.name}</span>${from ? html`<span class="tiny muted">from ${from}</span>` : ''}<span class="tiny muted">${fmtBytes(file.size)}${file.textKey ? ' · text read' : ''}</span>
+    <button class="btn small" onClick=${preview}>Preview</button>
     <button class="btn small ghost" onClick=${async () => { const b = await load(); if (b) downloadBytes(b, file.name, mimeFor(file.name)); }} aria-label=${`Download ${file.name}`}>⬇</button>
-    ${open && html`<${FilePreviewModal} file=${file} bytes=${open} onClose=${() => setOpen(null)} />`}
+    ${open && html`<${FilePreviewModal} file=${file} bytes=${open} text=${text} onClose=${() => setOpen(null)} />`}
   </li>`;
 }
 

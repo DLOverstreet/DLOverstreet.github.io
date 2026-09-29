@@ -1,7 +1,9 @@
 // The agent swarm: a visitor writes a job and hands it over; agents do every step after
 // that, and the visitor gets back the deliverable and a list of what a person must still do.
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { boot } from './helpers.js';
+import { docxBytes } from '../helpers/office.js';
 
 test('a visitor hands a job to the agent swarm and gets it back done, with the steps left for a person', async ({ page }) => {
   const errors = [];
@@ -85,4 +87,29 @@ test('a split from the breakdown tool runs with agents straight away', async ({ 
   await expect(page).toHaveURL(/#\/c\/[^/]+\/swarm/);
   await expect(page.getByText('Signed off', { exact: true }).first()).toBeVisible({ timeout: 240000 });
   await expect(page.locator('.persona-btn')).toContainText(/Marisol|Tom/);
+});
+
+test('Word and PDF attachments are read in the browser, and the download carries Word copies', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await boot(page, '#/swarm');
+  await page.locator('#sw-goal').fill('Revise the attached manuscript based on the reviewers’ critiques in the attached decision letter, and write a response to the reviewers explaining how each concern was addressed.');
+  await page.locator('#sw-files').setInputFiles([
+    { name: 'Manuscript.docx', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', buffer: Buffer.from(docxBytes()) },
+    { name: 'Decision letter.pdf', mimeType: 'application/pdf', buffer: readFileSync(new URL('../fixtures/files/decision-letter.pdf', import.meta.url)) },
+  ]);
+  await page.getByRole('button', { name: 'Hand it to the swarm' }).click();
+  await expect(page).toHaveURL(/#\/c\/[^/]+\/swarm/);
+  const summaries = await page.evaluate(() => window.tessera.db.filter('Commission', (c) => c.workforce === 'agents')[0].files.map((f) => ({ name: f.name, kind: f.summary.kind, excerpt: f.summary.excerpt })));
+  expect(summaries.map((x) => x.kind)).toEqual(['document', 'document']);
+  expect(summaries[0].excerpt).toContain('{+gradually+}');
+  expect(summaries[1].excerpt).toContain('Comment 1.2: Please report robustness checks with state fixed effects');
+  await expect(page.getByText('Signed off', { exact: true }).first()).toBeVisible({ timeout: 240000 });
+  const keys = await page.evaluate(() => window.tessera.db.filter('Tile', (t) => t.commissionId === window.tessera.db.filter('Commission', (c) => c.workforce === 'agents')[0].id && !t.dynamic).map((t) => t.key));
+  expect(keys).toContain('revision-plan');
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download the deliverable' }).click();
+  const zip = readFileSync(await (await download).path());
+  expect(zip.includes(Buffer.from('revised_manuscript.docx'))).toBe(true);
+  expect(errors).toEqual([]);
 });

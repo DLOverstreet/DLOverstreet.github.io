@@ -11,6 +11,7 @@ import { reviewPayCents, feeCents } from '../domain/pricing.js';
 import { fundingEntry } from '../domain/ledger.js';
 import { config } from '../domain/config.js';
 import { createZip } from '../lib/zip.js';
+import { markdownToDocx } from '../lib/docx.js';
 import { textToBytes, fmtMoney, canonicalJson } from '../lib/util.js';
 
 function deliveredTiles(db, commissionId) {
@@ -160,13 +161,19 @@ export async function buildDeliverableZip(T, commissionId) {
   if (!c.deliverableKey) throw new UserError('Nothing has been delivered yet.');
   const files = [];
   const report = await T.blobs.get(c.deliverableKey);
-  if (report) files.push({ name: 'deliverable.md', data: report });
+  if (report) files.push({ name: 'deliverable.md', data: report }, { name: 'deliverable.docx', data: markdownToDocx(new TextDecoder().decode(report)) });
   files.push({ name: 'credits.json', data: textToBytes(JSON.stringify({ commission: c.title, deliveredAt: new Date(c.deliveredAt).toISOString(), manifest: c.delivery.manifest }, null, 2)) });
-  for (const t of deliveredTiles(T.db, commissionId)) {
+  const tiles = deliveredTiles(T.db, commissionId);
+  for (const t of tiles) {
     const sub = T.db.get('Submission', t.acceptedSubmissionId);
     for (const f of sub?.files || []) {
       const bytes = await T.blobs.get(f.key);
-      if (bytes) files.push({ name: `tiles/${t.key}/${f.name}`, data: bytes });
+      if (!bytes) continue;
+      files.push({ name: `tiles/${t.key}/${f.name}`, data: bytes });
+      // The finished documents from the final assembly also come as Word files, at the top of the download.
+      if (t.kind === 'INTEGRATION' && /\.(md|markdown)$/i.test(f.name) && !/^handoff\b/i.test(f.name)) {
+        files.push({ name: f.name.replace(/\.(md|markdown)$/i, '.docx'), data: markdownToDocx(new TextDecoder().decode(bytes)) });
+      }
     }
   }
   return createZip(files);
