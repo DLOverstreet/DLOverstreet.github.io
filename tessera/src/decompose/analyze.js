@@ -12,7 +12,18 @@ const NUM = `(\\d[\\d,]*(?:\\.\\d+)?|${NUM_WORDS})`;
 const PREPS = new Set(['of', 'for', 'to', 'in', 'on', 'at', 'by', 'with', 'from', 'and', 'or', 'per', 'each', 'the', 'a', 'an', 'our', 'my', 'your', 'their', 'into', 'about', 'than', 'is', 'are', 'was', 'were', 'be', 'we', 'it', 'that', 'which', 'call', 'calls']);
 const LANG_RE = 'english|spanish|french|chinese|mandarin|cantonese|vietnamese|arabic|portuguese|german|korean|japanese|russian|hindi|tagalog|somali|navajo|italian|haitian creole|swahili|ukrainian';
 const FILLER = /^(?:(?:and|also|plus|then|finally|lastly|next|first|second|third)\s*,?\s+)?(?:please\s+)?(?:(?:[\w'-]+\s+){1,3}?(?:need|needs|want|wants|would like|'d like|require|requires|expect|are looking for|is looking for|looking for)(?:\s+(?:you|someone|help|a contributor))?(?:\s+to)?|it should also (?:include|have|cover)|(?:it|this) (?:should|must|needs to) (?:include|have|cover)|help (?:us|me)(?: to)?|can you|could you|the job is to|the goal is to|our goal is to|deliverables?(?: are| include)?:?)\s+/i;
-const LEADING = /^(?:and|or|also|plus|then|with|as well as|including)\s+/i;
+const LEADING = /^(?:(?:and|or|also|plus|then|with|as well as|including)\s+|(?:finally|lastly|next|then|also|after that|afterwards?|first|second|third|to finish)\s*,\s*|(?:finally|lastly|afterwards?)\s+)/i;
+/** "no more than 3 recommendations": a cap on a named part, not a rule for the whole job. */
+const CAP = /^(?:no more than|not more than|at most|up to|a maximum of|maximum of)\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+(.+)$/i;
+/** "…, each with a rough cost": what every one of the things before it carries. */
+const EACH_WITH = /^(?:each|each one|every one)\s+(?:with|having|including|showing|listing|citing)\b/i;
+/** A phrase that names only a data file to hand back: "Produce a coded_all.csv". */
+const FILE_ONLY = /^(?:(?:produce|deliver|create|export|save|make|return|provide|send|give us|hand (?:back|in)|output)\s+)?(?:a|an|the|one|our)?\s*([\w-]+\.(?:csv|tsv|xlsx))$/i;
+/** A lead that names a table or data file, whose "with" list is its columns. */
+const TABLE_LEAD = /\.(?:csv|tsv|xlsx)\b|\b(?:spreadsheet|csv|data ?set|table)\b/i;
+const COLUMNISH = /^[a-z][a-z0-9_]*(?:\s[a-z][a-z0-9_]*)?$/i;
+/** Parts of work that stand on their own even when listed inside a short document. */
+const SEPARABLE = new Set(['finance', 'visualize', 'design', 'media', 'web', 'software', 'collect', 'outreach', 'schedule', 'translate', 'analyze']);
 const PURPOSE = /,?\s+(?:so that|so|because|since|in order to|which will|to help|to make sure|to ensure|to let)\s+/i;
 /** Verbs that apply to each object in a list: "translate the flyer and the FAQ" is two pieces of work. */
 const DISTRIBUTIVE = /^(?:translate|locali[sz]e|transcribe|proofread|copyedit|edit|clean|code|categori[sz]e|tag|fix|summari[sz]e|review|redesign|update|digiti[sz]e|catalog(?:ue)?|geocode|convert|migrate|move|port|transfer)$/;
@@ -23,7 +34,7 @@ const GENERIC_VERB = /^(?:write|build|create|make|design|set up|setup|plan|produ
 const DETAIL_VERB = /^(?:add|include|insert|mark|note|flag|label|attach|highlight|format|keep|number)$/;
 const COMMON_VERB = /^(?:arrange|secure|reserve|rent|buy|purchase|mail|ship|move|scan|caption|animate|repair|replace|upgrade|port|transfer|redirect|audit|improve|optimi[sz]e|redesign|refresh|field|tabulate|screen|extract|recruit|package|merge|apply|double-code|de-identify|scope|spot-check|integrate|write|draft|build|create|make|design|translate|record|edit|find|get|set|recruit|research|interview|clean|code|collect|analy[sz]e|map|chart|test|publish|produce|prepare|develop|shoot|film|mix|reconcile|categori[sz]e|fill|fix|tag|transcribe|book|plan|schedule|train|launch|review|check|compile|summari[sz]e|add|include|host|run|send|call|email|contact|identify|compare|pull|scrape|update|organi[sz]e|coordinate|photograph|catalog|illustrate|proofread|audit|survey|estimate|forecast|model|price|order|source|shortlist|pick|choose|select|upload|post|share|promote|pitch|track|measure|evaluate|assess|outline|storyboard|narrate|voice|hire|onboard|deploy|host|migrate|convert|import|export|digiti[sz]e|geocode|link|merge|combine|split|format|style|brand|lay|print|package)$/;
 const CONVENTION_NOUNS = /^(?:(?:a|an|the|new|shared|single|one|clear|consistent)\s+)?(?:[\w-]+\s+){0,2}?(codebook|glossary|style ?(?:guide|sheet)|brand (?:guide|kit)|data dictionary|search protocol|protocol|outline|template|api (?:contract|spec)|data model|schema|taxonomy|wireframes?|site ?map|information architecture|creative brief|message brief|lesson template|course outline|season outline|run sheet template)\b/i;
-const CHECK_CUES = /\b(agree|agreement|reliab\w*|kappa|double[- ]cod\w*|inter-?rater|spot[- ]check|quality[- ]check|qa\b|proofread\w*|fact[- ]check\w*|verif\w*|audit\w*|test\w*|usability)\b/i;
+const CHECK_CUES = /\b(agree|agreement|consisten\w*|reliab\w*|kappa|double[- ]cod\w*|inter-?rater|spot[- ]check|quality[- ]check|qa\b|proofread\w*|fact[- ]check\w*|verif\w*|audit\w*|test\w*|usability)\b/i;
 const SUBSET = /\b(missing|that have none|that don'?t have|without (?:a|an|any)|that lack|lacking|with no|where needed|if needed|only the ones|incomplete|blank)\b/i;
 const EVERY = /\b(every|each|all|everything|entire|whole|remaining)\b/i;
 const SEASON_LEVEL = /\b(cover art|logo|brand\w*|trailer|theme (?:music|song)|intro music|season|series overview|website|landing page|style guide|facilitator guide|teacher'?s? guide|syllabus|course outline|marketing|launch|press kit|social media kit|feed|rss|budget|tracker|list)\b/i;
@@ -124,6 +135,8 @@ export function classify(phrase, frame = 'generic') {
   if (frame === 'finance' && best === 'code') best = 'finance';
   // A named section of a document or page is writing, whatever its topic.
   if (!lead && ['document', 'web', 'generic', 'research'].includes(frame) && SECTION_HEAD.test(headChunk) && !['finance', 'visualize', 'collect', 'outreach', 'design'].includes(best)) best = 'write';
+  // "A table of theme counts by branch": tallying data the job already has is analysis, not collection.
+  if (!lead && best === 'collect' && /\b(?:counts?|totals?|tall(?:y|ies)|frequenc(?:y|ies)|percentages?)\b(?:\s+[\w-]+){0,2}?\s+(?:by|per|across|for each)\s+\w+/i.test(p)) best = 'analyze';
   return { archetype: best, score: scores[0].score, runnerUp: scores[1]?.score > 0 ? scores[1].key : null, leadVerb: lead };
 }
 
@@ -200,15 +213,17 @@ function detectPlace(text) {
     || null;
 }
 
-/** Splits at top-level commas and semicolons, respecting parentheses. */
+/** Splits at top-level commas and semicolons, respecting parentheses and numbers ("2,000"). */
 function splitTop(text, seps = ',;') {
   const parts = [];
   let depth = 0;
   let cur = '';
-  for (const ch of text) {
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
     if (ch === '(') depth++;
     if (ch === ')') depth = Math.max(0, depth - 1);
-    if (seps.includes(ch) && depth === 0) { parts.push(cur); cur = ''; } else cur += ch;
+    const inNumber = ch === ',' && /\d$/.test(cur) && /^\d{3}\b/.test(text.slice(i + 1));
+    if (seps.includes(ch) && depth === 0 && !inNumber) { parts.push(cur); cur = ''; } else cur += ch;
   }
   parts.push(cur);
   return parts.map((p) => p.trim()).filter(Boolean);
@@ -231,11 +246,35 @@ export function splitList(text, frame = 'generic') {
     for (const b of bits.map((x) => x.trim().replace(/^(?:and|or)\s+/i, '')).filter(Boolean)) {
       // "maps and recommendations": two short noun phrases that are different kinds of work.
       const pair = /^((?:[\w'-]+\s+){0,3}?[\w'-]+)\s+and\s+((?:[\w'-]+\s+){0,3}?[\w'-]+)((?:\s+(?:for|on|about|of)\s+.*)?)$/i.exec(b);
-      if (pair && !FIXED_PAIRS.test(b) && !leadVerbOf(pair[1]) && classify(pair[1], frame).archetype !== classify(pair[2], frame).archetype) out.push(pair[1] + pair[3], pair[2] + pair[3]);
+      if (EACH_WITH.test(b) && out.length) out[out.length - 1] += `, ${b}`;
+      else if (pair && !FIXED_PAIRS.test(b) && !leadVerbOf(pair[1]) && classify(pair[1], frame).archetype !== classify(pair[2], frame).archetype) out.push(pair[1] + pair[3], pair[2] + pair[3]);
       else out.push(b);
     }
   }
   return out;
+}
+
+/**
+ * A "with" list that describes the thing before it rather than naming new work: "a codebook
+ * with a definition and an example quote for each", or the columns of "a coded_all.csv with
+ * response_id, branch and theme(s)". Returns those details and whatever list is left over.
+ */
+function attributesOf(lead, list) {
+  if (/\s+(?:for|of|on|in)\s+(?:each|each one|every one|each of them|all of them)$/i.test(list)) return { details: [cap(list)], columns: [], rest: null };
+  if (!TABLE_LEAD.test(lead)) return null;
+  const columns = [];
+  const items = splitTop(list);
+  let i = 0;
+  for (; i < items.length; i++) {
+    // "…, email and phone for 2,000 donors": the tail is about the rows, not another column.
+    const bits = items[i].replace(/^(?:and|or)\s+/i, '').replace(/\s+(?:for|of|in|from|per|across)\s+.*$/i, '').split(/\s+(?:and|or|&)\s+/i).map((x) => x.trim());
+    // One word is a column name even when it could be a verb ("email"); two words must not start with one.
+    if (!bits.every((x) => COLUMNISH.test(x) && !/^(?:a|an|the|one|some|each|every)\b/i.test(x) && (!x.includes(' ') || !leadVerbOf(x)))) break;
+    columns.push(...bits.map((x) => x.toLowerCase().replace(/\s+/g, '_')));
+  }
+  if (!columns.length) return null;
+  const rest = items.slice(i).join(', ').replace(/^(?:and|or)\s+/i, '').trim();
+  return { details: [`Columns: ${columns.join(', ')}`], columns, rest: rest || null };
 }
 
 function stripItem(s) {
@@ -342,6 +381,8 @@ export function analyzeJob(job) {
   const constraints = [];
   const purposes = [];
   const components = [];
+  /** Data files the job names by file name, with the columns it asks for. */
+  const namedFiles = [];
   let head = null;
 
   const primaryOf = (kind) => quantities.filter((q) => q.kind === kind).sort((a, b) => b.n - a.n)[0] || null;
@@ -359,6 +400,9 @@ export function analyzeJob(job) {
     phrase = work.trim();
     if (purpose) purposes.push(purpose.trim());
     phrase = phrase.replace(/\s+(?:that|which) (?:goes|go|comes?|is|are) (?:along )?with (?:it|them|this)\b/i, '');
+    // "No more than 3 recommendations" names a part of the work and its cap.
+    const capped = CAP.exec(phrase);
+    if (capped) phrase = `Up to ${capped[1]} ${capped[2]}`;
     // "bank accounts reconciled" → "reconcile bank accounts".
     const part = /^(.+?)\s+(categori[sz]ed|reconciled|coded|translated|transcribed|cleaned|edited|reviewed|updated|entered|tagged|fixed|proofread|checked|summari[sz]ed|analy[sz]ed|redacted|digiti[sz]ed|organi[sz]ed|filed)$/i.exec(phrase);
     if (part) {
@@ -368,6 +412,12 @@ export function analyzeJob(job) {
     }
     phrase = phrase.replace(/^(?:them|it|these|those|this|all of (?:them|it))\b/i, pronounNoun()).replace(/\b(?:them|it)$/i, pronounNoun());
     if (!words(phrase).length) return;
+    // "Produce a coded_all.csv": in coding and bulk jobs that file is the merged result of the batches.
+    const fileOnly = FILE_ONLY.exec(phrase);
+    if (fileOnly && ['coding', 'bulk'].includes(frame)) {
+      if (!namedFiles.some((f) => f.name === fileOnly[1].toLowerCase())) namedFiles.push({ name: fileOnly[1].toLowerCase(), columns: ctx.columns || [] });
+      return;
+    }
     // "Write and illustrate a picture book": two kinds of work on one thing.
     const twoVerbs = /^([a-z]+) and ([a-z]+) (.{3,})$/i.exec(phrase);
     if (twoVerbs && leadVerbOf(twoVerbs[1]) && leadVerbOf(twoVerbs[2]) && !ctx.split) {
@@ -412,20 +462,22 @@ export function analyzeJob(job) {
     // A feature of an app or site is built by whoever builds the product, and so is a fix to it.
     if (ctx.feature && (frame === 'software' || frame === 'web')) cls.archetype = frame;
     if ((frame === 'software' || frame === 'web') && /^(?:fix|repair|patch|resolve|remediate|address)\b/i.test(verbFirst)) cls.archetype = frame;
-    const qs = findQuantities(phrase);
+    // "…, each with a rough cost" describes each of the things named; it isn't a count of the job's items.
+    const core = phrase.replace(/,?\s+(?:each|each one|every one)\s+(?:with|having|including|showing|listing|citing)\b.*$/i, '');
+    const qs = findQuantities(core);
     /** @type {{ n: number, unit: string, kind: string, noun: string } | null} */
     let qty = qs.find((q) => q.kind !== 'scale' || ['outreach', 'schedule', 'research'].includes(cls.archetype)) || null;
-    const every = EVERY.test(phrase);
-    const subset = SUBSET.test(phrase);
+    const every = EVERY.test(core);
+    const subset = SUBSET.test(core);
     // "a letter for the top 10": ten of the things counted elsewhere in the job.
-    const top = /\btop (\d+|five|ten|twenty|three)\b/i.exec(phrase);
+    const top = /\btop (\d+|five|ten|twenty|three)\b/i.exec(core);
     if (!qty && top && primary.items) qty = { n: toNumber(top[1]), unit: primary.items.unit, kind: 'items', noun: primary.items.noun };
     // "Digitize 3,000 photos: scan them, tag each, write captions": each step works on all of them.
     if (!qty && ctx.headQty && ['clean', 'enrich', 'code', 'write', 'catalog', 'translate', 'edit', 'transcribe', 'migrate', 'design', 'research', 'outreach'].includes(cls.archetype)) qty = ctx.headQty;
     if (!qty) {
       // "every response coded", "categorize everything": the job's main count.
       const unitHit = quantities.find((q) => ['items', 'duration', 'length', 'period', 'assets'].includes(q.kind)
-        && words(q.noun).filter((w) => w.length > 3 && !/^(?:hours?|minutes?|open-ended|survey|product|each)$/.test(w)).some((w) => new RegExp(`\\b${w.replace(/s$/, '')}s?\\b`, 'i').test(phrase)));
+        && words(q.noun).filter((w) => w.length > 3 && !/^(?:hours?|minutes?|open-ended|survey|product|each)$/.test(w)).some((w) => new RegExp(`\\b${w.replace(/s$/, '')}s?\\b`, 'i').test(core)));
       if (unitHit) qty = unitHit;
       else if ((every || subset || frame === 'bulk' || (ctx.verb && DISTRIBUTIVE.test(ctx.verb))) && (primary.items || primary.duration || primary.length)
         && !(ctx.verb && DISTRIBUTIVE.test(ctx.verb) && !ctx.single && !every && !subset && frame !== 'bulk')
@@ -435,18 +487,20 @@ export function analyzeJob(job) {
     if (CONVENTION_NOUNS.test(phrase) && !/\b(?:our|your|their|existing|current)\s+(?:[\w-]+\s+)?(?:taxonomy|template|schema|outline|glossary|style guide|brand guide|codebook|protocol)\b/i.test(phrase) && !/\binto\b/i.test(phrase)) role = 'conventions';
     // A check of this job's own work; auditing something the requester already has is work in itself.
     else if (CHECK_CUES.test(phrase) && ['test', 'edit', 'code', 'analyze', 'legal'].includes(cls.archetype) && !/\b(?:audit|test|review|assess|evaluate)\w*\s+(?:our|the existing|the current|their|your)\b/i.test(phrase)) role = 'check';
+    // In a coding job, a check on the coding is the agreement check.
+    if (role === 'check' && frame === 'coding' && /\bcod(?:e|es|ed|ing|ers?)\b|\bthemes?\b/i.test(phrase)) cls.archetype = 'code';
     const rawItem = stripItem(raw);
     const isSingular = /^(?:a|an|one|the|single)\s/i.test(rawItem) && !/(?:[^s]s|ies)$/i.test(words(phrase).slice(-1)[0] || '');
     components.push({
       phrase: cap(phrase), verb: cls.leadVerb || ctx.verb || null, archetype: cls.archetype, runnerUp: cls.runnerUp, confidence: cls.score,
       qty: qty ? { n: qty.n, unit: qty.unit, kind: qty.kind, noun: qty.noun } : null,
       subset, every, role, source: ctx.source, parentRef: ctx.parent || null, perParent: !!ctx.parent, singular: isSingular, feature: !!ctx.feature,
-      physical: PHYSICAL.test(phrase), details: [],
+      physical: PHYSICAL.test(phrase), details: [...(ctx.details || [])],
     });
   };
 
   const processSentence = (s, source) => {
-    const t = s.text.replace(/\s*\([^)]*\)/g, (m) => (/\d/.test(m) ? m : '')).replace(/[.!?]+$/, '');
+    const t = s.text.replace(/(\w)\(s\)/g, '$1s').replace(/\s*\([^)]*\)/g, (m) => (/\d/.test(m) ? m : '')).replace(/[.!?]+$/, '');
     if (s.bullets) { for (const b of t.split('; ')) addComponent(b, { source }); return; }
     if (isConstraint(t)) {
       const [c, purpose] = t.split(PURPOSE);
@@ -478,6 +532,15 @@ export function analyzeJob(job) {
       if (isHead && lead) {
         const object = (verb ? lead.slice(verb.length) : lead).trim();
         head = { phrase: cap(lead), verb, object: object.replace(/^(?:a|an|the|our)\s+/i, 'the ') || null, archetype: classify(lead, frame).archetype };
+      }
+      // "A codebook with a definition and an example quote for each", "a coded_all.csv with response_id,
+      // branch and theme(s), a table of counts…": details of the thing named, then any new pieces.
+      const skipHead = isHead && ((PRODUCT_FRAMES.has(frame) && (!verb || MAKE_VERB.test(verb))) || ['event', 'media', 'course', 'campaign'].includes(frame));
+      const attrs = list && !skipHead ? attributesOf(lead, list) : null;
+      if (attrs) {
+        addComponent(lead, { source, details: attrs.details, columns: attrs.columns });
+        if (attrs.rest) for (const it of splitList(attrs.rest, frame)) addComponent(it, { source });
+        return;
       }
       if (list && weak && verb && DISTRIBUTIVE.test(verb)) {
         // "Translate the form and its instructions into French, with a glossary": the objects are the work, the with-list adds to it.
@@ -530,6 +593,14 @@ export function analyzeJob(job) {
     seen.add(key);
     unique.push(c);
   }
+  // The parts listed for a short document ("a 2-page report: the main findings, differences between
+  // branches…") are what its writer covers, not separate pieces; costs, charts and the like stay apart.
+  const shortDoc = (p) => !!p && p.archetype === 'write' && p.qty?.kind === 'length' && ((p.qty.unit === 'page' && p.qty.n <= 3) || (p.qty.unit === 'word' && p.qty.n <= 1500));
+  for (const c of [...unique]) {
+    if (!shortDoc(c.parentRef) || !unique.includes(c.parentRef) || SEPARABLE.has(c.archetype) || c.role !== 'work') continue;
+    c.parentRef.details.push(cap(c.phrase));
+    unique.splice(unique.indexOf(c), 1);
+  }
   // With a count of assets (6 episodes, 8 lessons), work that isn't about one named thing happens once per asset.
   const assets = primary.assets && ASSET_FRAMES.has(frame) && primary.assets.n > 1 && primary.assets.n <= 40 ? primary.assets : null;
   for (const c of unique) {
@@ -556,6 +627,7 @@ export function analyzeJob(job) {
   for (const c of unique) req(c.phrase, c.role === 'conventions' ? 'conventions' : 'component', c.id);
   for (const t of languages.targets) req(`${LANGUAGE_NAMES[t] || t} version`, 'language', t);
   for (const c of uniqueStrings(constraints)) req(c, constraintKind(c), null);
+  for (const f of namedFiles) req(`Deliver ${f.name}${f.columns.length ? ` with ${f.columns.join(', ')}` : ''}`, 'format', f.name);
   if (sensitive.yes) req(sensitive.redact ? 'Contributors only see de-identified data' : 'Sensitive data stays need-to-know', 'privacy', null);
   const named = { phone: 'Works on a phone', print: 'Ready to print', pdf: 'Delivered as PDF', accessible: 'Meets accessibility basics' };
   for (const f of formats.filter((x) => named[x])) {
@@ -571,7 +643,7 @@ export function analyzeJob(job) {
     subject: subjectOf(title, head, frame), place: detectPlace(`${title}. ${goal}`), head,
     components: unique, constraints: uniqueStrings(constraints), purposes: uniqueStrings(purposes),
     quantities, primary, languages, audiences, formats, sensitive, sources, provided,
-    requirements, assumptions, suggestions, vague,
+    requirements, assumptions, suggestions, vague, namedFiles,
   };
 }
 

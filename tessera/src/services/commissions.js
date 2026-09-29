@@ -168,7 +168,7 @@ export async function finishPlan(T, tiles, analysis, opts = {}) {
   return { tiles: out, quality, changes, refined };
 }
 
-const PLAN_FIELDS = ['inputs', 'outputs', 'stream', 'phase', 'archetype', 'partOf', 'part', 'covers', 'priority', 'handoff', 'agentMode', 'collapsed'];
+const PLAN_FIELDS = ['inputs', 'outputs', 'stream', 'phase', 'archetype', 'partOf', 'part', 'covers', 'priority', 'handoff', 'agentMode', 'collapsed', 'webResearch', 'independentCheck'];
 
 function insertPlanTiles(tx, commissionId, tiles, rush) {
   const idByKey = new Map();

@@ -4,9 +4,9 @@
 // other where the plan asks for a person's judgment, and revise failed rounds; the autopilot
 // signs off the delivery. Agents are contributor accounts marked isAgent, so every claim,
 // check, payout and reputation event goes through the same services a person uses.
-import { AGENTS } from '../agents/index.js';
+import { AGENTS, samplePlaceholder } from '../agents/index.js';
 import { runAgent } from '../llm/run-agent.js';
-import { runCostUsd } from '../llm/prices.js';
+import { runCostUsd, modelCaps } from '../llm/prices.js';
 import { adaptForAgents } from '../decompose/agents.js';
 import { UserError, must, tilesOf } from './core.js';
 import { respondToOffer, claimFromBoard, explainFit } from './market.js';
@@ -53,6 +53,26 @@ export function ensureAgents(T, size = swarmSettings(T.db).size) {
   });
 }
 
+/**
+ * Anthropic's server-side web tools for a research call: the latest versions (dynamic
+ * filtering, raw results left out of the response) on models that take them, the basic ones
+ * otherwise.
+ * @param {string} model
+ * @param {{ maxSearchesPerTile: number, maxFetchesPerTile: number }} s
+ */
+export function webTools(model, s) {
+  if (modelCaps(model).webTools) {
+    return [
+      { type: 'web_search_20260318', name: 'web_search', max_uses: s.maxSearchesPerTile, response_inclusion: 'excluded' },
+      { type: 'web_fetch_20260318', name: 'web_fetch', max_uses: s.maxFetchesPerTile, max_content_tokens: 20000, citations: { enabled: true }, response_inclusion: 'excluded' },
+    ];
+  }
+  return [
+    { type: 'web_search_20250305', name: 'web_search', max_uses: s.maxSearchesPerTile },
+    { type: 'web_fetch_20250910', name: 'web_fetch', max_uses: s.maxFetchesPerTile, max_content_tokens: 20000, citations: { enabled: true } },
+  ];
+}
+
 /** Model spend on a commission, in dollars (zero with the mock). */
 export function spentUsd(db, commissionId) {
   return db.filter('AgentRun', (r) => r.commissionId === commissionId).reduce((n, r) => n + runCostUsd(r), 0);
@@ -68,41 +88,60 @@ function csvTable(f) {
 }
 
 function concatTables(list) {
-  const sorted = [...list].sort((a, b) => Number(NUMBERED.exec(a.name)?.[2] || 0) - Number(NUMBERED.exec(b.name)?.[2] || 0));
+  const order = (f) => f.partIndex ?? Number(NUMBERED.exec(f.name)?.[2] || 0);
+  const sorted = [...list].sort((a, b) => order(a) - order(b) || a.name.localeCompare(b.name));
   const tables = sorted.map(csvTable);
   const columns = [...new Set(tables.flatMap((t) => t.columns))];
   const rows = tables.flatMap((t) => t.rows.map((r) => columns.map((c) => r[t.columns.indexOf(c)] ?? '')));
   return { columns, rows, from: sorted.map((f) => f.name) };
 }
 
+/** A tile whose job is to put batch files together (by kind, title or output name). */
+export function isMergeTile(tile) {
+  return tile.kind === 'INTEGRATION'
+    || /\b(merge|combine|compile|consolidate|assemble|stack|join|collate)\b/i.test(tile.title || '')
+    || (tile.outputs || []).some((n) => /(^|_)(all|merged|combined|full|final)(_|\.csv$)/i.test(n));
+}
+
 /**
- * Batch files merged without a model, so a merge of thousands of rows is exact: numbered
- * batches of one file (coded_01.csv, coded_02.csv → coded_all.csv) are stacked, and for a
- * final assembly tile with one CSV output, batches of different files are joined on their
- * shared id column, onto the attached source file when it has that column.
- * @param {{ kind?: string, outputs?: string[], acceptanceCriteria?: any[] }} tile
- * @param {{ name: string, text: string|null }[]} files upstream files with their text
+ * Batch files merged without a model, so a merge of thousands of rows is exact. Batches are
+ * grouped by the plan (files from tiles that share a partOf group, in part order), or by name
+ * when the plan doesn't say (coded_01.csv, coded_02.csv). A group is stacked into the CSV output
+ * named after it, or into a merge tile's only CSV output; a merge tile's single CSV output built
+ * from several groups joins them on their shared id column, onto the attached source file when
+ * it has that column.
+ * @param {{ kind?: string, title?: string, outputs?: string[], acceptanceCriteria?: any[] }} tile
+ * @param {{ name: string, text: string|null, group?: string|null, partIndex?: number }[]} files upstream files with their text
  * @param {{ name: string, text: string|null }[]} [sources] the requester's attached files
- * @returns {{ name: string, text: string, rows: number, from: string[] }[]}
+ * @returns {{ name: string, text: string, rows: number, from: string[], added?: string[] }[]}
  */
 export function mergeBatches(tile, files, sources = []) {
   const csvOut = (tile.outputs || []).filter((n) => /\.csv$/i.test(n));
   if (!csvOut.length) return [];
   const groups = new Map();
   for (const f of files) {
-    if (typeof f.text !== 'string') continue;
+    if (typeof f.text !== 'string' || !/\.csv$/i.test(f.name) || csvOut.includes(f.name)) continue;
     const m = NUMBERED.exec(f.name);
-    if (m) (groups.get(m[1]) || groups.set(m[1], []).get(m[1])).push(f);
+    const g = f.group ? `plan:${f.group}` : m ? m[1] : null;
+    if (g) (groups.get(g) || groups.set(g, []).get(g)).push(f);
   }
+  const stemOf = (list) => NUMBERED.exec(list[0].name)?.[1] || list[0].name.replace(/\.csv$/i, '');
   const out = [];
+  const used = new Set();
   for (const name of csvOut) {
-    const stem = name.replace(/\.csv$/i, '').replace(/_(all|merged|combined|full)$/i, '');
-    const g = groups.get(stem);
-    if (!g || g.length < 2) continue;
-    const t = concatTables(g);
+    const stem = name.replace(/\.csv$/i, '').replace(/_(all|merged|combined|full|final)$/i, '');
+    const hit = [...groups.entries()].find(([g, list]) => list.length > 1 && !used.has(g) && (g === stem || stemOf(list) === stem));
+    if (!hit) continue;
+    used.add(hit[0]);
+    const t = concatTables(hit[1]);
     out.push({ name, text: toCsv(t.columns, t.rows), rows: t.rows.length, from: t.from, added: t.columns });
   }
-  if (out.length || csvOut.length !== 1 || tile.kind !== 'INTEGRATION' || groups.size < 2) return out;
+  if (out.length || csvOut.length !== 1 || !isMergeTile(tile) || !groups.size) return out;
+  if (groups.size === 1) {
+    if ([...groups.values()][0].length < 2) return out;
+    const t = concatTables([...groups.values()][0]);
+    return [{ name: csvOut[0], text: toCsv(t.columns, t.rows), rows: t.rows.length, from: t.from, added: t.columns }];
+  }
   const tables = [...groups.values()].map(concatTables);
   const key = tables[0].columns.find((c) => tables.every((t) => t.columns.includes(c)));
   if (!key) return out;
@@ -158,22 +197,42 @@ export function settleMerge(m, criteria) {
   return { ...m, text, fails: fails.map((f) => `${f.rule}: ${f.reason}`) };
 }
 
+/** Every tile upstream of this one, however many layers up. */
+function ancestors(db, tileId) {
+  const seen = new Set();
+  const queue = [tileId];
+  while (queue.length) {
+    const id = queue.shift();
+    for (const e of db.filter('TileEdge', (x) => x.toTileId === id)) if (!seen.has(e.fromTileId)) { seen.add(e.fromTileId); queue.push(e.fromTileId); }
+  }
+  return seen;
+}
+
 /**
- * The files a tile works from: everything its upstream tiles delivered, plus any file its
- * inputs name that an earlier accepted tile made (a final assembly tile names batch files
- * from several layers up).
+ * The files a tile works from: everything its upstream tiles delivered, any file its inputs
+ * name that an earlier accepted tile made, and for a merge tile every batch file upstream of
+ * it (a model-made plan may wire a merge to the last layer only, or name the batches loosely).
+ * Each file carries its maker's batch group and part, so merges follow the plan.
  */
 export function inputRefs(db, tile) {
   const out = upstreamFiles(db, tile.id);
   const want = new Set(tile.inputs || []);
   const have = new Set(out.map((f) => f.name));
-  if (![...want].some((n) => !have.has(n))) return out;
-  for (const t of db.filter('Tile', (x) => x.commissionId === tile.commissionId && !x.dynamic && x.status === 'ACCEPTED' && x.acceptedSubmissionId && x.id !== tile.id)) {
+  const merge = isMergeTile(tile) && (tile.outputs || []).some((n) => /\.csv$/i.test(n));
+  const up = merge ? ancestors(db, tile.id) : null;
+  const accepted = db.filter('Tile', (x) => x.commissionId === tile.commissionId && !x.dynamic && x.status === 'ACCEPTED' && x.acceptedSubmissionId && x.id !== tile.id);
+  for (const t of accepted) {
+    const batch = merge && up.has(t.id) && t.partOf;
     for (const f of db.get('Submission', t.acceptedSubmissionId)?.files || []) {
-      if (want.has(f.name) && !have.has(f.name)) { out.push({ ...f, fromTile: t.key, fromTitle: t.title }); have.add(f.name); }
+      if (have.has(f.name)) continue;
+      if (want.has(f.name) || (batch && /\.csv$/i.test(f.name))) { out.push({ ...f, fromTile: t.key, fromTitle: t.title }); have.add(f.name); }
     }
   }
-  return out;
+  const byKey = new Map(accepted.map((t) => [t.key, t]));
+  return out.map((f) => {
+    const maker = byKey.get(f.fromTile);
+    return maker?.partOf ? { ...f, group: maker.partOf, partIndex: maker.part?.index ?? 0 } : f;
+  });
 }
 
 /** Columns the tile's csv_columns rules ask for. */
@@ -256,6 +315,20 @@ export async function workerInput(T, tile) {
     input.merged = merged.map((m) => ({ name: m.name, rows: m.rows, from: m.from, note: 'Already assembled by the swarm from the accepted batches. Don’t write this file; hand in the other files.' }));
     Object.defineProperty(input, 'precomputedFiles', { value: merged.map((m) => ({ name: m.name, text: m.text })), enumerable: false });
   }
+  // Say what the merge step did, so a skipped merge shows up in the submission notes.
+  if (isMergeTile(tile) && (tile.outputs || []).some((n) => /\.csv$/i.test(n))) {
+    const report = merged.length
+      ? `Merged by code: ${merged.map((m) => `${m.name} (${m.rows} rows from ${m.from.length} files)`).join('; ')}.`
+      : drafts.length
+        ? `Merged by code into a draft the agent fixed: ${drafts.map((d) => `${d.name} (${d.fails.join('; ')})`).join('; ')}.`
+        : `No merge by code: no batch files from the plan were found upstream (${ups.filter((f) => /\.csv$/i.test(f.name)).length} CSV inputs).`;
+    Object.defineProperty(input, 'mergeReport', { value: report, enumerable: false });
+  }
+  if (tile.research) {
+    input.research = tile.research.unavailable
+      ? { unavailable: tile.research.unavailable }
+      : { notes: clipText(tile.research.notes || '', 12000), sources: (tile.research.sources || []).slice(0, 25).map((x, i) => ({ n: i + 1, title: x.title, url: x.url })) };
+  }
   const last = tile.lastSubmissionId ? T.db.get('Submission', tile.lastSubmissionId) : null;
   if (tile.status === 'REVISION' && last && last.contributorId === tile.claimedById) {
     const failed = [];
@@ -285,6 +358,15 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
   const failures = new Map();
   let timer = null;
   let stepping = false;
+  /** Set when the key's organization has the web tools switched off; research then stops for this session. */
+  let webOff = null;
+
+  /** Whether agents may use the web now: the setting is on and the provider can run Anthropic's web tools (the mock stands in). */
+  function webReady() {
+    const s = swarmSettings(T.db);
+    const route = T.llm.agent(s.workerModel);
+    return !!s.web && !webOff && route.providerName !== 'openai-compatible';
+  }
 
   const jobs = () => T.db.filter('Commission', (c) => c.workforce === 'agents' && !['ACCEPTED', 'CANCELLED'].includes(c.status));
   const isAgent = (id) => !!T.db.get('User', id)?.isAgent;
@@ -312,7 +394,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     const tiles = draftGraph(T.db, c.id).filter((t) => t.status !== 'CANCELLED');
     const hasSource = (c.files || []).some((f) => isTextFile(f.name));
     const sourceRows = Math.max(0, ...(c.files || []).map((f) => f.summary?.rowCount || 0)) || null;
-    const adapted = adaptForAgents(tiles, { hasSource, sourceRows });
+    const adapted = adaptForAgents(tiles, { hasSource, sourceRows, web: webReady() });
     if (adapted.changes.length || adapted.handoffs.length) replacePlan(T, c.requesterId, c.id, adapted.tiles, 'Adapted the plan for the agent swarm');
     fundCommission(T, c.requesterId, c.id, { acceptOverBudget: true });
     note(c.id, `The swarm started on ${adapted.tiles.length} tiles.`, { launchedAt: T.clock.now(), changes: adapted.changes, handoffs: adapted.handoffs });
@@ -379,17 +461,60 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     note(c.id, `The autopilot answered ${output.answers.length} scoping question${output.answers.length === 1 ? '' : 's'}${assumed ? `, ${assumed} by assumption` : ''}.`);
   }
 
+  /**
+   * Looks up what a tile needs from the web before the work starts, once per tile (a revision
+   * reuses it). Without web access the tile carries a note saying so, and the worker marks
+   * outside facts "(verify)".
+   */
+  async function research(tile) {
+    const c = T.db.get('Commission', tile.commissionId);
+    const s = swarmSettings(T.db);
+    const save = (research) => T.db.tx((tx) => tx.update('Tile', tile.id, { research }));
+    if (!webReady()) {
+      save({ unavailable: webOff || 'Web access is off in Settings.', at: T.clock.now() });
+      return;
+    }
+    const route = T.llm.agent(s.workerModel);
+    setActivity(tile.id, { agentId: tile.claimedById, doing: 'researching', since: T.clock.now(), model: route.label });
+    const restricted = c.privacy === 'RESTRICTED';
+    const input = {
+      job: { title: c.title, goal: restricted ? redactText(c.goal) : c.goal },
+      tile: { title: tile.title, spec: restricted ? redactText(tile.spec) : tile.spec, outputs: tile.outputs || [], criteria: tile.acceptanceCriteria.map((x) => x.text) },
+      requesterFiles: (c.files || []).map((f) => f.name),
+      limits: { searches: s.maxSearchesPerTile, pageReads: s.maxFetchesPerTile },
+    };
+    await pace();
+    try {
+      const res = await runAgent({ agent: AGENTS.researcher, input, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: tile.claimedById }, tools: webTools(route.model, s), retries: 1 });
+      save({ notes: res.output, sources: res.sources || [], searches: res.usage?.webSearches || 0, reads: res.usage?.webFetches || 0, model: res.model, at: T.clock.now() });
+    } catch (e) {
+      if (!/web access isn.t available/i.test(e.message || '')) throw e;
+      webOff = e.message;
+      note(c.id, 'Web search is switched off for this API key’s organization (Claude Console → Settings → Capabilities), so agents mark outside facts “(verify)” instead.');
+      save({ unavailable: e.message, at: T.clock.now() });
+    }
+  }
+
   async function work(tile) {
     const agent = tile.claimedById;
     const c = T.db.get('Commission', tile.commissionId);
-    const route = T.llm.forCommission(c, swarmSettings(T.db).workerTier);
+    const s = swarmSettings(T.db);
+    if (tile.webResearch && !tile.research) {
+      await research(tile);
+      tile = T.db.get('Tile', tile.id);
+    }
+    // A check of others' work runs on a different model from the one that did the work.
+    const route = T.llm.agent(tile.independentCheck ? s.checkModel : s.workerModel);
     const started = Date.now();
     setActivity(tile.id, { agentId: agent, doing: tile.status === 'REVISION' ? 'revising' : 'working', since: T.clock.now(), model: route.label });
     const input = await workerInput(T, tile);
     await pace();
-    const res = await runAgent({ agent: AGENTS.worker, input, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 16000, bestEffort: true });
+    const res = await runAgent({ agent: AGENTS.worker, input, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 20000, bestEffort: true });
     const cur = T.db.get('Tile', tile.id);
     if (cur.claimedById !== agent || !['CLAIMED', 'REVISION'].includes(cur.status)) return;
+    // Placeholder data when the real data was in the inputs is never handed in; the task retries.
+    const fake = samplePlaceholder(res.output, input);
+    if (fake) throw new Error(`Refused to hand in placeholder data: ${fake}`);
     const pre = input.precomputedFiles || [];
     const allowed = (name) => config.limits.allowedExtensions.includes(String(name).split('.').pop().toLowerCase());
     const files = [
@@ -400,7 +525,8 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     const notes = [
       res.output.approach.map((a, i) => `${i + 1}. ${a}`).join('\n'),
       res.output.notes,
-      pre.length ? `Merged by the swarm without a model: ${pre.map((p) => p.name).join(', ')}.` : '',
+      input.mergeReport || '',
+      tile.research && !tile.research.unavailable ? `Web research: ${tile.research.searches || 0} searches, ${tile.research.reads || 0} pages read, ${(tile.research.sources || []).length} sources.` : '',
       res.problems?.length ? `Handed in with known problems after ${config.llm.maxRetries + 1} attempts: ${res.problems.join('; ')}` : '',
     ].filter(Boolean).join('\n\n');
     await submitWork(T, agent, tile.id, {
@@ -431,7 +557,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     setActivity(rt.id, { agentId: agent, doing: 'reviewing', since: T.clock.now() });
     const input = await reviewInput(target, sub, rt.acceptanceCriteria, c);
     await pace();
-    const route = T.llm.forCommission(c, swarmSettings(T.db).workerTier);
+    const route = T.llm.agent(swarmSettings(T.db).checkModel);
     const { output, model } = await runAgent({ agent: AGENTS.reviewer, input, route, log: T.log, meta: { commissionId: c.id, tileId: rt.id, userId: agent } });
     const cur = T.db.get('Tile', rt.id);
     if (cur.claimedById !== agent || cur.status !== 'CLAIMED') return;

@@ -121,6 +121,40 @@ test('audits come before fixes, and a story is written by one person before it i
   assert.ok(pros.tiles.filter((t) => /^draft-/.test(t.key)).every((t) => t.dependsOn.some((d) => /^research-/.test(d))), 'letters wait for the research');
 });
 
+test('a long multi-part job reads as one pipeline: codebook, batches, check, counts, chart, costs, report, summary', () => {
+  const r = plans.find((p) => p.j.id === 'library').r;
+  const titles = r.tiles.map((t) => t.title);
+  for (const bad of [/^Code the definition/i, /^Code the response_id/i, /^Prepare the each/i, /finally/i, /^Code the every/i, /for page \d/]) {
+    assert.ok(!titles.some((t) => bad.test(t)), `no tile reads ${bad}: ${titles.join(' | ')}`);
+  }
+  const batches = r.tiles.filter((t) => t.archetype === 'code' && t.phase === 'work');
+  assert.ok(batches.length >= 2);
+  assert.equal(batches[0].part.from, 1);
+  batches.reduce((prev, t) => { assert.equal(t.part.from, prev + 1); return t.part.to; }, 0);
+  assert.equal(batches[batches.length - 1].part.to, 90, 'coding batches cover all 90 rows');
+  assert.ok(batches.every((t) => t.acceptanceCriteria.some((c) => c.rule === 'csv_columns(response_id, branch, themes)')), 'batches use the columns the requester named');
+  const by = (re) => r.tiles.filter((t) => re.test(t.key));
+  const [check] = by(/^agreement-check$/);
+  assert.ok(batches.every((b) => check.dependsOn.includes(b.key)));
+  const [counts] = by(/counts/);
+  assert.equal(counts.archetype, 'analyze');
+  assert.ok(batches.every((b) => counts.dependsOn.includes(b.key)), 'counts wait for the coding');
+  const charts = r.tiles.filter((t) => t.archetype === 'visualize');
+  assert.equal(charts.length, 1);
+  assert.ok(charts[0].dependsOn.includes(counts.key));
+  const recs = r.tiles.filter((t) => /recommendations/i.test(t.title));
+  assert.equal(recs.length, 1);
+  assert.ok(recs[0].dependsOn.includes(counts.key), 'recommendations follow the findings');
+  assert.ok(recs[0].acceptanceCriteria.some((c) => c.rule === 'csv_max_rows(3)'));
+  const reports = r.tiles.filter((t) => /report/i.test(t.title) && t.archetype === 'write' && !t.languages.includes('es'));
+  assert.ok(reports.length >= 1 && reports.length <= 2, `one report tile or a pair, got ${reports.length}`);
+  assert.ok(reports.every((t) => t.dependsOn.includes(recs[0].key) && t.dependsOn.includes(charts[0].key)));
+  const spanish = r.tiles.filter((t) => t.languages.includes('es'));
+  assert.equal(spanish.length, 1, 'one Spanish summary, written in Spanish');
+  assert.ok(reports.every((t) => spanish[0].dependsOn.includes(t.key)), 'the summary is written from the report');
+  assert.ok(!r.tiles.some((t) => t.archetype === 'translate'), 'no translator for text that is already written in Spanish');
+});
+
 test('plans are deterministic', () => {
   for (const j of CORPUS.slice(0, 8)) assert.deepEqual(disaggregate(j).tiles, disaggregate(j).tiles);
 });

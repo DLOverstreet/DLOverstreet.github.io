@@ -129,15 +129,21 @@ function SwarmSettings() {
   const llm = T.db.meta.settings.llm;
   const set = (patch) => T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, swarm: { ...(tx.meta.settings.swarm || {}), ...patch } } }));
   const num = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || lo)));
-  const label = (id) => MODEL_PRICES[id]?.label || id;
+  const options = (value) => ANTHROPIC_MODELS.map((m) => html`<option value=${m} selected=${m === value}>${MODEL_PRICES[m].label} ($${MODEL_PRICES[m].in} / $${MODEL_PRICES[m].out} per M tokens)</option>`);
+  const claude = llm.provider === 'anthropic';
   return html`<div class="card stack-sm">
     <h2>Agent swarm</h2>
-    <p class="small muted">The AI agents that do every step of a job you <a href="#/swarm">hand to the swarm</a>. They use the platform model above; with the mock they hand in placeholder files.</p>
+    <p class="small muted">The AI agents that do every step of a job you <a href="#/swarm">hand to the swarm</a>. They use the platform provider above; with the mock they hand in placeholder files.</p>
     <div class="inline-fields">
-      <${Field} label="Worker model" id="sw-tier" hint="The model each agent works with. The Reviewer still starts light and escalates."><select id="sw-tier" value=${sw.workerTier} onChange=${(e) => set({ workerTier: e.target.value })}>
-        <option value="heavy">Heavy (${llm.provider === 'anthropic' ? label(llm.heavyModel) : 'platform heavy'})</option>
-        <option value="light">Light (${llm.provider === 'anthropic' ? label(llm.lightModel) : 'platform light'}), cheaper</option>
-      </select><//>
+      <${Field} label="Worker model" id="sw-model" hint=${claude ? 'The model each agent does its tile with. Claude Sonnet 5.5 is fast and a fraction of Opus’s price.' : 'Used when the platform model is Claude.'}><select id="sw-model" value=${sw.workerModel} onChange=${(e) => set({ workerModel: e.target.value })}>${options(sw.workerModel)}</select><//>
+      <${Field} label="Check model" id="sw-check" hint="Agreement checks, spot checks and peer reviews run on a different model from the work they check."><select id="sw-check" value=${sw.checkModel} onChange=${(e) => set({ checkModel: e.target.value })}>${options(sw.checkModel)}</select><//>
+    </div>
+    <label class="choice"><input type="checkbox" checked=${!!sw.web} onChange=${(e) => set({ web: e.target.checked })} /><span><b>Let agents search and read the web</b><span>Tiles that need outside facts (prices, venues, funders, public data, research) get a research step first with Anthropic’s web search and web fetch, and cite their sources. Searches cost $10 per 1,000 on top of tokens; reading pages costs only tokens. Needs Claude as the platform model and web search allowed for your key’s organization.</span></span></label>
+    <div class="inline-fields">
+      <${Field} label="Web searches per tile" id="sw-searches" hint="The most a tile’s research may run (1 to 20)."><input id="sw-searches" type="number" min="1" max="20" value=${sw.maxSearchesPerTile} disabled=${!sw.web} onChange=${(e) => set({ maxSearchesPerTile: num(e.target.value, 1, 20) })} /><//>
+      <${Field} label="Pages read per tile" id="sw-fetches" hint="The most pages a tile’s research may open (0 to 20)."><input id="sw-fetches" type="number" min="0" max="20" value=${sw.maxFetchesPerTile} disabled=${!sw.web} onChange=${(e) => set({ maxFetchesPerTile: Math.max(0, Math.min(20, Math.round(Number(e.target.value) || 0))) })} /><//>
+    </div>
+    <div class="inline-fields">
       <${Field} label="Agents working at once" id="sw-conc" hint="1 to 8. More is faster and spends faster."><input id="sw-conc" type="number" min="1" max="8" value=${sw.concurrency} onChange=${(e) => set({ concurrency: num(e.target.value, 1, 8) })} /><//>
       <${Field} label="Spend cap per job (USD)" id="sw-cap" hint="The swarm pauses a job when its model spend reaches this. 0 means no cap."><input id="sw-cap" type="number" min="0" step="1" value=${sw.spendCapUsd} onChange=${(e) => set({ spendCapUsd: Math.max(0, Number(e.target.value) || 0) })} /><//>
       <${Field} label="Agents in the swarm" id="sw-size" hint="How many agent accounts share the work (2 to 24)."><input id="sw-size" type="number" min="2" max="24" value=${sw.size} onChange=${(e) => set({ size: num(e.target.value, 2, 24) })} /><//>

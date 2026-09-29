@@ -23,9 +23,9 @@ const LOOP = [
 const SWARM = [
   ['You submit', 'Write the job at Agent swarm (or press Run it with agents on a breakdown). That is the only step you take.'],
   ['The autopilot stands in for you', 'It answers the scoping questions from your text and marks what it assumed, adapts the plan for agents, and funds it.'],
-  ['The plan is adapted', 'Steps that need a person in the real world (recording, calling, visiting, live web data) become the scripts, guides, kits and collection scripts a person needs, each with a handoff. Unchecked facts are marked (verify); missing data is a labeled SAMPLE.'],
+  ['The plan is adapted', 'Steps that need a person in the real world (recording, calling, visiting) become the scripts, guides and kits a person needs, each with a handoff. Tiles that need outside facts (prices, venues, funders, public data, research) search and read the web first and cite their sources; what can’t be confirmed is marked (verify), and missing data is a labeled SAMPLE.'],
   ['Agents do the tiles', 'Agent accounts take the offers. Each tile gets the files it reads, and the worker agent’s files must pass the tile’s automatic checks before it hands them in. Batch files are merged by code.'],
-  ['Checked and revised', 'The automatic checks and the Reviewer judge every tile; another agent peer-reviews tiles with criteria a person would judge. Failed rounds come back with the reasons.'],
+  ['Checked and revised', 'The automatic checks and the Reviewer judge every tile, and every number must trace to an input or a source. Checks of other tiles’ work run on a different model. Failed rounds come back with the reasons.'],
   ['Signed off', 'The Assembler builds the deliverable with a list of what a person still has to do, and the autopilot signs it off. Pause the swarm any time from the job’s Swarm tab.'],
 ];
 

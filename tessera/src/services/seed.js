@@ -25,7 +25,7 @@ export const PERSONAS = [
   },
   {
     id: 'usr_dev', name: 'Dev Patel', role: 'contributor', blurb: 'Data engineer in Austin. Brings his own Claude key.',
-    profile: { skills: [['python', 5], ['web-scraping', 4], ['data-cleaning', 4], ['sql', 4], ['testing', 3]], languages: ['en'], tools: ['vscode', 'jupyter', 'git'], timezone: 'America/Chicago', availability: everyDay('19:00', '23:00'), weeklyHoursCap: 10, payFloorCents: 4500, llmMode: 'OWN_KEY', briefStyle: 'CONCISE', llm: { provider: 'anthropic', model: 'claude-sonnet-5' } },
+    profile: { skills: [['python', 5], ['web-scraping', 4], ['data-cleaning', 4], ['sql', 4], ['testing', 3]], languages: ['en'], tools: ['vscode', 'jupyter', 'git'], timezone: 'America/Chicago', availability: everyDay('19:00', '23:00'), weeklyHoursCap: 10, payFloorCents: 4500, llmMode: 'OWN_KEY', briefStyle: 'CONCISE', llm: { provider: 'anthropic', model: 'claude-sonnet-5-5' } },
   },
   {
     id: 'usr_amara', name: 'Amara Okafor', role: 'contributor', blurb: 'Survey methodologist in Atlanta.',
@@ -41,7 +41,7 @@ export const PERSONAS = [
   },
   {
     id: 'usr_marco', name: 'Marco Bianchi', role: 'contributor', blurb: 'Front-end developer in Milan who takes integration work.',
-    profile: { skills: [['web-dev', 5], ['html-css', 5], ['javascript', 4], ['accessibility', 4], ['project-integration', 4], ['mobile-dev', 3]], languages: ['en', 'it'], tools: ['vscode', 'git'], timezone: 'Europe/Rome', availability: everyDay('08:00', '20:00'), weeklyHoursCap: 8, payFloorCents: 5000, llmMode: 'OWN_KEY', briefStyle: 'CONCISE', llm: { provider: 'anthropic', model: 'claude-opus-5' } },
+    profile: { skills: [['web-dev', 5], ['html-css', 5], ['javascript', 4], ['accessibility', 4], ['project-integration', 4], ['mobile-dev', 3]], languages: ['en', 'it'], tools: ['vscode', 'git'], timezone: 'Europe/Rome', availability: everyDay('08:00', '20:00'), weeklyHoursCap: 8, payFloorCents: 5000, llmMode: 'OWN_KEY', briefStyle: 'CONCISE', llm: { provider: 'anthropic', model: 'claude-opus-5-5' } },
   },
   {
     id: 'usr_grace', name: 'Grace Liu', role: 'contributor', blurb: 'Bookkeeper in Phoenix, new to Tessera, learning as she goes.',
@@ -57,7 +57,7 @@ export const PERSONAS = [
   },
   {
     id: 'usr_noah', name: 'Noah Fischer', role: 'contributor', blurb: 'Econometrician in Boston with a $90/h floor. Shows the floor filter at work.',
-    profile: { skills: [['statistics', 5], ['econometrics', 5], ['r', 5], ['python', 4]], languages: ['en', 'de'], tools: ['rstudio', 'vscode'], timezone: 'America/New_York', availability: weekdays('09:00', '17:00'), weeklyHoursCap: 5, payFloorCents: 9000, llmMode: 'OWN_KEY', briefStyle: 'CONCISE', llm: { provider: 'anthropic', model: 'claude-sonnet-5' } },
+    profile: { skills: [['statistics', 5], ['econometrics', 5], ['r', 5], ['python', 4]], languages: ['en', 'de'], tools: ['rstudio', 'vscode'], timezone: 'America/New_York', availability: weekdays('09:00', '17:00'), weeklyHoursCap: 5, payFloorCents: 9000, llmMode: 'OWN_KEY', briefStyle: 'CONCISE', llm: { provider: 'anthropic', model: 'claude-sonnet-5-5' } },
   },
 ];
 

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mergeBatches, settleMerge } from '../../src/services/swarm.js';
-import { worker, workerFiles } from '../../src/agents/index.js';
+import { mergeBatches, settleMerge, webTools } from '../../src/services/swarm.js';
+import { worker, workerFiles, samplePlaceholder } from '../../src/agents/index.js';
 import { WorkResult } from '../../src/agents/schemas.js';
 import { parseCsv } from '../../src/lib/csv.js';
 
@@ -82,4 +82,33 @@ test('files the swarm merged count toward the checks without the agent writing t
   assert.deepEqual(worker.validate(out, input), []);
   assert.deepEqual(workerFiles(out, input).map((f) => f.name), ['report.md', 'coded_all.csv']);
   assert.ok(!JSON.stringify(input).includes('coded_all'), 'merged files never reach the prompt');
+});
+
+test('batches are grouped by the plan even when their names don’t match the merged file', () => {
+  const files = [
+    { ...csv('coded_responses_1-45.csv', 'response_id,theme', ['R001,hours', 'R002,wifi']), group: 'p1', partIndex: 1 },
+    { ...csv('coded_responses_46-90.csv', 'response_id,theme', ['R046,staff']), group: 'p1', partIndex: 2 },
+    { name: 'codebook.csv', text: 'code,label\nhours,Hours\n' },
+  ];
+  const [m] = mergeBatches({ kind: 'WORK', title: 'Compile the coded batches', outputs: ['coded_all.csv'] }, files);
+  assert.equal(m.name, 'coded_all.csv');
+  assert.deepEqual(parseCsv(m.text).rows.map((r) => r[0]), ['R001', 'R002', 'R046']);
+  // A tile that only reads the batches (an agreement check) never gets a merge.
+  assert.deepEqual(mergeBatches({ kind: 'WORK', title: 'Double-code a sample and measure agreement', outputs: ['agreement.csv'] }, files), []);
+});
+
+test('placeholder data is refused when the real data is in the inputs, and allowed for sample-data tiles', () => {
+  const out = WorkResult.parse({ approach: ['Tallied.'], files: [{ name: 'counts.csv', content: 'branch,count,note\nCentral,2,SAMPLE - illustrative only\n' }], notes: '', checklist: [] });
+  const input = { tile: { title: 'Collect theme counts', acceptanceCriteria: [] }, inputs: [{ name: 'coded_all.csv', content: 'response_id,branch,theme\nR001,Central,hours\n' }] };
+  assert.match(samplePlaceholder(out, input), /counts\.csv .*real data is in your inputs \(coded_all\.csv\)/);
+  assert.equal(samplePlaceholder(out, { ...input, tile: { ...input.tile, agentMode: 'sample-data' } }), null);
+  assert.equal(samplePlaceholder(out, { ...input, inputs: [] }), null, 'no real data, so a labeled sample is honest');
+  const prose = WorkResult.parse({ approach: ['Checked.'], files: [{ name: 'agreement.md', content: '# Double-code a sample\nWe coded a random sample of 18.' }], notes: '', checklist: [] });
+  assert.equal(samplePlaceholder(prose, input), null, 'the word “sample” in prose is fine');
+});
+
+test('research uses the latest web tools on current models and the basic ones on Haiku', () => {
+  const s = { maxSearchesPerTile: 4, maxFetchesPerTile: 2 };
+  assert.deepEqual(webTools('claude-sonnet-5-5', s).map((t) => [t.type, t.max_uses]), [['web_search_20260318', 4], ['web_fetch_20260318', 2]]);
+  assert.deepEqual(webTools('claude-haiku-4-5', s).map((t) => t.type), ['web_search_20250305', 'web_fetch_20250910']);
 });

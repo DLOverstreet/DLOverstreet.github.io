@@ -162,6 +162,13 @@ export async function runVerifyJob(T, { submissionId }) {
       criteria: llmCriteria.map((c) => ({ id: c.id, text: c.text })),
       submission: { notes: sub.notes, files: files.map((f) => ({ name: f.name, excerpt: excerptFor(f, { restricted }) })) },
     };
+    // On a swarm job the Reviewer also sees what the tile worked from, so it can check that
+    // every number and quote traces back to an input or a cited source.
+    if (commission.workforce === 'agents') {
+      const ups = await loadFileTexts(T, upstreamFiles(T.db, tile.id).slice(0, 8), { maxChars: 6000 });
+      if (ups.length) input.inputs = ups.map((f) => ({ name: f.name, excerpt: excerptFor(f, { restricted, max: 2500 }) }));
+      if (tile.research?.sources?.length) input.researchSources = tile.research.sources.slice(0, 15).map((x) => ({ title: x.title, url: x.url }));
+    }
     const meta = { commissionId: tile.commissionId, tileId: tile.id, userId: sub.contributorId };
     const light = await runAgent({ agent: AGENTS.reviewer, input, route: T.llm.forCommission(commission, 'light'), log: T.log, meta });
     llm = { ...light.output, model: light.model, escalated: false };

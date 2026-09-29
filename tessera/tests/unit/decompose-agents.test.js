@@ -97,3 +97,40 @@ test('row batches are fitted to the attached table: ranges past its end go, the 
   assert.ok(!tiles.some((t) => t.acceptanceCriteria.some((c) => /^csv_min_rows\((\d+)\)/.test(c.rule || '') && Number(/\d+/.exec(c.rule)[0]) > 70)), 'no tile asks for more rows than the table has');
   assert.deepEqual(validateGraph(tiles).filter((i) => i.code !== 'no-work'), []);
 });
+
+test('a tile that counts from upstream data isn’t mistaken for live-data collection', () => {
+  const tiles = [
+    { key: 'code', kind: 'WORK', title: 'Code the responses', spec: 'Code every response. '.repeat(3), deliverableFormat: 'coded_all.csv', estMinutes: 60, tier: 2, skillTags: ['survey-coding'], dependsOn: [], inputs: [], outputs: ['coded_all.csv'], acceptanceCriteria: [{ id: 'c1', check: 'AUTO', text: 'CSV', rule: 'file_ext(csv)' }] },
+    { key: 'counts', kind: 'WORK', title: 'Collect theme counts by branch', archetype: 'collect', spec: 'Count themes by branch. '.repeat(3), deliverableFormat: 'counts.csv', estMinutes: 30, tier: 2, skillTags: ['data-cleaning'], dependsOn: ['code'], inputs: ['coded_all.csv'], outputs: ['counts.csv'], acceptanceCriteria: [{ id: 'c1', check: 'AUTO', text: 'rows', rule: 'csv_min_rows(3)' }] },
+  ];
+  const { tiles: out } = adaptForAgents(tiles, { web: true });
+  const counts = out.find((t) => t.key === 'counts');
+  assert.equal(counts.agentMode, undefined, 'it computes from coded_all.csv; it isn’t sample data');
+  assert.ok(counts.acceptanceCriteria.some((c) => c.rule === 'csv_min_rows(3)'));
+  assert.ok(!counts.webResearch);
+});
+
+test('with the web, fact-finding tiles research and cite sources instead of handing every fact to a person', () => {
+  const offline = adaptForAgents(plan('gala'), { web: false }).tiles.find((t) => t.title === 'Get catering quotes');
+  const online = adaptForAgents(plan('gala'), { web: true });
+  const quotes = online.tiles.find((t) => t.title === 'Get catering quotes');
+  assert.equal(offline.agentMode, 'verify');
+  assert.ok(offline.handoff);
+  assert.equal(quotes.agentMode, 'researched');
+  assert.ok(quotes.webResearch);
+  assert.equal(quotes.handoff, undefined);
+  assert.ok(quotes.acceptanceCriteria.some((c) => /source URL/.test(c.text)));
+  assert.ok(online.changes.some((c) => /look up outside facts on the web/.test(c)));
+  // Coding the requester's own responses stays offline.
+  assert.ok(!adaptForAgents(plan('survey'), { web: true, hasSource: true }).tiles.some((t) => /^code-response/.test(t.key) && t.webResearch));
+});
+
+test('costs and recommendations must show where their numbers come from, and checks run on another model', () => {
+  const grant = adaptForAgents(plan('grant'), { web: true }).tiles.find((t) => /budget/i.test(t.title));
+  assert.ok(grant.acceptanceCriteria.some((c) => /arithmetic/.test(c.text)));
+  assert.ok(grant.webResearch, 'rates for a budget are looked up');
+  const check = adaptForAgents(plan('survey')).tiles.find((t) => /agreement/i.test(t.title));
+  assert.ok(check.independentCheck);
+  const ids = grant.acceptanceCriteria.map((c) => c.id);
+  assert.equal(new Set(ids).size, ids.length, 'criterion ids stay unique');
+});

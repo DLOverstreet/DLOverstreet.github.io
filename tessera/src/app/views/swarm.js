@@ -24,21 +24,18 @@ export async function handToSwarm(T, input) {
   return c;
 }
 
-const tierLabel = (T, tier) => {
-  const llm = T.db.meta.settings.llm;
-  const id = tier === 'light' ? llm.lightModel : llm.heavyModel;
-  return MODEL_PRICES[id]?.label || id;
-};
+const modelLabel = (id) => MODEL_PRICES[id]?.label || id;
 
-/** Which model the agents run on, or that they're on the mock and hand in placeholders. */
+/** Which model the agents run on and whether they can use the web, or that they're on the mock and hand in placeholders. */
 export function SwarmModelNote() {
   const T = useT();
   const s = swarmSettings(T.db);
-  const route = T.llm.platform(s.workerTier);
+  const route = T.llm.agent(s.workerModel);
   if (route.providerName === 'mock') {
-    return html`<div class="callout warn"><b>No model connected, so the agents run on the mock.</b> They go through every step, but the files they hand in are placeholders that pass the automatic checks. <a href="#/settings">Connect Claude in Settings</a> to have them do the real work.</div>`;
+    return html`<div class="callout warn"><b>No model connected, so the agents run on the mock.</b> They go through every step, including a stand-in for web research, but the files they hand in are placeholders that pass the automatic checks. <a href="#/settings">Connect Claude in Settings</a> to have them do the real work and search the web.</div>`;
   }
-  return html`<div class="callout good">Agents work on <b>${route.providerName === 'anthropic' ? tierLabel(T, s.workerTier) : route.label}</b>, up to ${s.concurrency} at once, and each job stops at <b>$${s.spendCapUsd}</b> of model spend. <a href="#/settings">Change in Settings</a>.</div>`;
+  const claude = route.providerName === 'anthropic';
+  return html`<div class="callout good">Agents work on <b>${claude ? modelLabel(s.workerModel) : route.label}</b>${claude ? html`, checks run on <b>${modelLabel(s.checkModel)}</b>` : ''}, up to ${s.concurrency} at once. ${claude && s.web ? html`Tiles that need outside facts <b>search the web</b> first (up to ${s.maxSearchesPerTile} searches each). ` : 'Web access is off, so outside facts are marked “(verify)”. '}Each job stops at <b>$${s.spendCapUsd}</b> of model spend. <a href="#/settings">Change in Settings</a>.</div>`;
 }
 
 const STATE = {
@@ -162,6 +159,18 @@ function activityText(db, t, now) {
   return STATUS_LABEL[t.status] || t.status;
 }
 
+/** The one-line note under a tile: what's special about how an agent does it. */
+function tileNote(t) {
+  const notes = [];
+  const mode = { prepare: 'Prepares a kit for a person', 'sample-data': 'Works on a labeled sample', verify: 'A person confirms the result', researched: 'Facts looked up on the web, with sources' }[t.agentMode];
+  if (mode) notes.push(mode);
+  if (t.webResearch && !t.agentMode) notes.push('Researches on the web first');
+  if (t.research?.unavailable) notes.push('No web access: outside facts marked “(verify)”');
+  else if (t.research) notes.push(`${t.research.searches || 0} searches, ${(t.research.sources || []).filter((x) => x.kind !== 'searched').length} sources`);
+  if (t.independentCheck) notes.push('Checked on a different model');
+  return notes.join(' · ');
+}
+
 const ORDER = ['CLAIMED', 'REVISION', 'SUBMITTED', 'IN_REVIEW', 'OFFERED', 'OPEN', 'LOCKED', 'ACCEPTED', 'CANCELLED', 'DRAFT'];
 
 export function SwarmTab({ c, owner }) {
@@ -181,6 +190,13 @@ export function SwarmTab({ c, owner }) {
   const handoffs = handoffList(T.db, c, planned);
   const feed = T.db.filter('StatusChange', (x) => x.commissionId === c.id).sort((a, b) => b.createdAt - a.createdAt).slice(0, 30);
   const sorted = [...tiles].sort((a, b) => ORDER.indexOf(a.status) - ORDER.indexOf(b.status) || (a.dynamic - b.dynamic));
+  const withResearch = planned.filter((t) => t.research && !t.research.unavailable);
+  const sources = [];
+  const seenUrls = new Set();
+  for (const t of withResearch) for (const x of t.research.sources || []) if (x.kind !== 'searched' && !seenUrls.has(x.url)) { seenUrls.add(x.url); sources.push({ ...x, tileTitle: t.title }); }
+  const searches = withResearch.reduce((n, t) => n + (t.research.searches || 0), 0);
+  const reads = withResearch.reduce((n, t) => n + (t.research.reads || 0), 0);
+  const researched = withResearch.length;
   const zip = async () => {
     const bytes = await act(() => T.api.buildDeliverableZip(c.id));
     if (bytes) downloadBytes(bytes, `${c.title.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.zip`, 'application/zip');
@@ -217,7 +233,7 @@ export function SwarmTab({ c, owner }) {
         ${sorted.length ? html`<div class="table-wrap"><table>
           <thead><tr><th>Tile</th><th>Agent</th><th>Status</th><th>Now</th></tr></thead>
           <tbody>${sorted.map((t) => html`<tr class="clickable" tabindex="0" onClick=${() => navigate(`#/t/${t.id}`)} onKeyDown=${(e) => e.key === 'Enter' && navigate(`#/t/${t.id}`)}>
-            <td><b>${truncate(t.title, 70)}</b>${t.agentMode ? html`<div class="tiny muted">${{ prepare: 'Prepares a kit for a person', 'sample-data': 'Works on a labeled sample', verify: 'A person confirms the result' }[t.agentMode]}</div>` : ''}</td>
+            <td><b>${truncate(t.title, 70)}</b>${tileNote(t) ? html`<div class="tiny muted">${tileNote(t)}</div>` : ''}</td>
             <td class="small nowrap">${t.claimedById ? T.db.get('User', t.claimedById)?.name : '—'}</td>
             <td><${StatusBadge} status=${t.status} /></td>
             <td class="small">${activityText(T.db, t, now)}</td>
@@ -228,6 +244,9 @@ export function SwarmTab({ c, owner }) {
           <h2>What a person still needs to do</h2>
           ${handoffs.length ? html`<ul class="small" style=${{ marginTop: '.4rem', paddingLeft: '1.1rem' }}>${handoffs.map((h) => html`<li><b>${h.title}</b>: ${h.handoff}</li>`)}</ul>` : html`<p class="small muted" style=${{ marginTop: '.4rem' }}>Nothing so far: the agents can do every tile of this job themselves.</p>`}
         </div>
+        ${sources.length ? html`<div class="card"><h2>Sources the agents used</h2>
+          <ol class="small" style=${{ marginTop: '.4rem', paddingLeft: '1.3rem' }}>${sources.slice(0, 40).map((x) => html`<li style=${{ overflowWrap: 'anywhere' }}><a href=${/^https?:\/\//i.test(x.url) ? x.url : undefined} target="_blank" rel="noopener noreferrer">${truncate(x.title || x.url, 80)}</a> <span class="tiny muted">· ${x.tileTitle}</span></li>`)}</ol>
+          <p class="tiny muted" style=${{ marginTop: '.4rem' }}>${searches} web search${searches === 1 ? '' : 'es'} and ${reads} page${reads === 1 ? '' : 's'} read across ${researched} tile${researched === 1 ? '' : 's'}.</p></div>` : ''}
         <div class="card"><h2>Activity</h2><ul class="feed">${feed.map((ch) => html`<li><time title=${fmtDateTime(ch.createdAt)}>${ago(ch.createdAt, now)}</time><span>${changeText(T.db, ch)}</span></li>`)}</ul></div>
       </div>
     </div>

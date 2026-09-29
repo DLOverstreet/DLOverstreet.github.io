@@ -69,6 +69,33 @@ test('lists split where a new piece starts, not inside fixed phrases', () => {
   assert.deepEqual(splitList('maps and recommendations for the city council'), ['maps for the city council', 'recommendations for the city council']);
   assert.deepEqual(splitList('a profit and loss statement'), ['a profit and loss statement']);
   assert.deepEqual(splitList('fix titles, fill in missing sizes, and categorize everything'), ['fix titles', 'fill in missing sizes', 'categorize everything']);
+  assert.deepEqual(splitList('fix titles for 5,000 listings, and fill in sizes'), ['fix titles for 5,000 listings', 'fill in sizes'], 'a comma inside a number is not a list comma');
+  const donors = analyzeJob({ title: '', goal: 'Clean up our donor spreadsheet with name, email and phone for 2,000 donors.' }).components;
+  assert.equal(donors.length, 1);
+  assert.deepEqual(donors[0].details, ['Columns: name, email, phone']);
+  const migration = analyzeJob({ title: 'Donor database migration', goal: 'Migrate 12,000 donor records from our old spreadsheet into the new CRM, dedupe contacts, and write a data dictionary.' });
+  assert.match(migration.components[0].phrase, /^12,000 donor records/);
+});
+
+test('long sentences: "with … for each", column lists, "each with …" and connectives attach to the right piece', () => {
+  const a = analyzeJob(job('library'));
+  const phrases = a.components.map((c) => c.phrase);
+  const codebook = a.components.find((c) => c.role === 'conventions');
+  assert.match(codebook.phrase, /codebook/i);
+  assert.deepEqual(codebook.details, ['A definition and an example quote for each'], 'the definition and quote describe each theme, not new work');
+  for (const bad of [/^A definition/, /^An example quote/, /^Response_id/i, /^Branch and theme/i, /^Each with/i, /^Finally/i, /^Then\b/, /coded_all/i]) {
+    assert.ok(!phrases.some((p) => bad.test(p)), `no piece reads ${bad}: ${phrases.join(' | ')}`);
+  }
+  assert.deepEqual(a.namedFiles, [{ name: 'coded_all.csv', columns: ['response_id', 'branch', 'themes'] }]);
+  assert.ok(a.components.some((c) => c.role === 'check' && c.archetype === 'code'), 'the consistency check is the agreement check');
+  assert.equal(a.components.find((c) => /counts by branch/.test(c.phrase)).archetype, 'analyze', 'counting coded rows is analysis, not collection');
+  const recs = a.components.find((c) => /recommendations/i.test(c.phrase));
+  assert.match(recs.phrase, /^Up to 3 recommendations, each with a rough cost/);
+  assert.equal(recs.qty, null, '"each with" is not a count of the 90 comments');
+  const report = a.components.find((c) => /2-page report/.test(c.phrase));
+  assert.deepEqual(report.details, ['The main findings with quotes', 'Differences between branches'], 'sections of a short report are what its writer covers');
+  assert.equal(recs.parent, report.id);
+  assert.ok(!a.constraints.some((c) => /recommendations/i.test(c)));
 });
 
 test('a vague job says so and assumes a scoping step', () => {

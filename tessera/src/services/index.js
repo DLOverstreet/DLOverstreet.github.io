@@ -10,6 +10,7 @@ import { createWorker } from '../jobs/worker.js';
 import { createCrowd } from './crowd.js';
 import { createSwarm, runWithAgents, pauseSwarmJob, resumeSwarmJob } from './swarm.js';
 import { seedWorld } from './seed.js';
+import { config } from '../domain/config.js';
 import * as commissions from './commissions.js';
 import * as market from './market.js';
 import * as work from './work.js';
@@ -77,6 +78,7 @@ export async function createTessera({ worldStore, blobs, keystore, secrets, seed
   /** @type {any} */
   const T = { db, clock, blobs, keystore, secrets, llm, mock, debug };
   T.log = (row) => db.tx((tx) => tx.insert('AgentRun', row));
+  if (!fresh) migrateSettings(db);
   T.api = Object.fromEntries(Object.entries(API).map(([name, fn]) => [name, (...args) => fn(T, ...args)]));
   T.crowd = createCrowd(T);
   T.swarm = createSwarm(T, { paceMs: swarmPaceMs });
@@ -101,6 +103,21 @@ export async function createTessera({ worldStore, blobs, keystore, secrets, seed
   }
   T.fresh = fresh;
   return T;
+}
+
+/**
+ * Settings saved by an earlier version: the old default heavy model (Claude Sonnet 5) moves to
+ * the current default, and the swarm's heavy/light worker tier becomes an explicit model.
+ * A model someone picked on purpose is kept.
+ */
+function migrateSettings(db) {
+  if ((db.meta.settingsVersion || 1) >= 2) return;
+  const s = db.meta.settings;
+  const llm = { ...s.llm };
+  if (llm.heavyModel === 'claude-sonnet-5') llm.heavyModel = config.llm.heavyModel;
+  const { workerTier, ...swarm } = s.swarm || {};
+  if (workerTier === 'light') swarm.workerModel = llm.lightModel;
+  db.tx((tx) => tx.setMeta({ settings: { ...s, llm, swarm }, settingsVersion: 2 }));
 }
 
 export { commissions, market, work, delivery, profiles };
