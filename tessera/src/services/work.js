@@ -69,7 +69,7 @@ export async function generateBrief(T, actorId, tileId) {
   };
   const meta = { commissionId: tile.commissionId, tileId, userId: actorId };
   let route = T.llm.contributor(user, profile);
-  let fallbackNote = route.fallback || null;
+  let fallbackNote = route.note || null;
   let result;
   try {
     result = await runAgent({ agent: AGENTS.translator, input, route, log: T.log, meta });

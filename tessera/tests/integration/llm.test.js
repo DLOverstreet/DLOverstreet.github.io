@@ -81,7 +81,7 @@ test('a contributor with no personal key falls back to the shared model, and say
   const profile = T.db.find('ContributorProfile', (p) => p.userId === 'usr_dev');
   const route = T.llm.contributor(dev, profile);
   assert.equal(route.providerName, 'mock');
-  assert.match(route.fallback, /shared model/);
+  assert.match(route.note, /shared model/);
 });
 
 test('a research call gets Anthropic’s web tools, resumes a paused turn, and returns its sources and search count', async () => {

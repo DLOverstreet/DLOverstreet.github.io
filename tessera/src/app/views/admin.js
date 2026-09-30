@@ -47,7 +47,7 @@ function Overview() {
       <div class="stat"><span class="v">${fmtMoney(held)}</span><span class="l">Held in escrow</span></div>
       <div class="stat"><span class="v">${runs.length}</span><span class="l">Agent calls · $${runs.reduce((n, r) => n + runCostUsd(r), 0).toFixed(2)}</span></div>
     </div>
-    <div class="callout">Platform model: <b>${settings.provider === 'mock' ? 'deterministic mock' : settings.provider === 'anthropic' ? `Claude (${settings.heavyModel} heavy, ${settings.lightModel} light)` : `${settings.openai.model} at ${settings.openai.baseUrl}`}</b>. Change it in <a href="#/settings">Settings</a>.</div>
+    <div class="callout">Platform model: <b>${settings.provider === 'mock' ? 'deterministic mock' : settings.provider === 'anthropic' ? `Claude (${settings.heavyModel} heavy, ${settings.lightModel} light)` : settings.provider === 'free' ? `free models only (${T.llm.platform('heavy').label})` : `${settings.openai.model} at ${settings.openai.baseUrl}`}</b>. Change it in <a href="#/settings">Settings</a>.</div>
     <div class="card"><h2>Commissions</h2><div class="table-wrap"><table><thead><tr><th>Commission</th><th>Status</th><th>Requester</th><th class="right">Budget</th><th class="right">Escrow</th></tr></thead><tbody>
       ${commissions.sort((a, b) => b.createdAt - a.createdAt).map((c) => html`<tr class="clickable" tabindex="0" onClick=${() => navigate(`#/c/${c.id}`)} onKeyDown=${(e) => e.key === 'Enter' && navigate(`#/c/${c.id}`)}>
         <td><b>${c.title}</b></td><td><${StatusBadge} status=${c.status} kind="commission" /></td><td class="small">${T.db.get('User', c.requesterId)?.name}</td>

@@ -404,7 +404,8 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
   function webReady() {
     const s = swarmSettings(T.db);
     const route = T.llm.agent(s.workerModel);
-    return !!s.web && !webOff && route.providerName !== 'openai-compatible';
+    // Web research uses Anthropic's server tools, so it needs Claude.
+    return !!s.web && !webOff && route.providerName !== 'openai-compatible' && route.providerName !== 'free';
   }
 
   const jobs = () => T.db.filter('Commission', (c) => c.workforce === 'agents' && !['ACCEPTED', 'CANCELLED'].includes(c.status));
@@ -523,7 +524,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       save({ unavailable: webOff || 'Web access is off in Settings.', at: T.clock.now() });
       return;
     }
-    const route = T.llm.agent(s.workerModel);
+    const route = T.llm.agent(s.workerModel, { commission: c });
     setActivity(tile.id, { agentId: tile.claimedById, doing: 'researching', since: T.clock.now(), model: route.label });
     const restricted = c.privacy === 'RESTRICTED';
     const input = {
@@ -553,7 +554,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
       tile = T.db.get('Tile', tile.id);
     }
     // A check of others' work runs on a different model from the one that did the work.
-    const route = T.llm.agent(tile.independentCheck ? s.checkModel : s.workerModel);
+    const route = T.llm.agent(tile.independentCheck ? s.checkModel : s.workerModel, { commission: c });
     const started = Date.now();
     setActivity(tile.id, { agentId: agent, doing: tile.status === 'REVISION' ? 'revising' : 'working', since: T.clock.now(), model: route.label });
     const input = await workerInput(T, tile);
@@ -570,7 +571,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     let won = null;
     if (competes(tile, s)) {
       // Competing workers do the tile and a supervisor on another model keeps the best (competition.js).
-      const checkRoute = T.llm.agent(tile.independentCheck ? s.workerModel : s.checkModel);
+      const checkRoute = T.llm.agent(tile.independentCheck ? s.workerModel : s.checkModel, { commission: c });
       won = await competition.compete(tile, input, { route, checkRoute, s, offer, rows: rowRange(tile, estimateAgentWork(tile, shape)), userFeedback: tile.supervision?.state === 'retry' ? tile.supervision.feedback : null });
       const now = T.db.get('Tile', tile.id);
       if (now.claimedById !== agent || !['CLAIMED', 'REVISION'].includes(now.status)) return;
@@ -749,7 +750,7 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     setActivity(rt.id, { agentId: agent, doing: 'reviewing', since: T.clock.now() });
     const input = await reviewInput(target, sub, rt.acceptanceCriteria, c);
     await pace();
-    const route = T.llm.agent(swarmSettings(T.db).checkModel);
+    const route = T.llm.agent(swarmSettings(T.db).checkModel, { commission: c });
     const { output, model } = await runAgent({ agent: AGENTS.reviewer, input, route, log: T.log, meta: { commissionId: c.id, tileId: rt.id, userId: agent } });
     const cur = T.db.get('Tile', rt.id);
     if (cur.claimedById !== agent || cur.status !== 'CLAIMED') return;

@@ -14,12 +14,12 @@ import { LlmError } from './errors.js';
  */
 export const FREE_PROVIDERS = Object.freeze({
   gemini: {
-    label: 'Google Gemini (free tier)', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash',
+    label: 'Google Gemini (free tier)', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash', maxOutput: 65536,
     keyHint: 'A Google AI Studio key (aistudio.google.com/apikey).', limits: 'About 10 requests a minute and 250 a day on Flash (Flash-Lite: 15 and 1,000).',
     privacy: 'Google may use free-tier prompts and replies to improve its products, and people may review them.', local: false,
   },
   groq: {
-    label: 'Groq (free tier)', baseUrl: 'https://api.groq.com/openai/v1', model: 'openai/gpt-oss-120b',
+    label: 'Groq (free tier)', baseUrl: 'https://api.groq.com/openai/v1', model: 'openai/gpt-oss-120b', maxOutput: 32768,
     keyHint: 'A Groq key (console.groq.com/keys).', limits: 'About 30 requests a minute and 1,000 a day per model, with small per-minute token limits: long prompts fall through to Claude.',
     privacy: 'Check Groq’s terms before sending anything confidential.', local: false,
   },
@@ -37,31 +37,50 @@ export const FREE_PROVIDERS = Object.freeze({
 
 const QUOTA = /per[ -]?day|daily|RPD|quota|exhausted|limit: 0/i;
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 /**
- * @param {{ id: string, label: string, provider: { complete: (req: any) => Promise<any> }, model: string }[]} entries in the order to try
- * @param {{ now?: () => number, cooldown?: Map<string, number> }} [opts] cooldown: shared across chains, provider id → time it may be tried again
+ * @param {{ id: string, label: string, provider: { complete: (req: any) => Promise<any> }, model: string, maxOutput?: number|null }[]} entries in the order to try
+ * @param {{ now?: () => number, cooldown?: Map<string, number>, patience?: number, wait?: (ms: number) => Promise<void> }} [opts]
+ *   cooldown: shared across chains, provider id → time it may be tried again. patience: how long to
+ *   wait for a provider resting after a per-minute limit before giving up (free-only mode waits;
+ *   free-first gives up at once, since Claude is there to take the call)
  */
-export function createFreeChain(entries, { now = () => Date.now(), cooldown = new Map() } = {}) {
+export function createFreeChain(entries, { now = () => Date.now(), cooldown = new Map(), patience = 0, wait = sleep } = {}) {
   return {
     name: 'free',
     async complete(req) {
-      const tried = [];
-      for (const e of entries) {
-        if ((cooldown.get(e.id) || 0) > now()) { tried.push(`${e.label}: resting after its limit`); continue; }
-        try {
-          const res = await e.provider.complete({ ...req, model: e.model });
-          return { ...res, model: res.model || e.model, freeProvider: e.id };
-        } catch (err) {
-          const msg = String(err?.message || err);
-          tried.push(`${e.label}: ${msg.slice(0, 160)}`);
-          // Out of requests: rest the provider (a daily quota for an hour, a per-minute limit for as long as it asks).
-          if (err instanceof LlmError && (err.code === 'rate_limit' || err.code === 'http_429')) {
-            cooldown.set(e.id, now() + (QUOTA.test(msg) ? 60 * 60 * 1000 : Math.max(err.retryAfterMs || 0, 60 * 1000)));
+      const deadline = now() + patience;
+      for (;;) {
+        const tried = [];
+        for (const e of entries) {
+          if ((cooldown.get(e.id) || 0) > now()) { tried.push(`${e.label}: resting after its limit`); continue; }
+          try {
+            // Each provider has its own ceiling on reply length; asking for more is refused.
+            const maxTokens = e.maxOutput && req.maxTokens ? Math.min(req.maxTokens, e.maxOutput) : req.maxTokens;
+            const res = await e.provider.complete({ ...req, model: e.model, maxTokens });
+            return { ...res, model: res.model || e.model, freeProvider: e.id };
+          } catch (err) {
+            const msg = String(err?.message || err);
+            tried.push(`${e.label}: ${msg.slice(0, 160)}`);
+            // Out of requests: rest the provider (a daily quota for an hour, a per-minute limit for as long as it asks).
+            if (err instanceof LlmError && (err.code === 'rate_limit' || err.code === 'http_429')) {
+              cooldown.set(e.id, now() + (QUOTA.test(msg) ? 60 * 60 * 1000 : Math.max(err.retryAfterMs || 0, 60 * 1000)));
+            }
           }
         }
+        // A provider back within our patience (a per-minute limit): wait for it rather than fail.
+        const back = Math.min(...entries.map((e) => cooldown.get(e.id) || Infinity));
+        if (patience && Number.isFinite(back) && back > now() && back <= deadline) {
+          await wait(back - now() + 250);
+          continue;
+        }
+        if (req.onStart) req.onStart();
+        const resting = entries.length && entries.every((e) => (cooldown.get(e.id) || 0) > deadline);
+        throw new LlmError(resting
+          ? `Every free model is out of requests for now (daily quota); try again later or add another provider (${tried.join('; ')}).`
+          : `No free model could answer (${tried.join('; ') || 'none set up'}).`, { retryable: !resting, code: resting ? 'free_quota' : 'free_exhausted' });
       }
-      if (req.onStart) req.onStart();
-      throw new LlmError(`No free model could answer (${tried.join('; ') || 'none set up'}).`, { retryable: true, code: 'free_exhausted' });
     },
   };
 }
