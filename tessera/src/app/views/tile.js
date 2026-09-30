@@ -178,7 +178,7 @@ function BriefCard({ t, me, checks, setChecks }) {
   if (!brief) {
     return html`<div class="card accent"><h2>Your brief</h2>
       <p class="small">Your model rewrites this tile for you: steps at your level (${profile.briefStyle.toLowerCase().replace(/_/g, ' ')}), setup for your tools, in ${profile.briefLanguage || profile.languages[0]}, with a checklist that maps one to one onto the criteria.</p>
-      <p class="small muted" style=${{ margin: '.4rem 0 .7rem' }}>Model: ${route.label}${route.fallback ? ` · ${route.fallback}` : ''}</p>
+      <p class="small muted" style=${{ margin: '.4rem 0 .7rem' }}>Model: ${route.label}${route.note ? ` · ${route.note}` : ''}</p>
       <${AsyncButton} class="primary" onClick=${gen}>Write my brief<//></div>`;
   }
   const b = brief.content;

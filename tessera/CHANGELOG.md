@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-09-30 (later)
+- **Free models only.** A new platform provider in Settings runs every agent (scoping, planning,
+  workers, supervisors, reviewers, assembly) on the free providers you set up (Gemini, Groq,
+  OpenRouter, Ollama), with no Claude fallback, so you can see what free models produce. A provider
+  at its per-minute limit is waited for (up to three minutes a call); when every provider has used
+  its daily quota the job stops with that message. Web research is off (it needs Claude's tools).
+  Private jobs use only a local model unless you allow the free cloud models. A button sets the
+  swarm to fit free-tier limits (one agent per tile, one call at a time). Replies are capped at each
+  provider's maximum length.
+- Fixed: a contributor route's explanatory note shared a name with the new fallback route and could
+  have been mistaken for one.
+
 ## 2026-09-30
 - **Cheaper runs.** The biggest costs on a swarm job were the competitors each writing whole drafts
   two or three times and every tile re-sending the requester's files. Now:

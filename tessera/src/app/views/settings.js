@@ -71,7 +71,7 @@ export function SettingsView() {
       <h2>Platform model</h2>
       <p class="small muted">Runs the platform agents: Scoping, Decomposer, Matcher notes, Reviewer and Assembler. Contributors on the shared model use it for briefs too.</p>
       <div class="choices" role="radiogroup" aria-label="Platform model provider">
-        ${[['mock', 'Deterministic mock', 'No key, no network, instant. Good for trying the whole loop.'], ['anthropic', 'Claude', 'Real agents on the Anthropic API with your key.'], ['openai', 'OpenAI-compatible', 'Ollama, OpenRouter or a gateway.']].map(([v, l, d]) => html`
+        ${[['mock', 'Deterministic mock', 'No key, no network, instant. Good for trying the whole loop.'], ['anthropic', 'Claude', 'Real agents on the Anthropic API with your key.'], ['free', 'Free models only', 'Every agent on the free tiers set up below (Gemini, Groq, OpenRouter, Ollama). No Claude, no cost; lower quality.'], ['openai', 'OpenAI-compatible', 'Ollama, OpenRouter or a gateway.']].map(([v, l, d]) => html`
           <label class="choice"><input type="radio" name="provider" checked=${llm.provider === v} onChange=${() => setLlm({ provider: v })} /><span><b>${l}</b><span>${d}</span></span></label>`)}
       </div>
       ${llm.provider === 'anthropic' ? html`<div class="stack-sm">
@@ -86,6 +86,7 @@ export function SettingsView() {
         ${!hasKey ? html`<p class="small" style=${{ color: 'var(--warn)' }}>Without a key the platform keeps using the mock.</p>` : ''}
         <p class="small muted">Platform calls are rate-limited to ${config.limits.llmCallsPerWindow} per 10 minutes as a safety net, and the agent swarm has its own ${config.limits.swarmCallsPerWindow}. Everything is logged under Admin → Agent runs with its cost.</p>
       </div>` : ''}
+      ${llm.provider === 'free' ? html`<${FreeOnlyNote} />` : ''}
       ${llm.provider === 'openai' ? html`<div class="inline-fields">
         <${Field} label="Base URL" id="obase"><input id="obase" type="url" value=${llm.openai.baseUrl} onInput=${(e) => setLlm({ openai: { ...llm.openai, baseUrl: e.target.value } })} /><//>
         <${Field} label="Model" id="omodel"><input id="omodel" type="text" value=${llm.openai.model} onInput=${(e) => setLlm({ openai: { ...llm.openai, model: e.target.value } })} /><//>
@@ -174,6 +175,23 @@ function FreeModels() {
       <label class="choice"><input type="checkbox" checked=${!!sw.freeSolo} onChange=${(e) => setSwarm({ freeSolo: e.target.checked })} /><span><b>Agents working alone</b><span>When competition is off (or a config works alone), the agent tries the free models first; the Reviewer still checks the work.</span></span></label>
       ${!ready ? html`<p class="tiny muted">No free provider is ready yet: switch one on and give it a model${Object.values(FREE_PROVIDERS).some((d) => !d.local) ? ' and a key' : ''}. Until then everything runs on Claude as before.</p>` : ''}
     </div>
+  </div>`;
+}
+
+/** What "Free models only" means, the switch for private jobs, and settings that suit free-tier rate limits. */
+function FreeOnlyNote() {
+  const T = useT();
+  const llm = T.db.meta.settings.llm;
+  const free = llm.free || { providers: [] };
+  const setFree = (patch) => { T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, llm: { ...tx.meta.settings.llm, free: { ...(tx.meta.settings.llm.free || { providers: [] }), ...patch } } } })); T.llm.clearCache(); };
+  const setSwarm = (patch) => T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, swarm: { ...(tx.meta.settings.swarm || {}), ...patch } } }));
+  const ready = T.llm.freeReady();
+  return html`<div class="stack-sm">
+    <p class="small">Every agent (scoping, planning, workers, supervisors, reviewers, assembly) runs on the free providers you switch on in <b>Free models first</b> below, tried in the order listed, and nothing ever goes to Claude. When a provider hits its per-minute limit, the call waits for it (up to three minutes); when every provider has used its daily quota, the job stops with a message and you can resume it later. Web research needs Claude’s tools, so it is off: outside facts are marked “(verify)”.</p>
+    ${ready ? html`<p class="small" style=${{ color: 'var(--good)' }}>Ready: ${T.llm.platform('heavy').label}.</p>` : html`<p class="small" style=${{ color: 'var(--warn)' }}>No free provider is ready yet: switch one on below and give it a model and a key. Google Gemini is the quickest (a free key from aistudio.google.com/apikey).</p>`}
+    <label class="choice"><input type="checkbox" checked=${!!free.privateToo} onChange=${(e) => setFree({ privateToo: e.target.checked })} /><span><b>Also run private jobs on the free cloud models</b><span>Off: jobs marked Need to know or Restricted only run on a local Ollama model. On: they go to the cloud free tiers too, which may keep or learn from what you send (Google says its free tier does).</span></span></label>
+    <div><button class="btn small" onClick=${() => { setSwarm({ competition: 'off', concurrency: 1, web: false, split: false, challenger: 'off', batch: false }); toast('Swarm set for free-tier limits: one agent per tile, one at a time, no competition.', 'ok'); }}>Suit the swarm to free-tier limits</button>
+      <span class="tiny muted"> One agent per tile, one call at a time, no competition or splitting: a job then uses tens of requests, not hundreds, and stays inside a free daily quota. Turn competition back on to compare free models against each other.</span></div>
   </div>`;
 }
 

@@ -225,3 +225,45 @@ test('a swarm agent on the model "free" falls back to the worker model on Claude
   assert.equal(runCostUsd(logs[0]), 0);
   assert.equal(router.agent('free', { commission: { privacy: 'RESTRICTED' }, fallbackModel: 'claude-sonnet-5-5' }).model, 'claude-sonnet-5-5', 'a restricted job never goes to a cloud free tier');
 });
+
+test('free models only: every tier runs on the free chain with no Claude fallback, and private jobs need permission', async () => {
+  const free = { providers: [{ id: 'gemini', on: true, model: 'gemini-2.5-flash' }] };
+  const s = { provider: 'free', heavyModel: 'claude-opus-5-5', lightModel: 'claude-haiku-4-5', free };
+  const only = createLlmRouter({ getSettings: () => s, secrets: { get: (k) => (k === 'free.gemini' ? 'g' : null) }, mock: createMockProvider(), providerFactory: { openai: () => fakeFree().provider } });
+  for (const route of [only.platform('heavy'), only.forCommission({ privacy: 'PUBLIC' }, 'light'), only.agent('claude-sonnet-5-5', { commission: { privacy: 'PUBLIC' } }), only.agent('free', { commission: { privacy: 'PUBLIC' } })]) {
+    assert.equal(route.providerName, 'free');
+    assert.equal(route.fallback, undefined, 'nothing falls back to Claude');
+  }
+  const logs = [];
+  const res = await runAgent({ agent: ECHO, input: {}, route: only.platform('heavy'), log: (x) => logs.push(x) });
+  assert.deepEqual(res.output, { ok: true });
+  assert.equal(logs[0].provider, 'free:gemini');
+  assert.equal(logs[0].shadowModel, 'claude-opus-5-5');
+  const priv = only.forCommission({ privacy: 'RESTRICTED' }, 'heavy');
+  await assert.rejects(runAgent({ agent: ECHO, input: {}, route: priv, log: () => {} }), /isn’t marked Public/);
+  s.free = { ...free, privateToo: true };
+  only.clearCache();
+  assert.equal((await runAgent({ agent: ECHO, input: {}, route: only.forCommission({ privacy: 'RESTRICTED' }, 'heavy'), log: () => {} })).provider, 'free:gemini');
+});
+
+test('free models only waits out a per-minute limit instead of failing, and stops cleanly on a daily quota', async () => {
+  let t = 0;
+  let calls = 0;
+  const flaky = { name: 'x', async complete(req) { calls++; if (calls === 1) throw new LlmError('429 too many requests per minute', { retryable: true, code: 'rate_limit', retryAfterMs: 20000 }); return { text: '{"ok":true}', model: req.model, usage: {} }; } };
+  const waited = [];
+  const chain = createFreeChain([{ id: 'g', label: 'Gemini', model: 'm', provider: flaky, maxOutput: 100 }], { now: () => t, patience: 180000, wait: async (ms) => { waited.push(ms); t += ms; } });
+  const res = await chain.complete({ system: 's', messages: [], maxTokens: 64000 });
+  assert.equal(res.freeProvider, 'g');
+  assert.equal(waited.length, 1);
+  assert.ok(waited[0] >= 60000, 'waited for the provider to come back');
+  const daily = { name: 'x', async complete() { throw new LlmError('429 quota exceeded per day', { retryable: true, code: 'rate_limit' }); } };
+  const done = createFreeChain([{ id: 'd', label: 'Gemini', model: 'm', provider: daily }], { now: () => t, patience: 180000, wait: async () => { throw new Error('should not wait an hour'); } });
+  await assert.rejects(done.complete({ system: 's', messages: [] }), (/** @type {any} */ e) => e.code === 'free_quota' && !e.retryable && /daily quota/.test(e.message));
+});
+
+test('reply length is capped at each free provider’s maximum', async () => {
+  const seen = [];
+  const p = { name: 'x', async complete(req) { seen.push(req.maxTokens); return { text: '{}', model: 'm', usage: {} }; } };
+  await createFreeChain([{ id: 'q', label: 'Groq', model: 'm', provider: p, maxOutput: 32768 }]).complete({ system: 's', messages: [], maxTokens: 64000 });
+  assert.deepEqual(seen, [32768]);
+});

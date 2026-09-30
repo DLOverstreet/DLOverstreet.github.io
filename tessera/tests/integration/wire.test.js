@@ -124,3 +124,31 @@ test('the requester’s files ride in the hour-long job layer: the same bytes fo
   const writes = runs.filter((r) => r.tokensCacheWrite1h > 0);
   assert.equal(writes.length, 1, 'the job layer (and the system prompt) is written once; every other call reads it');
 });
+
+test('free models only: a whole swarm job, planning to sign-off, runs on the free providers and never calls Claude', async () => {
+  const { createMockProvider } = await import('../../src/llm/mock.js');
+  const { mockBrains } = await import('../../src/agents/mock/index.js');
+  const inner = createMockProvider({ brains: mockBrains });
+  let claude = 0;
+  const models = new Set();
+  const T = await makeTessera({
+    crowd: false,
+    providerFactory: {
+      anthropic: () => ({ name: 'anthropic', async complete() { claude++; throw new Error('Claude must not be called'); } }),
+      openai: () => ({ name: 'openai-compatible', async complete(req) { models.add(req.model); return { ...(await inner.complete(req)), model: req.model }; } }),
+    },
+  });
+  T.secrets.set('platform.anthropic', 'sk-ant-unused');
+  T.secrets.set('free.gemini', 'gemini-key');
+  T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, llm: { ...tx.meta.settings.llm, provider: 'free', free: { providers: [{ id: 'gemini', on: true, model: 'gemini-2.5-flash' }] } } } }));
+  setSwarm(T, { competition: 'off', concurrency: 1 });
+  const c = await T.api.runWithAgents('usr_marisol', job('pantry'));
+  await T.swarm.settle();
+  assert.equal(T.db.get('Commission', c.id).status, 'ACCEPTED');
+  assert.equal(claude, 0);
+  assert.deepEqual([...models], ['gemini-2.5-flash']);
+  const runs = T.db.filter('AgentRun', (r) => r.commissionId === c.id);
+  assert.ok(runs.some((r) => r.agent === 'decomposer') && runs.some((r) => r.agent === 'worker') && runs.some((r) => r.agent === 'assembler'));
+  assert.ok(runs.every((r) => r.provider === 'free:gemini'), 'every call, planning and assembly included, went to the free model');
+  assert.ok(T.db.filter('Tile', (t) => t.commissionId === c.id && t.webResearch).every((t) => t.research?.unavailable), 'no web research without Claude');
+});

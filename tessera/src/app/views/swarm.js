@@ -35,6 +35,9 @@ export function SwarmModelNote() {
     return html`<div class="callout warn"><b>No model connected, so the agents run on the mock.</b> They go through every step, including a stand-in for web research, but the files they hand in are placeholders that pass the automatic checks. <a href="#/settings">Connect Claude in Settings</a> to have them do the real work and search the web.</div>`;
   }
   const claude = route.providerName === 'anthropic';
+  if (route.providerName === 'free') {
+    return html`<div class="callout ${T.llm.freeReady() ? 'good' : 'warn'}">Every agent runs on <b>free models only</b>: ${route.label}. No Claude, no cost; expect lower quality than Claude, and waits when a free tier’s per-minute limit is reached. Web research is off, so outside facts are marked “(verify)”. <a href="#/settings">Change in Settings</a>.</div>`;
+  }
   return html`<div class="callout good">Agents work on <b>${claude ? modelLabel(s.workerModel) : route.label}</b>${claude ? html`, checks run on <b>${modelLabel(s.checkModel)}</b>` : ''}, up to ${s.concurrency} at once. ${claude && s.web ? html`Tiles that need outside facts <b>search the web</b> first (up to ${s.maxSearchesPerTile} searches each). ` : 'Web access is off, so outside facts are marked “(verify)”. '}Each job stops at <b>$${s.spendCapUsd}</b> of model spend. <a href="#/settings">Change in Settings</a>.</div>`;
 }
 

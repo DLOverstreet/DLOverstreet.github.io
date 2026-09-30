@@ -46,12 +46,13 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
 
   /**
    * @param {'heavy'|'light'} [tier]
-   * @param {{ pool?: 'platform'|'swarm', model?: string|null }} [opts] model: a specific Claude model instead of the tier's
+   * @param {{ pool?: 'platform'|'swarm', model?: string|null, commission?: any }} [opts] model: a specific Claude model instead of the tier's; commission: the job (free-only mode checks its privacy)
    */
-  function platform(tier = 'heavy', { pool = 'platform', model = null } = {}) {
+  function platform(tier = 'heavy', { pool = 'platform', model = null, commission = null } = {}) {
     const s = getSettings();
     const shadow = model || (tier === 'heavy' ? s.heavyModel : s.lightModel);
     const max = pool === 'swarm' ? config.limits.swarmCallsPerWindow : config.limits.llmCallsPerWindow;
+    if (s.provider === 'free') return freeOnly(commission, shadow);
     if (s.provider === 'anthropic') {
       const key = secrets.get('platform.anthropic');
       if (key) {
@@ -83,7 +84,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
         const p = cached(`openai:${llm.baseUrl}:${key}`, () => makeOpenAi({ baseUrl: llm.baseUrl, apiKey: key }));
         return { provider: limited(p, user.id), model: llm.model, providerName: 'openai-compatible', label: `${llm.model} (your key)`, own: true };
       }
-      return { ...platform('heavy'), fallback: 'No personal key is saved in this browser, so the shared model is used.' };
+      return { ...platform('heavy'), note: 'No personal key is saved in this browser, so the shared model is used.' };
     }
     if (mode === 'OLLAMA') {
       const url = llm.ollamaUrl || 'http://localhost:11434/v1';
@@ -100,10 +101,10 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
    * for jobs marked Public).
    * @param {any} commission
    */
-  function freeEntries(commission) {
+  function freeEntries(commission, { privateToo = false } = {}) {
     const f = getSettings().free;
     if (!f?.providers?.length) return [];
-    const open = !commission || (commission.privacy || 'PUBLIC') === 'PUBLIC';
+    const open = privateToo || !commission || (commission.privacy || 'PUBLIC') === 'PUBLIC';
     const out = [];
     for (const p of f.providers) {
       const def = FREE_PROVIDERS[p.id];
@@ -112,7 +113,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
       const key = secrets.get(`free.${p.id}`) || '';
       if (!def.local && !key) continue;
       const baseUrl = p.baseUrl || def.baseUrl;
-      out.push({ id: p.id, label: def.label, model: p.model, provider: cached(`free:${p.id}:${baseUrl}:${key}`, () => makeOpenAi({ baseUrl, apiKey: key })) });
+      out.push({ id: p.id, label: def.label, model: p.model, maxOutput: def.maxOutput || null, provider: cached(`free:${p.id}:${baseUrl}:${key}`, () => makeOpenAi({ baseUrl, apiKey: key })) });
     }
     return out;
   }
@@ -132,10 +133,26 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     };
   }
 
+  /**
+   * Free models only (the platform provider "free"): every agent, planning and supervision included,
+   * runs on the free providers with no paid fallback. A provider resting after a per-minute limit is
+   * waited for (up to three minutes a call). Private jobs use them only when Settings allow it.
+   * @param {any} commission @param {string} shadow the Claude model this call stands in for (for the savings view)
+   */
+  function freeOnly(commission, shadow) {
+    const entries = freeEntries(commission, { privateToo: !!getSettings().free?.privateToo });
+    if (!entries.length) {
+      const why = freeEntries(null).length ? 'This job isn’t marked Public, and Settings don’t allow private jobs on the free cloud models (or use Ollama).' : 'No free model is set up: in Settings, switch on a provider and give it a model and a key.';
+      return { provider: { name: 'free', async complete() { throw new LlmError(why, { retryable: false, code: 'no_key' }); } }, model: 'free', providerName: 'free', label: 'Free models (none ready)', shadowModel: shadow, free: true };
+    }
+    const label = entries.length > 1 ? `${entries[0].model} (free, then ${entries.slice(1).map((e) => e.model).join(', ')})` : `${entries[0].model} (free)`;
+    return { provider: createFreeChain(entries, { now, cooldown, patience: 3 * 60 * 1000 }), model: entries[0].model, providerName: 'free', label, shadowModel: shadow, free: true };
+  }
+
   /** The route for work on a commission: swarm jobs draw on the swarm's pool; light work tries free models first when Settings say so. @param {any} commission @param {'heavy'|'light'} [tier] */
   function forCommission(commission, tier = 'heavy') {
-    const paid = platform(tier, { pool: commission?.workforce === 'agents' ? 'swarm' : 'platform' });
-    return tier === 'light' && getSettings().free?.light ? freeFirst(commission, paid) : paid;
+    const paid = platform(tier, { pool: commission?.workforce === 'agents' ? 'swarm' : 'platform', commission });
+    return tier === 'light' && getSettings().free?.light && !paid.free ? freeFirst(commission, paid) : paid;
   }
 
   /**
@@ -144,13 +161,16 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
    * @param {string} model @param {{ commission?: any, fallbackModel?: string }} [opts]
    */
   function agent(model, { commission = null, fallbackModel = null } = {}) {
-    if (model === 'free') return freeFirst(commission, platform('heavy', { pool: 'swarm', model: fallbackModel }));
-    return platform('heavy', { pool: 'swarm', model });
+    if (model === 'free') {
+      const paid = platform('heavy', { pool: 'swarm', model: fallbackModel, commission });
+      return paid.free ? paid : freeFirst(commission, paid);
+    }
+    return platform('heavy', { pool: 'swarm', model, commission });
   }
 
   /** Whether any free provider is ready for a job (for Settings and the swarm view). */
   function freeReady(commission = null) {
-    return freeEntries(commission).length > 0;
+    return freeEntries(commission, { privateToo: getSettings().provider === 'free' && !!getSettings().free?.privateToo }).length > 0;
   }
 
   return { platform, contributor, forCommission, agent, freeFirst, freeReady, clearCache: () => cache.clear() };

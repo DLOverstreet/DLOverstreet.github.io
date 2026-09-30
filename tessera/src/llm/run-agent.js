@@ -48,7 +48,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
   let lastValid = null;
   // A route that tries free models first carries the paid route as its fallback, and gets one more try for it.
   let current = route;
-  const attempts = retries + 1 + (route.fallback ? 1 : 0);
+  const attempts = retries + 1 + (route.fallback && typeof route.fallback === 'object' ? 1 : 0);
   for (let attempt = 0; attempt < attempts; attempt++) {
     const started = Date.now();
     let res = null;
@@ -110,7 +110,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
     if (!error) return { output, model: res.model, provider: res.freeProvider ? `free:${res.freeProvider}` : current.providerName, free: !!res.freeProvider, sources: res.sources || [], usage: res.usage || null };
     lastError = String(error.message || error);
     // A free model that failed (no answer, or an answer that doesn't hold up) hands the call to the paid route, from the start.
-    if (current.fallback) {
+    if (current.fallback && typeof current.fallback === 'object') {
       current = current.fallback;
       messages = baseMessages;
       feedback = null;
