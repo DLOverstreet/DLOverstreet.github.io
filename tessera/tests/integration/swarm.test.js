@@ -149,7 +149,8 @@ test('when web search is off for the key, research stops after one try and agent
   const T = await makeTessera({ crowd: false, providerFactory: { anthropic: () => fake } });
   T.secrets.set('platform.anthropic', 'sk-ant-test-key');
   T.db.tx((tx) => tx.setMeta({ settings: { ...tx.meta.settings, llm: { ...tx.meta.settings.llm, provider: 'anthropic' } } }));
-  setSwarm(T, { concurrency: 1 });
+  // Cheaper clones would run some competitors on Haiku; this test is about which model the checks use.
+  setSwarm(T, { concurrency: 1, cheaperClones: false });
   const gala = await T.api.runWithAgents('usr_marisol', job('gala'));
   await T.swarm.settle();
   assert.equal(T.db.get('Commission', gala.id).status, 'ACCEPTED');

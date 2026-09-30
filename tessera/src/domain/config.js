@@ -93,8 +93,28 @@ export const config = Object.freeze({
      */
     competition: 'on',
     competitors: 3,
-    /** The reveal round, where workers see each other's blind drafts and revise: 'auto' (only when the blind round wasn't a clean accept), 'always' or 'never'. */
+    /** The second round, where workers revise after the blind one: 'auto' (only when the blind round wasn't a clean accept), 'always' or 'never'. */
     reveal: 'auto',
+    /**
+     * What workers see in that round: 'notes' (the supervisor's scores and summaries, the notes they
+     * posted, each one's approach; cheap) or 'drafts' (every blind draft in full).
+     */
+    exchange: 'notes',
+    /** How many of the best attempts revise after a scored round (0: all of them). The rest count as losses. */
+    finalists: 0,
+    /** A cheaper challenger in every competition: 'off', 'free' (the free providers in Settings), 'haiku' or 'sonnet'. */
+    challenger: 'off',
+    /** When a config wins over half its tasks, try its strategy on the next cheaper Claude model; routing keeps whichever does the work for less. */
+    cheaperClones: true,
+    /** Effort for the workers and the supervisor (the model's own default when empty). */
+    workerEffort: 'medium',
+    checkEffort: 'medium',
+    /** Agents post short notes to the job's wire and read the others' before they work. */
+    wire: true,
+    /** An agent doing a tile alone (no competition) tries the free providers in Settings before Claude. */
+    freeSolo: false,
+    /** Send the swarm's worker, supervisor and reflection calls through Anthropic's Message Batches API: half price, slower. */
+    batch: false,
     /** The rubric score (0 to 1) the best attempt must reach. */
     threshold: 0.7,
     /** Two compete instead of three on a task type one config clearly dominates. */

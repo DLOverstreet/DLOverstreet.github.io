@@ -11,7 +11,8 @@ import * as translatorPrompt from './prompts/translator.v1.js';
 import * as reviewerPrompt from './prompts/reviewer.v1.js';
 import * as assemblerPrompt from './prompts/assembler.v2.js';
 import * as copilotPrompt from './prompts/copilot.v1.js';
-import * as workerPrompt from './prompts/worker.v4.js';
+import * as workerPrompt from './prompts/worker.v5.js';
+import { materializeWork } from './edits.js';
 import * as supervisorPrompt from './prompts/supervisor.v1.js';
 import * as reflectionPrompt from './prompts/reflection.v1.js';
 import * as resplitPrompt from './prompts/resplit.v1.js';
@@ -169,8 +170,13 @@ export function workerFiles(out, input) {
  */
 export const worker = {
   name: 'worker', prompt: workerPrompt, schema: WorkResult, tier: 'heavy', effort: 'medium',
-  validate(out, input) {
-    if (out.split && !input.part) return splitProblems(out.split, input);
+  /** The reply as the swarm uses it: edits applied to the prior draft, wire notes cleaned up. */
+  finalize(out, input) { return materializeWork(out, input).output; },
+  validate(raw, input) {
+    if (raw.split && !input.part) return splitProblems(raw.split, input);
+    const made = materializeWork(raw, input);
+    if (made.problems.length) return made.problems;
+    const out = made.output;
     // Asked only whether to split: no split means "keep it whole", and the work comes later.
     if (input.delegation?.decideOnly) return [];
     const problems = [];

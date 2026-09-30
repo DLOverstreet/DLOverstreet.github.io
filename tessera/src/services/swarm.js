@@ -14,7 +14,8 @@ import { UserError, must, tilesOf } from './core.js';
 import { respondToOffer, claimFromBoard, explainFit } from './market.js';
 import { submitWork, submitPeerReview, requesterReview, upstreamFiles } from './work.js';
 import { acceptDelivery } from './delivery.js';
-import { createCompetition, competes } from './competition.js';
+import { createCompetition, competes, postMessages } from './competition.js';
+import { wireFor } from '../domain/supervision.js';
 import { answerScoping, fundCommission, replacePlan, draftGraph, postCommission, queuePlanning } from './commissions.js';
 import { loadFileTexts, hasText } from './files.js';
 import { config } from '../domain/config.js';
@@ -303,6 +304,18 @@ export async function workerInput(T, tile) {
     budget -= t.length;
     return t;
   };
+  // The requester's whole files are the same for every tile of the job, so they go first, clipped
+  // the same way every time (up to 60% of the budget), and ride in the prompt's hour-long job layer:
+  // written to the cache once per job, then read at a tenth of the price by every tile after.
+  const batchSlice = (f) => tile.part?.of > 1 && /\.(csv|tsv)$/i.test(f.name);
+  let sharedRoom = Math.round(s.maxInputChars * 0.6);
+  for (const f of sources) {
+    if (typeof f.text !== 'string' || batchSlice(f)) continue;
+    const t = clipText(scrub(f.name, f.text), Math.max(600, Math.min(s.maxFileChars, sharedRoom)));
+    sharedRoom -= t.length;
+    budget -= t.length;
+    input.attachments.push({ name: f.name, content: t, shared: true });
+  }
   for (const f of ups) {
     if (typeof f.text !== 'string') { input.inputs.push({ name: f.name, note: 'Binary file, not shown.' }); continue; }
     if (consumed.has(f.name)) {
@@ -314,10 +327,11 @@ export async function workerInput(T, tile) {
     input.inputs.push({ name: f.name, content: take(restricted ? redactText(f.text) : f.text) });
   }
   for (const f of sources) {
-    if (typeof f.text !== 'string') { input.attachments.push({ name: f.name, note: isTextFile(f.name) ? 'Empty.' : 'Binary file with no readable text, not shown.' }); continue; }
-    const text = scrub(f.name, f.text);
+    if (typeof f.text !== 'string') { input.attachments.push({ name: f.name, note: isTextFile(f.name) ? 'Empty.' : 'Binary file with no readable text, not shown.', shared: true }); continue; }
+    if (!batchSlice(f)) continue;
     // A batch tile (one of several over the file) gets only its own rows.
-    const slice = tile.part?.of > 1 && /\.(csv|tsv)$/i.test(f.name) ? sliceCsv(text, tile.part.from, tile.part.to) : null;
+    const text = scrub(f.name, f.text);
+    const slice = sliceCsv(text, tile.part.from, tile.part.to);
     input.attachments.push(slice
       ? { name: f.name, note: `Rows ${tile.part.from}–${Math.min(tile.part.to, slice.total)} of ${slice.total}: your batch.`, content: take(slice.text) }
       : { name: f.name, content: take(text) });
@@ -337,6 +351,12 @@ export async function workerInput(T, tile) {
         ? `Merged by code into a draft the agent fixed: ${drafts.map((d) => `${d.name} (${d.fails.join('; ')})`).join('; ')}.`
         : `No merge by code: no batch files from the plan were found upstream (${ups.filter((f) => /\.csv$/i.test(f.name)).length} CSV inputs).`;
     Object.defineProperty(input, 'mergeReport', { value: report, enumerable: false });
+  }
+  // The job's wire: notes agents on other tiles posted. A snapshot taken now, so every competitor on
+  // this task reads the same one (it sits in the task's cached layer).
+  if (s.wire !== false) {
+    const wire = wireFor(T.db.filter('AgentMessage', (m) => m.commissionId === c.id && m.tileId !== tile.id));
+    if (wire.length) input.wire = wire;
   }
   if (tile.research) {
     input.research = tile.research.unavailable
@@ -564,14 +584,17 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     } else {
       if (offer) input.delegation = offer.delegation;
       await pace();
-      const call = (inp, extra = {}) => runAgent({ agent: AGENTS.worker, input: inp, route, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 20000, bestEffort: true, ...extra });
-      res = await call(input, { cache: !!offer });
+      // Cached like the competitors: the job layer is shared with every other tile, and a retry rereads the rest.
+      // With Settings' free-first option, an agent working alone tries the free models before Claude.
+      const solo = s.freeSolo && !tile.independentCheck ? T.llm.agent('free', { commission: c, fallbackModel: s.workerModel }) : route;
+      const call = (inp, extra = {}) => runAgent({ agent: AGENTS.worker, input: inp, route: solo, log: T.log, meta: { commissionId: c.id, tileId: tile.id, userId: agent }, maxTokens: 20000, bestEffort: true, cache: true, effort: s.workerEffort || undefined, batch: !!s.batch, ...extra });
+      res = await call(input);
       if (res.output.split) {
         split = offer && !res.problems?.length ? await runParts(tile, input, res.output, route) : { failed: `the split plan didn't hold up (${(res.problems || ['not offered']).join('; ')})` };
         if (split.failed) {
           // The parts couldn't be done or joined: one agent does the whole tile after all.
           delete input.delegation;
-          res = await call(input, { cache: !!offer });
+          res = await call(input);
         } else {
           res = { ...res, output: split.output, problems: split.problems };
         }
@@ -579,6 +602,8 @@ export function createSwarm(T, { paceMs = 0 } = {}) {
     }
     const cur = T.db.get('Tile', tile.id);
     if (cur.claimedById !== agent || !['CLAIMED', 'REVISION'].includes(cur.status)) return;
+    // One agent's notes go on the wire too (competitors' notes were posted with their attempts).
+    if (!won) postMessages(T, res.output.messages, { commissionId: c.id, tileId: tile.id, fromName: T.db.get('User', agent)?.name || 'An agent', taskTitle: tile.title, taskType: tile.archetype || 'work' });
     // Placeholder data when the real data was in the inputs is never handed in; the task retries.
     const fake = samplePlaceholder(res.output, input);
     if (fake) throw new Error(`Refused to hand in placeholder data: ${fake}`);

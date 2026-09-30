@@ -6,8 +6,11 @@
 //    falling back to the shared platform model.
 //  - The agent swarm uses the platform model through its own, larger rate-limit pool, and
 //    so do the Reviewer and Assembler on jobs handed to the swarm.
+//  - With free providers set up (Settings), light work and the swarm's free-model challenger try
+//    them first and fall back to Claude: jobs marked Public only, unless the provider runs locally.
 import { createAnthropicProvider } from './anthropic.js';
 import { createOpenAiCompatibleProvider } from './openai-compatible.js';
+import { createFreeChain, FREE_PROVIDERS } from './free-chain.js';
 import { rateLimitCheck } from '../domain/limits.js';
 import { config } from '../domain/config.js';
 import { LlmError } from './errors.js';
@@ -18,6 +21,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
   const makeOpenAi = providerFactory.openai || createOpenAiCompatibleProvider;
   const calls = new Map();
   const cache = new Map();
+  const cooldown = new Map();
 
   function cached(key, make) {
     if (!cache.has(key)) cache.set(key, make());
@@ -90,15 +94,64 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     return platform('heavy');
   }
 
-  /** The route for work on a commission: swarm jobs draw on the swarm's pool. @param {any} commission @param {'heavy'|'light'} [tier] */
-  function forCommission(commission, tier = 'heavy') {
-    return platform(tier, { pool: commission?.workforce === 'agents' ? 'swarm' : 'platform' });
+  /**
+   * The free providers a job may use, in the order Settings list them: every one that is switched
+   * on, has a model (and a key, unless it runs locally), and may see this job (cloud free tiers only
+   * for jobs marked Public).
+   * @param {any} commission
+   */
+  function freeEntries(commission) {
+    const f = getSettings().free;
+    if (!f?.providers?.length) return [];
+    const open = !commission || (commission.privacy || 'PUBLIC') === 'PUBLIC';
+    const out = [];
+    for (const p of f.providers) {
+      const def = FREE_PROVIDERS[p.id];
+      if (!p.on || !def || !p.model) continue;
+      if (!def.local && !open) continue;
+      const key = secrets.get(`free.${p.id}`) || '';
+      if (!def.local && !key) continue;
+      const baseUrl = p.baseUrl || def.baseUrl;
+      out.push({ id: p.id, label: def.label, model: p.model, provider: cached(`free:${p.id}:${baseUrl}:${key}`, () => makeOpenAi({ baseUrl, apiKey: key })) });
+    }
+    return out;
   }
 
-  /** A swarm agent's route: the platform provider with the model Settings picked for agents. @param {string} model */
-  function agent(model) {
+  /**
+   * A route that tries the free providers first and falls back to `paid` (runAgent switches to
+   * route.fallback after a free attempt fails). Without usable free providers, `paid` itself.
+   * @param {any} commission @param {any} paid
+   */
+  function freeFirst(commission, paid) {
+    const entries = freeEntries(commission);
+    if (!entries.length) return paid;
+    const label = entries.length > 1 ? `${entries[0].model} (free, then ${entries.slice(1).map((e) => e.model).join(', ')})` : `${entries[0].model} (free)`;
+    return {
+      provider: createFreeChain(entries, { now, cooldown }), model: entries[0].model, providerName: 'free', label: `${label}, then ${paid.label}`,
+      shadowModel: paid.shadowModel || paid.model, fallback: paid, free: true,
+    };
+  }
+
+  /** The route for work on a commission: swarm jobs draw on the swarm's pool; light work tries free models first when Settings say so. @param {any} commission @param {'heavy'|'light'} [tier] */
+  function forCommission(commission, tier = 'heavy') {
+    const paid = platform(tier, { pool: commission?.workforce === 'agents' ? 'swarm' : 'platform' });
+    return tier === 'light' && getSettings().free?.light ? freeFirst(commission, paid) : paid;
+  }
+
+  /**
+   * A swarm agent's route: the platform provider with the model Settings picked for agents. The model
+   * 'free' is the free providers, falling back to `fallbackModel` on Claude.
+   * @param {string} model @param {{ commission?: any, fallbackModel?: string }} [opts]
+   */
+  function agent(model, { commission = null, fallbackModel = null } = {}) {
+    if (model === 'free') return freeFirst(commission, platform('heavy', { pool: 'swarm', model: fallbackModel }));
     return platform('heavy', { pool: 'swarm', model });
   }
 
-  return { platform, contributor, forCommission, agent, clearCache: () => cache.clear() };
+  /** Whether any free provider is ready for a job (for Settings and the swarm view). */
+  function freeReady(commission = null) {
+    return freeEntries(commission).length > 0;
+  }
+
+  return { platform, contributor, forCommission, agent, freeFirst, freeReady, clearCache: () => cache.clear() };
 }

@@ -157,6 +157,18 @@ export const WorkResult = s.object({
   checklist: s.array(s.object({ criterionId: s.string(), done: s.boolean(), note: s.string() })),
   handoff: s.string().default('').describe('What a person must still do in the real world, or an empty string'),
   split: SplitPlan.optional().describe('Only when input.delegation offers it: split the tile into parts instead of handing in files'),
+  edits: s.array(s.object({
+    file: s.string().describe('A file in your prior draft'),
+    find: s.string().min(1).describe('A passage copied exactly from that file, occurring once'),
+    replace: s.string().describe('What replaces it'),
+  })).default([]).describe('Only with agent.priorDraft: changes to your prior draft instead of rewriting a file in full'),
+  messages: s.array(s.object({
+    to: s.string().describe('"team" or "rivals". team: agents on the other tiles of this job; rivals: the workers competing with you on this task, next round'),
+    kind: s.string().default('tip').describe('tip, warning, question or answer'),
+    text: s.string().min(1).describe('One or two sentences of fact another agent can use (the swarm keeps the first 400 characters)'),
+    replyTo: s.string().optional().describe('For an answer: the id of the note it answers'),
+  })).default([]).describe('Up to three notes for other agents on the wire (the swarm keeps the first three); empty when you have nothing worth posting'),
+  usedMessages: s.array(s.string()).default([]).describe('Ids of the wire or rival notes you relied on'),
 });
 
 export const MatcherNotes = s.object({

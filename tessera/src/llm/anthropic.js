@@ -5,7 +5,8 @@
 // A request can carry Anthropic's server tools (web search and web fetch): they run on
 // Anthropic's servers inside the same call, a long turn that pauses (stop_reason
 // "pause_turn") is resumed here, and the sources the model read or cited come back with
-// the text. Models that support it get effort and the server-side refusal fallback.
+// the text. Models that support it get effort and the server-side refusal fallback. Calls that can
+// wait go through the Message Batches API at half price (createBatcher).
 import { LlmError } from './errors.js';
 import { modelCaps } from './prices.js';
 
@@ -30,6 +31,17 @@ export function apiMessages(messages) {
     role: m.role,
     content: m.content.map((b) => ({ type: 'text', text: b.text, ...(b.cache ? { cache_control: b.cache === '1h' ? { type: 'ephemeral', ttl: '1h' } : { type: 'ephemeral' } } : {}) })),
   }));
+}
+/**
+ * The system prompt, with an hour-long cache breakpoint when the call caches (`cacheSystem`): it is
+ * the same for every job, so every call that shares it reads it at the cache price, and marking it
+ * costs nothing extra (a write bills each token once). Left unmarked when the messages already use
+ * the four breakpoints a request may have.
+ */
+export function systemBlocks(req, messages) {
+  if (!req.cacheSystem || !req.system) return req.system;
+  const marks = messages.reduce((n, m) => n + (Array.isArray(m.content) ? m.content.filter((b) => b.cache_control).length : 0), 0);
+  return marks >= 4 ? req.system : [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral', ttl: '1h' } }];
 }
 const MAX_CONTINUATIONS = 5;
 /** Requests allowed more output than this stream, so a long reply never runs into an HTTP timeout. */
@@ -64,8 +76,72 @@ export function sourcesOf(content) {
   return out;
 }
 
-/** @param {{ apiKey?: string, baseURL?: string, fetch?: typeof fetch }} [opts] */
-export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = {}) {
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Half-price calls: requests are collected for a moment, sent as one Message Batch, and the batch is
+ * polled until it ends (most finish within minutes, all within 24 hours). Each caller gets its own
+ * message back, or an error. Prompt caching still applies inside a batch, on a best-effort basis.
+ * @param {() => Promise<any>} getClient
+ * @param {{ windowMs?: number, maxSize?: number, pollMs?: number, maxPollMs?: number, wait?: (ms: number) => Promise<void>, mapError?: (e: any) => Error }} [opts]
+ */
+export function createBatcher(getClient, { windowMs = 2000, maxSize = 50, pollMs = 15000, maxPollMs = 60000, wait = sleep, mapError = (e) => e } = {}) {
+  let queue = [];
+  let timer = null;
+  let n = 0;
+  const failure = (err) => {
+    const inner = err?.error || err || {};
+    const type = inner.type || 'api_error';
+    const message = inner.message || 'The batch request failed.';
+    if (type === 'invalid_request_error') return new LlmError(`Request rejected: ${message}`, { retryable: false, code: 'bad_request' });
+    if (type === 'rate_limit_error') return new LlmError(`Anthropic rate limit reached in a batch: ${message}`, { retryable: true, code: 'rate_limit' });
+    if (type === 'overloaded_error') return new LlmError(`Anthropic is overloaded: ${message}`, { retryable: true, code: 'overloaded' });
+    return new LlmError(`Anthropic API error in a batch: ${message}`, { retryable: true, code: 'api' });
+  };
+  async function flush() {
+    timer = null;
+    const items = queue;
+    queue = [];
+    if (!items.length) return;
+    try {
+      const c = await getClient();
+      const batch = await c.messages.batches.create({ requests: items.map((it) => ({ custom_id: it.id, params: it.params })) });
+      let status = batch;
+      let delay = pollMs;
+      while (status.processing_status !== 'ended') {
+        await wait(delay);
+        delay = Math.min(maxPollMs, Math.round(delay * 1.5));
+        status = await c.messages.batches.retrieve(batch.id);
+      }
+      const open = new Map(items.map((it) => [it.id, it]));
+      for await (const r of await c.messages.batches.results(batch.id)) {
+        const it = open.get(r.custom_id);
+        if (!it) continue;
+        open.delete(r.custom_id);
+        if (r.result.type === 'succeeded') it.resolve(r.result.message);
+        else if (r.result.type === 'errored') it.reject(failure(r.result.error));
+        else it.reject(new LlmError(`The batch request was ${r.result.type} before it ran.`, { retryable: true, code: `batch_${r.result.type}` }));
+      }
+      for (const it of open.values()) it.reject(new LlmError('The batch ended without this request’s result.', { retryable: true, code: 'batch_missing' }));
+    } catch (e) {
+      const err = e instanceof LlmError ? e : mapError(e);
+      for (const it of items) it.reject(err);
+    }
+  }
+  return {
+    /** @param {any} params a Messages API request body */
+    add(params) {
+      return new Promise((resolve, reject) => {
+        queue.push({ id: `r${++n}`, params, resolve, reject });
+        if (queue.length >= maxSize) { clearTimeout(timer); flush(); } else if (!timer) timer = setTimeout(flush, windowMs);
+      });
+    },
+    get pending() { return queue.length; },
+  };
+}
+
+/** @param {{ apiKey?: string, baseURL?: string, fetch?: typeof fetch, batchOptions?: any }} [opts] */
+export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl, batchOptions = {} } = {}) {
   let client = null;
   let Anthropic = null;
   let fallbacksOff = false;
@@ -143,10 +219,12 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
     }
   }
 
+  const batcher = createBatcher(getClient, { mapError: (e) => mapError(e), ...batchOptions });
+
   return {
     name: 'anthropic',
     /**
-     * @param {{model: string, system: string, messages: any[], jsonSchema?: object, maxTokens?: number, tools?: any[], effort?: string, onStart?: () => void}} req
+     * @param {{model: string, system: string, messages: any[], jsonSchema?: object, maxTokens?: number, tools?: any[], effort?: string, onStart?: () => void, cacheSystem?: boolean, batch?: boolean}} req
      *   messages: content is a string, or text blocks ({ type: 'text', text, cache? }) where `cache` marks a prompt-cache breakpoint
      */
     async complete(req) {
@@ -155,7 +233,7 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
       const tools = req.tools && req.tools.length ? req.tools : null;
       /** @type {any} */
       const messages = apiMessages(req.messages);
-      const params = { model: req.model, max_tokens: req.maxTokens || 16000, system: req.system, messages };
+      const params = { model: req.model, max_tokens: req.maxTokens || 16000, system: systemBlocks(req, messages), messages };
       const outputConfig = {};
       // Structured output is left off when tools run: web search always cites, and citations
       // can't be combined with a JSON format. Those replies are parsed from the text instead.
@@ -167,8 +245,17 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
       const usage = { inputTokens: 0, outputTokens: 0, cacheWriteTokens: 0, cacheWrite1hTokens: 0, cacheReadTokens: 0, webSearches: 0, webFetches: 0 };
       let turn = [];
       let res;
+      // Half price through a Message Batch when asked (never with server tools, which may pause and resume).
+      const batched = !!req.batch && !tools;
+      if (batched) usage.batch = true;
       for (let hop = 0; ; hop++) {
-        res = await send(c, turn.length ? { ...params, messages: [...messages, { role: 'assistant', content: turn }] } : params, hop === 0 ? req.onStart || null : null);
+        if (batched) {
+          // Nothing streams, so calls waiting on this one's start can go now and join the same batch.
+          if (req.onStart) req.onStart();
+          res = await batcher.add(params);
+        } else {
+          res = await send(c, turn.length ? { ...params, messages: [...messages, { role: 'assistant', content: turn }] } : params, hop === 0 ? req.onStart || null : null);
+        }
         usage.inputTokens += res.usage?.input_tokens || 0;
         usage.outputTokens += res.usage?.output_tokens || 0;
         usage.cacheWriteTokens += res.usage?.cache_creation_input_tokens || 0;
@@ -178,7 +265,7 @@ export function createAnthropicProvider({ apiKey, baseURL, fetch: fetchImpl } = 
         usage.webFetches += res.usage?.server_tool_use?.web_fetch_requests || 0;
         turn = [...turn, ...res.content];
         // A long server-tool turn pauses; sending it back unchanged resumes it.
-        if (res.stop_reason !== 'pause_turn' || hop >= MAX_CONTINUATIONS) break;
+        if (batched || res.stop_reason !== 'pause_turn' || hop >= MAX_CONTINUATIONS) break;
       }
       // A reply that can't be used still cost its tokens: they travel with the error to the log.
       const spent = { usage, model: res.model || req.model };

@@ -211,26 +211,84 @@ const hash = (s) => { let h = 2166136261; for (const ch of String(s)) { h ^= ch.
  * @param {any[]} configs active worker configs
  * @param {any[]} stats WorkerStats rows
  * @param {string} taskType
- * @param {{ competitors?: number, routing?: boolean, seed?: string, playbookSize?: number, solo?: boolean }} [opts]
+ * @param {{ competitors?: number, routing?: boolean, seed?: string, playbookSize?: number, solo?: boolean, include?: string[] }} [opts] include: configs that must compete (the cheaper challenger)
  * @returns {{ picked: any[], control: string|null, reason: string }}
  */
-export function pickCompetitors(configs, stats, taskType, { competitors = 3, routing = true, seed = '', playbookSize = 0, solo = false } = {}) {
+export function pickCompetitors(configs, stats, taskType, { competitors = 3, routing = true, seed = '', playbookSize = 0, solo = false, include = [] } = {}) {
   const on = (c) => stats.find((s) => s.configId === c.id && s.taskType === taskType) || { attempts: 0, wins: 0, scoreSum: 0 };
   const rated = configs.map((c) => {
     const s = on(c);
     const avg = s.attempts ? s.scoreSum / s.attempts : 0.6;
-    return { c, s, rank: avg + 0.25 / Math.sqrt(s.attempts + 1) };
-  }).sort((a, b) => b.rank - a.rank || a.c.id.localeCompare(b.c.id));
+    // Notes other agents' winning work relied on earn a small bonus: sharing what helps pays.
+    const assist = s.attempts ? Math.min(0.05, (0.1 * (s.assists || 0)) / s.attempts) : 0;
+    const rank = avg + 0.25 / Math.sqrt(s.attempts + 1) + assist;
+    // Configs that score about the same (within 0.03) are ranked cheapest first, so a cheaper model
+    // that keeps up with a dearer one gets the work.
+    return { c, s, rank, band: Math.round(rank / 0.03), cost: s.attempts ? (s.costMicroUsd || 0) / s.attempts : Infinity };
+  }).sort((a, b) => b.band - a.band || a.cost - b.cost || b.rank - a.rank || a.c.id.localeCompare(b.c.id));
   const leader = rated.find((r) => r.s.attempts >= 6 && r.s.wins / r.s.attempts >= 0.7);
   const settled = solo && rated.find((r) => r.s.attempts >= 10 && r.s.wins / r.s.attempts >= 0.8);
   const n = Math.max(1, Math.min(rated.length, settled ? 1 : routing && leader ? Math.min(2, competitors) : competitors));
-  const picked = (settled ? [settled] : rated.slice(0, n)).map((r) => r.c);
+  let chosen = settled ? [settled] : rated.slice(0, n);
+  // A config that must compete (the cheaper challenger) takes the place of the lowest-ranked pick.
+  if (!settled) {
+    for (const id of include) {
+      const r = rated.find((x) => x.c.id === id);
+      if (!r || chosen.includes(r)) continue;
+      const out = [...chosen].reverse().find((x) => !include.includes(x.c.id));
+      chosen = out && chosen.length >= n ? chosen.map((x) => (x === out ? r : x)) : [...chosen, r].slice(0, Math.max(n, 1));
+    }
+  }
+  const picked = chosen.map((r) => r.c);
   const control = playbookSize > 0 && picked.length >= 2 ? picked[hash(seed) % picked.length].id : null;
   const top = settled || leader;
   const reason = top && n < competitors
     ? `${top.c.name} wins ${Math.round((top.s.wins / top.s.attempts) * 100)}% of ${taskType} tasks, so ${n === 1 ? 'it works alone' : `${n} compete`} instead of ${competitors}.`
     : n === 1 ? 'One config works alone.' : `${n} configs compete.`;
   return { picked, control, reason };
+}
+
+/**
+ * The wire as a worker reads it: the job's team notes, oldest first, the newest `max` of them and
+ * no more than `maxChars` in all, each with its id (to cite it) and who posted it where.
+ * @param {any[]} messages AgentMessage rows of one job
+ */
+export function wireFor(messages, { max = 15, maxChars = 4000 } = {}) {
+  const team = messages.filter((m) => m.to === 'team').sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+  const out = [];
+  let chars = 0;
+  for (const m of team.reverse()) {
+    if (out.length >= max || chars + m.text.length > maxChars) break;
+    chars += m.text.length;
+    out.push({ id: m.id, from: `${m.fromName || 'an agent'} on “${m.taskTitle || 'another tile'}”`, kind: m.kind, text: m.text, ...(m.replyTo ? { replyTo: m.replyTo } : {}) });
+  }
+  return out.reverse();
+}
+
+/** The notes a task's own competitors posted, for the next round: every note, labeled by attempt. */
+export function taskNotes(messages, specId) {
+  return messages.filter((m) => m.specId === specId).sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id))
+    .map((m) => ({ id: m.id, from: m.label || 'a worker', to: m.to, kind: m.kind, text: m.text }));
+}
+
+/**
+ * Assists from an accepted attempt: every note it relied on that another config posted earns that
+ * config one assist on the note's task type (once per note). Notes the attempt wasn't shown, its
+ * own config's notes and notes without a config earn nothing.
+ * @param {string[]} usedIds the ids the winning attempt cited, already limited to notes it was shown
+ * @param {any[]} messages AgentMessage rows
+ * @param {string|null} winnerConfigId
+ * @returns {{ messageId: string, configId: string, taskType: string }[]}
+ */
+export function assistsFrom(usedIds, messages, winnerConfigId) {
+  const byId = new Map(messages.map((m) => [m.id, m]));
+  const out = [];
+  for (const id of new Set(usedIds)) {
+    const m = byId.get(id);
+    if (!m || !m.configId || m.configId === winnerConfigId) continue;
+    out.push({ messageId: id, configId: m.configId, taskType: m.taskType || 'work' });
+  }
+  return out;
 }
 
 /** Shared lessons for a task type, as they go into the playbook layer: proven ones first, then newest candidates under test. */
@@ -266,10 +324,14 @@ export function judgeLesson(l, { minTrials = 20, minLift = 0.02 } = {}) {
 
 /**
  * Evolving the configs: ones that keep losing are retired (keeping a few active), and a winning
- * config is cloned with one change of strategy so the swarm keeps searching.
- * @returns {{ retire: string[], clones: { parentId: string, name: string, strategyHint: string }[] }}
+ * config is cloned, first onto the next cheaper model (`downshift`, when given) with its own
+ * strategy, then with one change of strategy, so the swarm keeps searching.
+ * @param {any[]} configs
+ * @param {any[]} stats
+ * @param {{ maxActive?: number, minActive?: number, retireBelow?: number, retireAfter?: number, cloneAbove?: number, cloneAfter?: number, downshift?: ((model: string|null) => { model: string, label: string }|null)|null }} [opts]
+ * @returns {{ retire: string[], clones: { parentId: string, name: string, strategyHint: string, model: string|null }[] }}
  */
-export function evolveConfigs(configs, stats, { maxActive = 6, minActive = 3, retireBelow = 0.15, retireAfter = 12, cloneAbove = 0.5, cloneAfter = 6 } = {}) {
+export function evolveConfigs(configs, stats, { maxActive = 6, minActive = 3, retireBelow = 0.15, retireAfter = 12, cloneAbove = 0.5, cloneAfter = 6, downshift = null } = {}) {
   const active = configs.filter((c) => c.status === 'active');
   const totals = new Map(active.map((c) => [c.id, { attempts: 0, wins: 0 }]));
   for (const s of stats) { const t = totals.get(s.configId); if (t) { t.attempts += s.attempts; t.wins += s.wins; } }
@@ -286,10 +348,18 @@ export function evolveConfigs(configs, stats, { maxActive = 6, minActive = 3, re
     if (room <= 0) break;
     if (retire.includes(c.id) || totals.get(c.id).attempts < cloneAfter || rate(c.id) < cloneAbove) continue;
     if (configs.some((x) => x.parentConfigId === c.id && x.status === 'active')) continue;
+    // A winner first tries its own strategy on a cheaper model: if the clone keeps up, routing
+    // prefers it (same score, lower cost), and the swarm has learned where the cheaper model is enough.
+    const cheaper = downshift ? downshift(c.model || null) : null;
+    if (cheaper && !configs.some((x) => x.parentConfigId === c.id && x.model === cheaper.model)) {
+      clones.push({ parentId: c.id, name: `${c.name} · ${cheaper.label}`, strategyHint: c.strategyHint, model: cheaper.model });
+      room--;
+      continue;
+    }
     const hint = HINT_BANK.find((h) => !used.has(h));
     if (!hint) break;
     used.add(hint);
-    clones.push({ parentId: c.id, name: `${c.name} ${configs.filter((x) => x.parentConfigId === c.id).length + 2}`, strategyHint: hint });
+    clones.push({ parentId: c.id, name: `${c.name} ${configs.filter((x) => x.parentConfigId === c.id).length + 2}`, strategyHint: hint, model: c.model || null });
     room--;
   }
   return { retire, clones };
@@ -318,5 +388,6 @@ export function leaderboard(stats, configs) {
   return stats.filter((s) => s.attempts > 0).map((s) => ({
     configId: s.configId, name: name.get(s.configId)?.name || s.configId, status: name.get(s.configId)?.status || 'active', taskType: s.taskType,
     wins: s.wins, attempts: s.attempts, winRate: s.wins / s.attempts, avgScore: s.scoreSum / s.attempts, avgCostUsd: (s.costMicroUsd || 0) / 1e6 / s.attempts,
+    assists: s.assists || 0, notes: s.notes || 0, model: name.get(s.configId)?.model || null,
   })).sort((a, b) => a.taskType.localeCompare(b.taskType) || b.winRate - a.winRate || b.avgScore - a.avgScore);
 }

@@ -16,7 +16,8 @@ function clip(value, max = 24000) {
  * @param {object} p
  * @param {object} p.agent { name, prompt: { version, system, render(input) }, schema?, validate?(output, input) => string[], format?: 'json'|'text', effort? }
  * @param {object} p.input structured input for the prompt
- * @param {{provider: object, model: string, providerName: string, shadowModel?: string}} p.route
+ * @param {{provider: object, model: string, providerName: string, shadowModel?: string, fallback?: any}} p.route fallback: the paid
+ *   route a free-first route hands the call to once a free attempt fails
  * @param {(row: object) => void} p.log writes an AgentRun row
  * @param {object} [p.meta] { commissionId, tileId, userId } for cost attribution
  * @param {{role: string, content: string}[]} [p.history] prior chat turns (copilot)
@@ -30,8 +31,9 @@ function clip(value, max = 24000) {
  * @param {() => void} [p.onStart] called once the first attempt's prompt has been read (the provider
  *   streams to know), so calls sharing its cached prefix can start and read the cache
  * @param {(ms: number) => Promise<void>} [p.wait] how a retry waits after a rate limit or overload (tests pass a no-op)
+ * @param {boolean} [p.batch] send the call through Anthropic's Message Batches API: half price, and the reply takes minutes
  */
-export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort, cache = false, onStart, wait = sleep }) {
+export async function runAgent({ agent, input, route, log, meta = {}, history = [], maxTokens, retries = config.llm.maxRetries, bestEffort = false, tools, effort, cache = false, onStart, wait = sleep, batch = false }) {
   const system = agent.prompt.system;
   // An agent that writes long replies (a whole plan, a whole deliverable) sets its own allowance.
   const outTokens = maxTokens ?? agent.maxTokens;
@@ -44,18 +46,20 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
   let lastError = 'unknown error';
   let feedback = null;
   let lastValid = null;
-  const attempts = retries + 1;
+  // A route that tries free models first carries the paid route as its fallback, and gets one more try for it.
+  let current = route;
+  const attempts = retries + 1 + (route.fallback ? 1 : 0);
   for (let attempt = 0; attempt < attempts; attempt++) {
     const started = Date.now();
     let res = null;
     let output = null;
     let error = null;
     try {
-      res = await route.provider.complete({
+      res = await current.provider.complete({
         agent: agent.name, promptVersion: agent.prompt.version, input, attempt, feedback,
-        model: route.model, system, messages, maxTokens: outTokens,
+        model: current.model, system, messages, maxTokens: outTokens,
         jsonSchema: format === 'json' && agent.schema ? agent.schema.jsonSchema() : undefined,
-        tools, effort: level, onStart: attempt === 0 ? onStart : undefined,
+        tools, effort: level, onStart: attempt === 0 ? onStart : undefined, cacheSystem: cache, batch,
       });
       if (format === 'text') {
         output = String(res.text || '').trim();
@@ -65,8 +69,10 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
         const parsed = agent.schema.safeParse(raw);
         if (!parsed.success) throw new ValidationProblem([parsed.error.message]);
         const problems = agent.validate ? agent.validate(parsed.data, input) : [];
-        if (problems.length) { lastValid = { output: parsed.data, model: res.model, problems }; throw new ValidationProblem(problems); }
-        output = parsed.data;
+        // An agent may turn its reply into what callers use (a worker's edits applied to its draft).
+        const final = agent.finalize ? agent.finalize(parsed.data, input) : parsed.data;
+        if (problems.length) { lastValid = { output: final, model: res.model, problems, usage: res.usage || null }; throw new ValidationProblem(problems); }
+        output = final;
       }
     } catch (e) {
       error = e;
@@ -76,9 +82,9 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
     log({
       agent: agent.name,
       promptVersion: agent.prompt.version,
-      provider: route.providerName,
-      model: res?.model || error?.model || route.model,
-      shadowModel: route.shadowModel || null,
+      provider: res?.freeProvider ? `free:${res.freeProvider}` : current.providerName,
+      model: res?.model || error?.model || current.model,
+      shadowModel: current.shadowModel || null,
       input: clip(input),
       output: error ? (res ? clip(res.text, 8000) : null) : clip(output),
       error: error ? String(error.message || error) : null,
@@ -87,6 +93,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       ...(used?.cacheWriteTokens ? { tokensCacheWrite: used.cacheWriteTokens } : {}),
       ...(used?.cacheWrite1hTokens ? { tokensCacheWrite1h: used.cacheWrite1hTokens } : {}),
       ...(used?.cacheReadTokens ? { tokensCacheRead: used.cacheReadTokens } : {}),
+      ...(used?.batch ? { batch: true } : {}),
       webSearches: used?.webSearches || 0,
       webFetches: used?.webFetches || 0,
       ...(level ? { effort: level } : {}),
@@ -100,8 +107,15 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       ...(meta.part ? { part: meta.part } : {}),
       ...(meta.competitor ? { competitor: meta.competitor } : {}),
     });
-    if (!error) return { output, model: res.model, provider: route.providerName, sources: res.sources || [], usage: res.usage || null };
+    if (!error) return { output, model: res.model, provider: res.freeProvider ? `free:${res.freeProvider}` : current.providerName, free: !!res.freeProvider, sources: res.sources || [], usage: res.usage || null };
     lastError = String(error.message || error);
+    // A free model that failed (no answer, or an answer that doesn't hold up) hands the call to the paid route, from the start.
+    if (current.fallback) {
+      current = current.fallback;
+      messages = baseMessages;
+      feedback = null;
+      continue;
+    }
     if (error instanceof LlmError && !error.retryable) throw new AgentFailure(agent.name, lastError, attempt + 1);
     // Cut off at max_tokens or the time limit: thinking took the room the answer needed, so the next
     // try thinks less instead of repeating a call that would end the same way.
@@ -117,7 +131,7 @@ export async function runAgent({ agent, input, route, log, meta = {}, history = 
       ];
     }
   }
-  if (bestEffort && lastValid) return { output: lastValid.output, model: lastValid.model, provider: route.providerName, problems: lastValid.problems, usage: null };
+  if (bestEffort && lastValid) return { output: lastValid.output, model: lastValid.model, provider: current.providerName, problems: lastValid.problems, usage: lastValid.usage };
   throw new AgentFailure(agent.name, lastError, attempts);
 }
 

@@ -1,5 +1,34 @@
 # Changelog
 
+## 2026-09-30
+- **Cheaper runs.** The biggest costs on a swarm job were the competitors each writing whole drafts
+  two or three times and every tile re-sending the requester's files. Now:
+  - *More of each prompt is cached.* The worker prompt (`worker.v5`) caches the system prompt for an
+    hour, puts the requester's whole files in the hour-long job layer (the same bytes for every tile,
+    so a long manuscript is written to the cache once per job and reread at a tenth of the price or
+    less), and moves the playbook out of the shared prefix so the control worker shares the task
+    layer too. Every worker call caches, including agents working alone.
+  - *Revisions by edits.* A worker revising its own draft can hand back edits (find, replace) instead
+    of the whole file, and gets its own draft in full to edit.
+  - *A notes round instead of whole drafts.* After a blind round that isn't a clean win, workers read
+    the supervisor's scores and summaries, each other's notes and approaches (one shared, cached
+    block) and revise. Whole drafts are still a setting. With **finalists**, only the best go on.
+  - *Cheaper models where they're enough.* A cheaper challenger (free models, Haiku or Sonnet) can
+    compete on every task; a winning config is first cloned onto the next cheaper Claude model;
+    configs that score about the same are ranked cheapest first. Worker and supervisor effort are
+    settings. An **Economy** preset sets all of this at once.
+  - *Free models first.* Gemini's, Groq's and OpenRouter's free tiers, or Ollama, can take light
+    work, a challenger slot and agents working alone before Claude; on a quota, an error or an
+    answer that fails its checks, the call goes to Claude. Only jobs marked Public go to cloud free
+    tiers (Google's free tier may learn from what you send).
+  - *Half-price batches.* An opt-in mode sends the swarm's calls through Anthropic's Message
+    Batches API at half price; jobs take longer.
+  - Admin → Cost per commission shows what the cache, batches and free models saved.
+- **Agents talk on the wire.** Agents post short notes to the agents on the job's other tiles or to
+  their rivals on the same task, read the others' before they work, and say which notes they used.
+  A note that accepted work relied on earns its author an assist, shown on the leaderboard and
+  counted in the rankings. The Supervision page lists the wire and who used each note.
+
 ## 2026-09-29 (night)
 - Word copies no longer print `****` in empty table header cells.
 - **Planning the manuscript revision, take two.** The run showed three more ways planning failed:

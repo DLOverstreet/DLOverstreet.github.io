@@ -1,7 +1,8 @@
 // The Supervision page: how the swarm's competition and supervisors are doing. Tasks the
 // supervisors escalated wait here for you; below are the leaderboard of worker configs by task
 // type, the lessons with their measured lift, the supervisors' reliability with a sample of
-// accepted tasks for your review, the configs' lineage, and the supervisors' latest actions.
+// accepted tasks for your review, the wire (the notes agents post each other, and who used them),
+// the configs' lineage, and the supervisors' latest actions.
 import { html, useState } from '../../../vendor/preact.js';
 import { useT, useDbVersion, useNow, currentUser, setPersona, act } from '../state.js';
 import { AsyncButton, Empty, Field, ago } from '../ui.js';
@@ -9,12 +10,13 @@ import { StoredFile } from './tile.js';
 import { leaderboard, lessonLift, supervisorReliability } from '../../domain/supervision.js';
 import { swarmSettings } from '../../services/swarm.js';
 import { truncate, fmtDateTime } from '../../lib/util.js';
+import { MODEL_PRICES } from '../../llm/prices.js';
 
 const ACTION = {
   accept: ['good', 'Accepted'],
   accept_flag: ['warn', 'Accepted, flagged'],
   send_back: ['info', 'Sent back'],
-  reveal: ['', 'Reveal round'],
+  reveal: ['', 'Second round'],
   resplit: ['info', 'Re-split'],
   split: ['', 'Split for speed'],
   escalate: ['bad', 'Escalated'],
@@ -61,7 +63,7 @@ function Escalation({ t }) {
   const spec = T.db.get('TaskSpec', t.supervision.specId);
   const specIds = new Set([spec?.id, ...T.db.filter('TaskSpec', (x) => x.parentSpecId === spec?.id).map((x) => x.id)]);
   // Latest round first, and within a round A, B, C.
-  const RANK = { blind: 0, reveal: 1, revise: 2, merge: 3 };
+  const RANK = { blind: 0, notes: 1, reveal: 1, revise: 2, merge: 3 };
   const attempts = T.db.filter('Attempt', (a) => specIds.has(a.specId)).sort((a, b) => b.cycle - a.cycle || RANK[b.round] - RANK[a.round] || a.label.localeCompare(b.label));
   const latest = attempts.filter((a) => a.specId === spec?.id && a.round === attempts.find((x) => x.specId === spec?.id)?.round && a.cycle === attempts.find((x) => x.specId === spec?.id)?.cycle);
   const shown = all ? attempts.filter((a) => a.specId === spec?.id) : latest;
@@ -97,6 +99,11 @@ function Overview() {
   const read = runs.reduce((n, r) => n + (r.tokensCacheRead || 0), 0);
   const total = runs.reduce((n, r) => n + (r.tokensIn || 0) + (r.tokensCacheWrite || 0) + (r.tokensCacheRead || 0), 0);
   const spend = specs.reduce((n, x) => n + (x.costMicroUsd || 0), 0);
+  const notes = T.db.count('AgentMessage');
+  const winners = new Set(specs.map((x) => x.winnerAttemptId).filter(Boolean));
+  const usedByWinners = new Set(T.db.filter('Attempt', (a) => winners.has(a.id)).flatMap((a) => a.usedMessageIds || []));
+  const revisions = T.db.filter('Attempt', (a) => ['notes', 'reveal', 'revise'].includes(a.round) && !a.error);
+  const byEdit = revisions.filter((a) => a.edited > 0).length;
   return html`<div class="card">
     <h2>How tasks end</h2>
     <div class="stats" style=${{ marginTop: '.6rem' }}>
@@ -106,8 +113,10 @@ function Overview() {
       <div class="stat"><span class="v">${count('send_back')}</span><span class="l">Sent back</span></div>
       <div class="stat"><span class="v">${count('resplit')}</span><span class="l">Re-split</span></div>
       <div class="stat"><span class="v">${count('escalate')}</span><span class="l">Escalated to you</span></div>
-      <div class="stat"><span class="v">${count('reveal')}</span><span class="l">Reveal rounds</span></div>
-      <div class="stat" title="Reveal-round revisions that moved toward the blind draft that scored worst. High means workers copy instead of checking."><span class="v">${herd.rev ? pct(herd.worst / herd.rev) : '—'}</span><span class="l">Herding (${herd.worst} of ${herd.rev} revisions)</span></div>
+      <div class="stat"><span class="v">${count('reveal')}</span><span class="l">Second rounds</span></div>
+      <div class="stat" title="Second-round revisions that moved toward the blind draft that scored worst. High means workers copy instead of checking."><span class="v">${herd.rev ? pct(herd.worst / herd.rev) : '—'}</span><span class="l">Herding (${herd.worst} of ${herd.rev} revisions)</span></div>
+      <div class="stat" title="Notes agents posted on the wire, and how many of them accepted work relied on."><span class="v">${notes}</span><span class="l">Notes on the wire (${usedByWinners.size} used by winners)</span></div>
+      <div class="stat" title="Revisions handed back as edits to the worker’s own draft instead of a full rewrite: far fewer output tokens."><span class="v">${revisions.length ? pct(byEdit / revisions.length) : '—'}</span><span class="l">Revisions by edit</span></div>
       <div class="stat" title="Share of the input tokens on competing calls read from the prompt cache. A falling rate means something dynamic slipped into a cached layer."><span class="v">${total ? pct(read / total) : '—'}</span><span class="l">Input read from the cache</span></div>
       <div class="stat"><span class="v">${usd(spend)}</span><span class="l">Model spend on competition</span></div>
     </div>
@@ -119,13 +128,54 @@ function Leaderboard() {
   const rows = leaderboard(T.db.all('WorkerStats'), T.db.all('WorkerConfig'));
   return html`<div class="card">
     <h2>Leaderboard by task type</h2>
-    <p class="small muted">Wins and average rubric score per worker config. A config that wins most tasks of a type gets fewer rivals on it (routing), and on “auto” may work alone.</p>
+    <p class="small muted">Wins, average rubric score and cost per worker config. A config that wins most tasks of a type gets fewer rivals on it (routing), and on “auto” may work alone. Configs that score about the same are ranked cheapest first. Assists count the notes a config posted that other configs’ winning work relied on; they earn a small bonus in the ranking.</p>
     ${rows.length ? html`<div class="table-wrap" style=${{ marginTop: '.6rem' }}><table>
-      <thead><tr><th>Task type</th><th>Config</th><th class="num">Won</th><th class="num">Win rate</th><th class="num">Avg score</th><th class="num">Avg cost</th></tr></thead>
+      <thead><tr><th>Task type</th><th>Config</th><th>Model</th><th class="num">Won</th><th class="num">Win rate</th><th class="num">Avg score</th><th class="num">Avg cost</th><th class="num">Notes / assists</th></tr></thead>
       <tbody>${rows.map((r) => html`<tr>
-        <td>${r.taskType}</td><td>${r.name}${r.status === 'retired' ? html` <span class="badge">retired</span>` : ''}</td>
-        <td class="num">${r.wins} / ${r.attempts}</td><td class="num">${pct(r.winRate)}</td><td class="num">${r.avgScore.toFixed(2)}</td><td class="num">${r.avgCostUsd ? `$${r.avgCostUsd.toFixed(4)}` : '$0'}</td>
+        <td>${r.taskType}</td><td>${r.name}${r.status === 'retired' ? html` <span class="badge">retired</span>` : ''}</td><td class="small">${modelName(r.model)}</td>
+        <td class="num">${r.wins} / ${r.attempts}</td><td class="num">${pct(r.winRate)}</td><td class="num">${r.avgScore.toFixed(2)}</td><td class="num">${r.avgCostUsd ? `$${r.avgCostUsd.toFixed(4)}` : '$0'}</td><td class="num">${r.notes} / ${r.assists}</td>
       </tr>`)}</tbody></table></div>` : html`<${Empty} title="No tasks scored yet">Hand a job to the swarm and the configs start competing.<//>`}
+  </div>`;
+}
+
+/** A config's model as a reader knows it: the worker model from Settings, a named Claude model, or the free models. */
+function modelName(model) {
+  if (!model) return 'Worker model';
+  if (model === 'free') return 'Free models';
+  return MODEL_PRICES[model]?.label || model;
+}
+
+const KIND = { tip: 'info', warning: 'warn', question: '', answer: 'good' };
+
+/** The wire: the notes agents post each other, newest first, with who relied on each. */
+function Wire() {
+  const T = useT();
+  const now = useNow(10000);
+  const [all, setAll] = useState(false);
+  const notes = T.db.all('AgentMessage').sort((a, b) => b.createdAt - a.createdAt || b.id.localeCompare(a.id));
+  const usedBy = new Map();
+  const winners = new Set(T.db.all('TaskSpec').map((x) => x.winnerAttemptId).filter(Boolean));
+  for (const a of T.db.filter('Attempt', (x) => x.usedMessageIds?.length)) {
+    for (const id of a.usedMessageIds) {
+      const u = usedBy.get(id) || { n: 0, won: 0 };
+      u.n++;
+      if (winners.has(a.id)) u.won++;
+      usedBy.set(id, u);
+    }
+  }
+  const shown = all ? notes.slice(0, 200) : notes.slice(0, 12);
+  return html`<div class="card">
+    <h2>The wire</h2>
+    <p class="small muted">Short notes the agents post each other while they work: to the agents on the other tiles of the job (team), or to their rivals on the same task, who read them in the next round. Each agent says which notes it used; a note that accepted work relied on earns its author an assist.</p>
+    ${notes.length ? html`<ul class="feed" style=${{ marginTop: '.6rem' }}>${shown.map((m) => {
+      const u = usedBy.get(m.id);
+      return html`<li><time title=${fmtDateTime(m.createdAt)}>${ago(m.createdAt, now)}</time><span>
+        <span class=${`badge ${KIND[m.kind] || ''}`}>${m.kind}</span> <span class="tiny muted">${m.to === 'rivals' ? 'to rivals' : 'to the team'} · ${m.fromName}${m.label ? ` (${m.label})` : ''} on <a href=${`#/t/${m.tileId}`}>${truncate(m.taskTitle || 'a tile', 40)}</a></span>
+        <div class="small">${m.text}</div>
+        ${u ? html`<div class="tiny muted">Used by ${u.n} attempt${u.n > 1 ? 's' : ''}${u.won ? html`, <b>${u.won} of them accepted</b>` : ''}.</div>` : ''}
+      </span></li>`;
+    })}</ul>
+    ${notes.length > 12 ? html`<button class="btn small ghost-line" onClick=${() => setAll(!all)}>${all ? 'Show the latest only' : `Show all ${Math.min(notes.length, 200)}`}</button>` : ''}` : html`<${Empty} title="No notes yet">Agents post notes when they find something the others should know.<//>`}
   </div>`;
 }
 
@@ -193,11 +243,12 @@ function Configs() {
   const canAct = me?.isRequester || me?.isAdmin;
   return html`<div class="card">
     <h2>Worker configs</h2>
-    <p class="small muted">A config is the worker model plus a strategy hint and its lessons. Configs that keep losing are retired; a winning config is cloned with one change of strategy, so the swarm keeps searching.</p>
+    <p class="small muted">A config is a model plus a strategy hint and its lessons. Configs that keep losing are retired. A winning config is cloned onto the next cheaper model first (if the clone keeps up, it gets the work for less), then with one change of strategy, so the swarm keeps searching.</p>
     ${configs.length ? html`<div class="table-wrap" style=${{ marginTop: '.6rem' }}><table>
-      <thead><tr><th>Config</th><th>Strategy hint</th><th>Lineage</th><th>Status</th>${canAct ? html`<th></th>` : ''}</tr></thead>
+      <thead><tr><th>Config</th><th>Model</th><th>Strategy hint</th><th>Lineage</th><th>Status</th>${canAct ? html`<th></th>` : ''}</tr></thead>
       <tbody>${configs.map((c) => html`<tr>
-        <td><b>${c.name}</b></td>
+        <td><b>${c.name}</b>${c.challenger ? html` <span class="badge info">challenger</span>` : ''}</td>
+        <td class="small">${modelName(c.model)}</td>
         <td class="small">${c.strategyHint}</td>
         <td class="small">${c.parentConfigId ? html`Clone of ${name(c.parentConfigId)} (generation ${c.generation})` : 'Original'}${c.why ? html`<div class="tiny muted">${c.why}</div>` : ''}</td>
         <td><span class=${`badge ${c.status === 'active' ? 'good' : ''}`}>${c.status}</span></td>
@@ -227,12 +278,13 @@ export function SupervisionPage() {
   return html`<div class="stack">
     <div class="page-head"><div>
       <h1>Supervision</h1>
-      <p class="muted" style=${{ maxWidth: '62rem' }}>On a swarm job, ${s.competition === 'off' ? 'competition is off, so one agent does each tile' : `each tile goes to ${s.competitors} competing worker configs`}. They work blind first; a supervisor on a different model scores the drafts after the automatic checks, on a rubric written before the work. When the blind round isn’t a clean win, the workers see each other’s drafts and revise. Then the supervisor accepts, flags, sends back, re-splits, or brings the task to you here. <a href="#/settings">Change in Settings</a>.</p>
+      <p class="muted" style=${{ maxWidth: '62rem' }}>On a swarm job, ${s.competition === 'off' ? 'competition is off, so one agent does each tile' : `each tile goes to ${s.competitors} competing worker configs`}. They work blind first, posting notes to each other on the wire; a supervisor on a different model scores the drafts after the automatic checks, on a rubric written before the work. When the blind round isn’t a clean win, ${s.finalists ? `the best ${s.finalists}` : 'the workers'} ${s.exchange === 'drafts' ? 'see each other’s drafts' : 'read the scores and each other’s notes'} and revise their own drafts. Then the supervisor accepts, flags, sends back, re-splits, or brings the task to you here. <a href="#/settings">Change in Settings</a>.</p>
     </div></div>
     <h2 class="section-title">Needs you${escalated.length ? ` (${escalated.length})` : ''}</h2>
     ${escalated.length ? html`<div class="grid-2">${escalated.map((t) => html`<${Escalation} t=${t} key=${t.id} />`)}</div>` : html`<div class="card"><${Empty} title="Nothing escalated">When a supervisor can’t judge a task, or a task fails after a re-split, it waits here for you.<//></div>`}
     <${Overview} />
     <${Leaderboard} />
+    <${Wire} />
     <div class="split"><${Lessons} /><${Supervisors} /></div>
     <div class="split"><${Configs} /><${Actions} /></div>
   </div>`;
@@ -255,19 +307,26 @@ export function CompetitionCard({ t }) {
     ${rounds.map((key) => {
       const [cycle, round] = key.split(':');
       const list = attempts.filter((a) => `${a.cycle}:${a.round}` === key);
-      return html`<div><div class="small"><b>${round === 'merge' ? 'Joined parts' : `${round[0].toUpperCase()}${round.slice(1)} round`}</b>${Number(cycle) > 1 ? ` · try ${cycle}` : ''}</div>
+      const name = { merge: 'Joined parts', notes: 'Notes round', reveal: 'Reveal round', revise: 'Revise round', blind: 'Blind round' }[round] || `${round} round`;
+      return html`<div><div class="small"><b>${name}</b>${Number(cycle) > 1 ? ` · try ${cycle}` : ''}</div>
         <div class="table-wrap" style=${{ marginTop: '.3rem' }}><table><tbody>${list.map((a) => {
           const sc = scores.get(a.id);
           return html`<tr class=${a.id === spec.winnerAttemptId ? 'win' : ''}><td class="nowrap"><b>${a.label}</b> ${a.configName}${a.control ? html` <span class="tiny muted">control</span>` : ''}</td>
             <td><span class=${`badge ${a.hardPass ? 'good' : 'bad'}`}>${a.hardPass ? 'checks pass' : 'fails a check'}</span></td>
             <td class="num">${sc ? sc.score.toFixed(2) : '—'}</td>
-            <td class="tiny muted">${a.id === spec.winnerAttemptId ? 'Winner. ' : ''}${truncate(sc?.summary || a.error || '', 110)}</td></tr>`;
+            <td class="tiny muted">${a.id === spec.winnerAttemptId ? 'Winner. ' : ''}${truncate(sc?.summary || a.error || '', 110)}${a.edited ? ` Revised by ${a.edited} edit${a.edited > 1 ? 's' : ''}.` : ''}${a.usedMessageIds?.length ? ` Used ${a.usedMessageIds.length} note${a.usedMessageIds.length > 1 ? 's' : ''}.` : ''}</td></tr>`;
         })}</tbody></table></div></div>`;
     })}
+    ${notesOf(T, spec).length ? html`<div class="small"><b>Notes the workers posted</b><ul class="tiny" style=${{ margin: '.2rem 0 0', paddingLeft: '1.1rem' }}>${notesOf(T, spec).map((m) => html`<li><b>${m.label || m.fromName}</b> ${m.to === 'rivals' ? 'to rivals' : 'to the team'} (${m.kind}): ${m.text}</li>`)}</ul></div>` : ''}
     ${kids.length ? html`<p class="small">Split into ${kids.length} parts, each competed on its own: ${kids.map((k) => `${truncate(k.title, 40)} (${k.status}${typeof k.score === 'number' ? `, ${k.score.toFixed(2)}` : ''})`).join('; ')}.</p>` : ''}
-    ${spec.herding ? html`<p class="tiny muted">Reveal round: ${spec.herding.towardWorst} of ${spec.herding.revisions} revisions moved toward the weakest blind draft.</p>` : ''}
+    ${spec.herding ? html`<p class="tiny muted">Second round: ${spec.herding.towardWorst} of ${spec.herding.revisions} revisions moved toward the weakest blind draft.</p>` : ''}
     ${spec.flagged && spec.disagreements?.length ? html`<div class="callout warn small"><b>Flagged:</b> ${spec.disagreements.join(' ')}</div>` : ''}
     ${acts.length ? html`<ul class="small" style=${{ margin: 0, paddingLeft: '1.1rem' }}>${acts.map((a) => html`<li><${ActionBadge} action=${a.action} /> ${a.reason}</li>`)}</ul>` : ''}
     ${t.supervision?.state === 'escalated' ? html`<div class="callout warn small">This task is waiting for you on the <a href="#/supervision">Supervision page</a>.</div>` : ''}
   </div>`;
+}
+
+/** The notes posted during one competition, oldest first. */
+function notesOf(T, spec) {
+  return T.db.filter('AgentMessage', (m) => m.specId === spec.id).sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id));
 }
