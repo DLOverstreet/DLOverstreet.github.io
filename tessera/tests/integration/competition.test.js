@@ -55,6 +55,7 @@ test('three configs compete blind on every tile; the supervisor scores them afte
 
 test('when the blind drafts disagree, the workers see each other’s drafts and revise, and the disagreement goes forward', async () => {
   const T = await makeTessera({ crowd: false });
+  setSwarm(T, { exchange: 'drafts' });
   const c = await T.api.runWithAgents('usr_marisol', job('grant'));
   await T.swarm.settle();
   const spec = tops(T, c).find((x) => actions(T, x.id).includes('reveal'));
@@ -196,7 +197,7 @@ test('the root supervisor can hold back sign-off; resuming lets the autopilot si
 
 test('lessons are written after scored tasks and trialed against a control group; winning configs are cloned', async () => {
   const T = await makeTessera({ crowd: false });
-  setSwarm(T, { lessonTrials: 6 });
+  setSwarm(T, { lessonTrials: 6, cheaperClones: false });
   for (const id of ['grant', 'pantry', 'course']) {
     await T.api.runWithAgents('usr_marisol', job(id));
     await T.swarm.settle();

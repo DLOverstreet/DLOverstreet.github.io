@@ -39,15 +39,19 @@ export function createMockProvider({ brains = {}, fixtures = {}, latencyMs = 0 }
       const text = typeof out === 'string' ? out : JSON.stringify(out);
       // Blocks marked for the prompt cache are counted as a cache write the first time this mock
       // sees them and as a read after, as the API would, so the swarm's costs and tests see it.
-      const usage = { inputTokens: estimateTokens(req.system), outputTokens: estimateTokens(text), cacheWriteTokens: 0, cacheWrite1hTokens: 0, cacheReadTokens: 0 };
+      // Caches are per model; a call that caches (cacheSystem) caches its system prompt for an hour.
+      const usage = { inputTokens: 0, outputTokens: estimateTokens(text), cacheWriteTokens: 0, cacheWrite1hTokens: 0, cacheReadTokens: 0, ...(req.batch ? { batch: true } : {}) };
+      const count = (textIn, cache) => {
+        const n = estimateTokens(textIn);
+        const key = `${req.model}:${hashString(textIn)}`;
+        if (!cache) usage.inputTokens += n;
+        else if (cached.has(key)) usage.cacheReadTokens += n;
+        else { cached.add(key); usage.cacheWriteTokens += n; if (cache === '1h') usage.cacheWrite1hTokens += n; }
+      };
+      count(req.system || '', req.cacheSystem ? '1h' : false);
       for (const m of req.messages) {
         if (typeof m.content === 'string') { usage.inputTokens += estimateTokens(m.content); continue; }
-        for (const b of m.content) {
-          const n = estimateTokens(b.text);
-          if (!b.cache) usage.inputTokens += n;
-          else if (cached.has(hashString(b.text))) usage.cacheReadTokens += n;
-          else { cached.add(hashString(b.text)); usage.cacheWriteTokens += n; if (b.cache === '1h') usage.cacheWrite1hTokens += n; }
-        }
+        for (const b of m.content) count(b.text, b.cache);
       }
       return { text, model: req.model, usage };
     },

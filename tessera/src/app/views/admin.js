@@ -4,7 +4,7 @@ import { html, useState } from '../../../vendor/preact.js';
 import { useT, useDbVersion, useNow, navigate, act, toast } from '../state.js';
 import { Tabs, Empty, StatusBadge, AsyncButton, ago } from '../ui.js';
 import { RunsTable, LedgerTable } from './commission.js';
-import { runCostUsd, shadowCostUsd } from '../../llm/prices.js';
+import { runCostUsd, shadowCostUsd, savingsUsd } from '../../llm/prices.js';
 import { commissionBalance, platformRevenue, findOverdraw, PAYOUT_TYPES } from '../../domain/ledger.js';
 import { runDecomposerEval, EVAL_FIXTURES } from '../../agents/eval.js';
 import { fmtMoney, fmtDateTime, fmtMinutes, truncate } from '../../lib/util.js';
@@ -76,13 +76,25 @@ function Costs() {
     const rs = runs.filter((r) => r.commissionId === c.id);
     const by = {};
     for (const r of rs) by[r.agent] = (by[r.agent] || 0) + 1;
-    return { c, n: rs.length, tin: rs.reduce((n, r) => n + (r.tokensIn || 0), 0), tout: rs.reduce((n, r) => n + (r.tokensOut || 0), 0), cost: rs.reduce((n, r) => n + runCostUsd(r), 0), shadow: rs.reduce((n, r) => n + shadowCostUsd(r), 0), by };
+    const saved = { cache: 0, batch: 0, free: 0 };
+    for (const r of rs) { const x = savingsUsd(r); saved.cache += x.cache; saved.batch += x.batch; saved.free += x.free; }
+    const freeCalls = rs.filter((r) => String(r.provider || '').startsWith('free:') && !r.error).length;
+    return { c, n: rs.length, tin: rs.reduce((n, r) => n + (r.tokensIn || 0), 0), tout: rs.reduce((n, r) => n + (r.tokensOut || 0), 0), cost: rs.reduce((n, r) => n + runCostUsd(r), 0), shadow: rs.reduce((n, r) => n + shadowCostUsd(r), 0), by, saved, freeCalls };
   });
+  const total = rows.reduce((n, r) => ({ cost: n.cost + r.cost, cache: n.cache + r.saved.cache, batch: n.batch + r.saved.batch, free: n.free + r.saved.free }), { cost: 0, cache: 0, batch: 0, free: 0 });
+  const usd = (x) => `$${x.toFixed(x < 1 ? 4 : 2)}`;
   return html`<div class="stack">
-    <p class="small muted">Actual cost is what the calls cost on the provider used. For mock calls it’s $0; the shadow column estimates what the same token counts would cost on the Claude models the mock stands in for (Sonnet 5 heavy, Haiku 4.5 light).</p>
-    <div class="table-wrap"><table><thead><tr><th>Commission</th><th>Calls by agent</th><th class="right">Tokens in / out</th><th class="right">Actual</th><th class="right">Shadow</th></tr></thead><tbody>
-      ${rows.map((r) => html`<tr><td><a href=${`#/c/${r.c.id}/runs`}>${r.c.title}</a></td><td class="small">${Object.entries(r.by).map(([a, n]) => `${a} ×${n}`).join(', ')}</td>
-        <td class="money small">${r.tin.toLocaleString()} / ${r.tout.toLocaleString()}</td><td class="money">$${r.cost.toFixed(4)}</td><td class="money muted">$${r.shadow.toFixed(4)}</td></tr>`)}
+    <div class="card stats">
+      <div class="stat"><span class="v">${usd(total.cost)}</span><span class="l">Spent on models</span></div>
+      <div class="stat" title="Input read from the prompt cache at a tenth of its price or less, minus the premium paid to write the cache."><span class="v">${usd(total.cache)}</span><span class="l">Saved by the prompt cache</span></div>
+      <div class="stat" title="Calls sent through the Message Batches API, at half price (Settings → Agent swarm → Half-price batch mode)."><span class="v">${usd(total.batch)}</span><span class="l">Saved by batches</span></div>
+      <div class="stat" title="What Claude would have charged for the calls free models answered (Settings → Free models first)."><span class="v">${usd(total.free)}</span><span class="l">Saved by free models</span></div>
+    </div>
+    <p class="small muted">Actual cost is what the calls cost on the provider used: $0 for free models and the mock. The shadow column estimates what the same token counts would cost on the Claude models the mock or the free models stood in for.</p>
+    <div class="table-wrap"><table><thead><tr><th>Commission</th><th>Calls by agent</th><th class="right">Tokens in / out</th><th class="right">Actual</th><th class="right">Saved</th><th class="right">Shadow</th></tr></thead><tbody>
+      ${rows.map((r) => html`<tr><td><a href=${`#/c/${r.c.id}/runs`}>${r.c.title}</a></td><td class="small">${Object.entries(r.by).map(([a, n]) => `${a} ×${n}`).join(', ')}${r.freeCalls ? html`<div class="tiny muted">${r.freeCalls} answered by free models</div>` : ''}</td>
+        <td class="money small">${r.tin.toLocaleString()} / ${r.tout.toLocaleString()}</td><td class="money">$${r.cost.toFixed(4)}</td>
+        <td class="money small" title=${`Cache $${r.saved.cache.toFixed(4)} · batches $${r.saved.batch.toFixed(4)} · free models $${r.saved.free.toFixed(4)}`}>$${(r.saved.cache + r.saved.batch + r.saved.free).toFixed(4)}</td><td class="money muted">$${r.shadow.toFixed(4)}</td></tr>`)}
     </tbody></table></div>
   </div>`;
 }

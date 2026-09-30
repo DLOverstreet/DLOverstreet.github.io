@@ -137,7 +137,7 @@ export async function runMatcherNoteJob(T, { tileId }) {
     };
   });
   const input = { tile: { title: tile.title, skillTags: tags, tier: tile.tier, estMinutes: tile.estMinutes, rateCents: effectiveHourlyCents(tile) }, candidates };
-  const { output } = await runAgent({ agent: AGENTS.matcherNote, input, route: T.llm.platform('light'), log: T.log, meta: { commissionId: tile.commissionId, tileId } });
+  const { output } = await runAgent({ agent: AGENTS.matcherNote, input, route: T.llm.forCommission(T.db.get('Commission', tile.commissionId), 'light'), log: T.log, meta: { commissionId: tile.commissionId, tileId } });
   T.db.tx((tx) => {
     for (const n of output.notes) {
       const o = offers.find((x) => x.contributorId === n.userId);

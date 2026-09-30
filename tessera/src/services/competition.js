@@ -13,8 +13,9 @@ import { UserError, must, upstreamIds } from './core.js';
 import { submitWork } from './work.js';
 import {
   buildTaskSpec, runHardChecks, rubricScore, decide, needReveal, herding, pickCompetitors, playbookFor, personalLessons,
-  judgeLesson, evolveConfigs, textSimilarity, DEFAULT_CONFIGS,
+  judgeLesson, evolveConfigs, textSimilarity, DEFAULT_CONFIGS, taskNotes, assistsFrom,
 } from '../domain/supervision.js';
+import { MODEL_PRICES } from '../llm/prices.js';
 import { redactText } from '../lib/redact.js';
 import { unitHash } from '../lib/util.js';
 
@@ -33,7 +34,7 @@ function costOf(res) {
   if (!u) return 0;
   return Math.round(1e6 * runCostUsd({
     model: res.model, tokensIn: u.inputTokens, tokensOut: u.outputTokens, tokensCacheWrite: u.cacheWriteTokens,
-    tokensCacheWrite1h: u.cacheWrite1hTokens, tokensCacheRead: u.cacheReadTokens, webSearches: u.webSearches,
+    tokensCacheWrite1h: u.cacheWrite1hTokens, tokensCacheRead: u.cacheReadTokens, webSearches: u.webSearches, batch: !!u.batch,
   }));
 }
 
@@ -74,6 +75,47 @@ export function ensureConfigs(T) {
   });
 }
 
+/** The cheaper challenger each task includes when Settings ask for one: a free model, or a cheaper Claude. */
+const CHALLENGERS = {
+  free: { key: 'challenger-free', name: 'Free-model challenger', model: 'free' },
+  haiku: { key: 'challenger-haiku', name: 'Haiku challenger', model: 'claude-haiku-4-5' },
+  sonnet: { key: 'challenger-sonnet', name: 'Sonnet challenger', model: 'claude-sonnet-5-5' },
+};
+const CHALLENGER_HINT = 'Prefer the plainest correct answer: exact numbers, short sentences, every figure traced to an input. Check the criteria one by one before you hand in.';
+
+/** The active challenger config for the current setting, created the first time it's asked for. */
+export function ensureChallenger(T, s) {
+  const want = s.competition !== 'off' ? CHALLENGERS[s.challenger] : null;
+  if (!want) return null;
+  const have = T.db.find('WorkerConfig', (c) => c.key === want.key);
+  if (have) return have.status === 'active' ? have : null;
+  return T.db.tx((tx) => tx.insert('WorkerConfig', { key: want.key, name: want.name, strategyHint: CHALLENGER_HINT, model: want.model, challenger: true, status: 'active', parentConfigId: null, generation: 1 }));
+}
+
+/** The next cheaper Claude model for a config's model, for clones that test whether a cheaper model is enough. */
+const LADDER = ['claude-fable-5-1', 'claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-4-5'];
+export function downshiftFor(s) {
+  return (model) => {
+    const i = LADDER.indexOf(model || s.workerModel);
+    const next = i >= 0 ? LADDER[i + 1] : null;
+    return next ? { model: next, label: MODEL_PRICES[next]?.label || next } : null;
+  };
+}
+
+/**
+ * Stores the notes a worker posted on the wire. Notes from competitors carry their config, so an
+ * accepted attempt that relied on one credits its author with an assist.
+ * @returns {any[]} the stored AgentMessage rows
+ */
+export function postMessages(T, messages, from) {
+  if (!messages?.length) return [];
+  return T.db.tx((tx) => messages.map((m) => tx.insert('AgentMessage', {
+    commissionId: from.commissionId, tileId: from.tileId, specId: from.specId || null, attemptId: from.attemptId || null,
+    configId: from.configId || null, fromName: from.fromName, label: from.label || null, taskTitle: from.taskTitle, taskType: from.taskType || 'work',
+    round: from.round || null, cycle: from.cycle || null, to: m.to, kind: m.kind, text: m.text, ...(m.replyTo ? { replyTo: m.replyTo } : {}),
+  })));
+}
+
 /** Whether a swarm tile goes to competing workers: work tiles do, unless competition is off or you settled it for one agent. */
 export function competes(tile, s) {
   return s.competition !== 'off' && !tile.dynamic && tile.kind !== 'REVIEW' && tile.supervision?.state !== 'single';
@@ -98,22 +140,36 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     return insert('TaskSpec', { ...spec, status: 'open', herding: null, costMicroUsd: 0 });
   }
 
+  /** The route a config works on: its own model when it has one (a cheaper clone, the challenger), else the task's. */
+  function routeOf(ctx, cfg) {
+    if (!cfg.model) return ctx.route;
+    const c = T.db.get('Commission', ctx.tile.commissionId);
+    return T.llm.agent(cfg.model, { commission: c, fallbackModel: ctx.s.workerModel });
+  }
+
   /** The context one task runs in: its spec and input, who competes, and what they cost. */
   function taskContext(parent, spec, base, extra = {}) {
-    const configs = T.db.filter('WorkerConfig', (c) => c.status === 'active');
+    const challenger = parent.challenger || null;
+    // A challenger config competes only while Settings ask for it.
+    const configs = T.db.filter('WorkerConfig', (c) => c.status === 'active' && (!c.challenger || c.id === challenger?.id));
     const playbook = parent.s.learning ? playbookFor(T.db.all('Lesson'), spec.taskType) : [];
     const pick = pickCompetitors(configs, T.db.all('WorkerStats'), spec.taskType, {
       competitors: parent.s.competitors, routing: parent.s.routing, seed: spec.id, playbookSize: playbook.length, solo: parent.s.competition === 'auto',
+      include: challenger ? [challenger.id] : [],
     });
     const lessons = T.db.all('Lesson');
+    const ctx0 = { ...parent, spec };
     const picked = pick.picked.map((cfg, i) => ({
-      cfg, label: LABELS[i], control: cfg.id === pick.control,
+      cfg, label: LABELS[i], control: cfg.id === pick.control, route: routeOf(ctx0, cfg),
       lessons: parent.s.learning ? personalLessons(lessons, cfg.id, spec.taskType) : [],
     }));
-    patch('TaskSpec', spec.id, { competitors: picked.map((p) => ({ configId: p.cfg.id, name: p.cfg.name, label: p.label, control: p.control })), routing: pick.reason, playbookIds: playbook.map((l) => l.id) });
+    patch('TaskSpec', spec.id, {
+      competitors: picked.map((p) => ({ configId: p.cfg.id, name: p.cfg.name, label: p.label, control: p.control, model: p.route.label })),
+      routing: pick.reason, playbookIds: playbook.map((l) => l.id),
+    });
     return {
-      ...parent, spec, base, picked, playbook, costs: new Map(), supervisorCost: 0, resplitUsed: false,
-      sourceUrls: citable(base), ...extra,
+      ...parent, spec, base, picked, playbook, costs: new Map(), posted: new Map(), supervisorCost: 0, resplitUsed: false, dropped: [],
+      sourceUrls: citable(base), shownIds: new Set((base.wire || []).map((m) => m.id)), ...extra,
     };
   }
 
@@ -125,7 +181,7 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     input.agent = {
       config: p.cfg.name, strategyHint: p.cfg.strategyHint, mode, cycle,
       ...(p.lessons.length ? { lessons: p.lessons.map((l) => l.text) } : {}),
-      ...(mode === 'reveal' ? { yourDraft: p.label } : {}),
+      ...(mode === 'reveal' || mode === 'notes' ? { yourDraft: p.label } : {}),
       ...(prior ? { priorDraft: prior } : {}),
       ...(feedback || note ? { feedback: [note, feedback].filter(Boolean).join('\n') } : {}),
     };
@@ -137,7 +193,7 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     const started = Date.now();
     const seconds = () => Math.round((Date.now() - started) / 100) / 10;
     return runAgent({
-      agent: AGENTS.worker, input, route: ctx.route, log: T.log, maxTokens: 20000, retries: 1, bestEffort: true, cache: true, onStart,
+      agent: AGENTS.worker, input, route: p.route, log: T.log, maxTokens: 20000, retries: 1, bestEffort: true, cache: true, onStart, effort: ctx.s.workerEffort || undefined, batch: !!ctx.s.batch,
       meta: { commissionId: ctx.tile.commissionId, tileId: ctx.tile.id, userId: ctx.tile.claimedById, competitor: `${p.label} · ${p.cfg.name}${ctx.spec.parentSpecId ? ` · part ${ctx.partNo}` : ''}` },
     }).then((res) => ({ p, input, res, seconds: seconds() }), (error) => ({ p, input, error, seconds: seconds() }));
   }
@@ -158,28 +214,81 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     const cost = costOf(r.res);
     if (p.cfg.id) ctx.costs.set(p.cfg.id, (ctx.costs.get(p.cfg.id) || 0) + cost);
     const u = r.res.usage || {};
+    // Only notes the worker was actually shown count as used.
+    const used = (out.usedMessages || []).filter((id) => ctx.shownIds.has(id));
     const row = insert('Attempt', {
       ...base, files: refs, approach: out.approach, notes: String(out.notes || '').slice(0, 2000), handoff: out.handoff || '', problems: r.res.problems || [],
-      model: r.res.model, tokensIn: u.inputTokens ?? null, tokensCached: u.cacheReadTokens || 0, tokensCacheWrite: u.cacheWriteTokens || 0, tokensOut: u.outputTokens ?? null,
-      costMicroUsd: cost, hardPass: hard.pass, hardResults: hard.results,
+      model: r.res.model, provider: r.res.provider || null, tokensIn: u.inputTokens ?? null, tokensCached: u.cacheReadTokens || 0, tokensCacheWrite: u.cacheWriteTokens || 0, tokensOut: u.outputTokens ?? null,
+      costMicroUsd: cost, hardPass: hard.pass, hardResults: hard.results, usedMessageIds: used, posted: (out.messages || []).length, edited: out.edited || 0,
     });
+    postMessages(T, out.messages, {
+      commissionId: ctx.tile.commissionId, tileId: ctx.tile.id, specId: ctx.spec.id, attemptId: row.id, configId: p.cfg.id, fromName: p.cfg.name, label: p.label,
+      taskTitle: ctx.spec.title, taskType: ctx.spec.taskType, round, cycle,
+    });
+    if (p.cfg.id && out.messages?.length) ctx.posted.set(p.cfg.id, (ctx.posted.get(p.cfg.id) || 0) + out.messages.length);
     return { p, row, output: out, input: r.input, hard };
   }
 
-  /** Every competitor does the task once in this round; each attempt is stored and hard-checked. */
+  /**
+   * Every competitor (or, with `extras.only`, the finalists) does the task once in this round; each
+   * attempt is stored and hard-checked. Caches are per model, so competitors are grouped by model and
+   * each group warms its own cache before the rest of the group reads it.
+   */
   async function runRound(ctx, round, cycle, extras = {}) {
-    const n = ctx.picked.length;
-    activity(ctx, round === 'blind' ? (n > 1 ? `${n} workers competing, blind` : 'working') : round === 'reveal' ? `${n} workers revising after seeing each other's drafts` : `${n > 1 ? `${n} workers` : 'the worker'} fixing what the supervisor sent back`);
+    const who = extras.only ? ctx.picked.filter((p) => extras.only.has(p.cfg.id)) : ctx.picked;
+    const n = who.length;
+    activity(ctx, round === 'blind' ? (n > 1 ? `${n} workers competing, blind` : 'working')
+      : round === 'reveal' ? `${n} workers revising after seeing each other's drafts`
+        : round === 'notes' ? `${n} workers revising after reading the scores and each other's notes`
+          : `${n > 1 ? `${n} workers` : 'the worker'} fixing what the supervisor sent back`);
     await pace();
-    const starters = ctx.picked.map((p) => (onStart) => callWorker(ctx, p, competitorInput(ctx, p, {
-      mode: round, cycle, round: extras.round || null, prior: extras.prior?.get(p.cfg.id) || null, feedback: extras.feedback?.get(p.cfg.id) || null,
-    }), onStart));
-    // A new cached layer (the task on its first call, the drafts on a reveal) is written once, then read by the rest.
-    const results = await fanOut(starters, round === 'revise' || (round === 'blind' && ctx.warm));
+    const groups = new Map();
+    for (const p of who) {
+      const starter = (onStart) => callWorker(ctx, p, competitorInput(ctx, p, {
+        mode: round, cycle, round: extras.round || null, prior: extras.prior?.get(p.cfg.id) || null, feedback: extras.feedback?.get(p.cfg.id) || null,
+      }), onStart);
+      const key = p.route.model;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(starter);
+    }
+    // A new cached layer (the task on its first call, the round's notes or drafts after) is written once per model, then read by the rest.
+    const warm = round === 'blind' && ctx.warm;
+    const results = (await Promise.all([...groups.values()].map((g) => fanOut(g, warm)))).flat();
     ctx.warm = true;
     const attempts = [];
     for (const r of results) attempts.push(await recordAttempt(ctx, r, round, cycle));
     return attempts;
+  }
+
+  /** The finalists who revise after a scored round: every attempt with output, or the best `finalists` of them. */
+  function finalistsOf(ctx, scored) {
+    const ranked = scored.scored.filter((a) => a.output).sort((a, b) => b.score - a.score || a.p.label.localeCompare(b.p.label));
+    const keep = ctx.s.finalists > 0 ? ranked.slice(0, ctx.s.finalists) : ranked;
+    // Attempts that don't go on still count as losses for their configs.
+    for (const a of scored.scored) if (!keep.includes(a) && !ctx.dropped.some((d) => d.p.cfg.id === a.p.cfg.id)) ctx.dropped.push(a);
+    return { keep, only: new Set(keep.map((a) => a.p.cfg.id)) };
+  }
+
+  /**
+   * What every reviser reads after a scored round, shared (and cached) by all of them: the supervisor's
+   * score and summary of each attempt, the notes the competitors posted, and each one's approach.
+   * With `drafts`, the full blind drafts instead of the approaches (the older reveal round).
+   */
+  function roundNotes(ctx, scored, { drafts = false } = {}) {
+    const notes = taskNotes(T.db.filter('AgentMessage', (m) => m.specId === ctx.spec.id), ctx.spec.id);
+    for (const m of notes) ctx.shownIds.add(m.id);
+    const scores = scored.scored.map((a) => ({
+      label: a.p.label, score: Math.round(a.score * 100) / 100, passedChecks: a.hard.pass,
+      ...(a.hard.pass ? {} : { failedChecks: a.hard.results.filter((r) => !r.pass).map((r) => r.reason) }),
+      summary: a.verdict?.summary || (a.error ? 'The worker failed.' : ''),
+    }));
+    if (drafts) {
+      return { drafts: scored.scored.filter((a) => a.output).map((a) => ({ label: a.p.label, files: a.output.files.map((f) => ({ name: f.name, content: clipText(f.content, 6000) })), notes: clipText(a.output.notes, 1000) })), scores, notes };
+    }
+    return {
+      scores, notes, supervisor: { feedback: scored.verdict?.feedback || '', disagreements: scored.verdict?.disagreements || [] },
+      approaches: scored.scored.filter((a) => a.output).map((a) => ({ label: a.p.label, approach: a.output.approach })),
+    };
   }
 
   function supervisorInput(ctx, judged, round, cycle) {
@@ -214,7 +323,7 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     if (judged.some((a) => a.hard.pass)) {
       activity(ctx, `supervisor scoring ${judged.length} attempt${judged.length > 1 ? 's' : ''}`);
       const res = await runAgent({
-        agent: AGENTS.supervisor, input: supervisorInput(ctx, judged, round, cycle), route: ctx.checkRoute, log: T.log, cache: true,
+        agent: AGENTS.supervisor, input: supervisorInput(ctx, judged, round, cycle), route: ctx.checkRoute, log: T.log, cache: true, effort: ctx.s.checkEffort || undefined, batch: !!ctx.s.batch,
         meta: { commissionId: ctx.tile.commissionId, tileId: ctx.tile.id, userId: ctx.tile.claimedById, competitor: `supervisor · ${round}` },
       });
       verdict = res.output;
@@ -256,35 +365,45 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     });
   }
 
-  /** What each worker is told when the task is sent back, and the draft each one revises. */
-  function sendBackNotes(scored) {
+  /**
+   * What each worker is told when it revises (sent back, or after the blind round), and the draft it
+   * revises: its own, in full, so it can hand back edits instead of rewriting.
+   */
+  function sendBackNotes(scored, { sentBack = true } = {}) {
     const feedback = new Map();
     const prior = new Map();
     for (const a of scored.scored) {
       const fails = a.hard.results.filter((r) => !r.pass).map((r) => `${r.id}: ${r.reason}`);
       const weak = (a.verdict?.items || []).filter((i) => i.score < 3).map((i) => `${i.id} (${i.score}/4): ${i.note}`);
       feedback.set(a.p.cfg.id, [
-        scored.verdict?.feedback ? `Supervisor: ${scored.verdict.feedback}` : '',
+        sentBack && scored.verdict?.feedback ? `Supervisor: ${scored.verdict.feedback}` : '',
         a.error ? `Your last try failed: ${a.error}` : '',
         fails.length ? `Your draft failed these checks: ${fails.join('; ')}` : '',
         weak.length ? `Your weakest points: ${weak.join('; ')}` : '',
-      ].filter(Boolean).join('\n') || 'No draft reached the bar. Check every figure and file against the inputs and the criteria.');
-      if (a.output) prior.set(a.p.cfg.id, { files: a.output.files.map((f) => ({ name: f.name, content: clipText(f.content, 8000) })), notes: clipText(a.output.notes, 1500) });
+      ].filter(Boolean).join('\n') || (sentBack ? 'No draft reached the bar. Check every figure and file against the inputs and the criteria.' : ''));
+      if (a.output) prior.set(a.p.cfg.id, { files: a.output.files.map((f) => ({ name: f.name, content: f.content })), notes: clipText(a.output.notes, 1500) });
     }
     return { feedback, prior };
   }
 
   /** A config's record on the task type, the lesson trials of this task, and the configs evolving on both. */
-  function recordOutcome(ctx, scored, winnerId) {
+  function recordOutcome(ctx, scored, winnerId, assists = []) {
     const s = ctx.s;
+    // Finalists' last attempts, plus the attempts that didn't make the final round (losses).
+    const all = [...(scored?.scored || []), ...ctx.dropped.filter((d) => !(scored?.scored || []).some((a) => a.p.cfg.id === d.p.cfg.id))];
     T.db.tx((tx) => {
       const touched = new Set();
-      for (const a of scored.scored) {
+      const bump = (configId, taskType, add) => {
+        const st = tx.find('WorkerStats', (x) => x.configId === configId && x.taskType === taskType);
+        if (st) {
+          const next = {};
+          for (const [k, v] of Object.entries(add)) next[k] = k === 'scoreSum' ? Math.round(((st[k] || 0) + v) * 1000) / 1000 : (st[k] || 0) + v;
+          tx.update('WorkerStats', st.id, next);
+        } else tx.insert('WorkerStats', { configId, taskType, attempts: 0, wins: 0, scoreSum: 0, costMicroUsd: 0, assists: 0, notes: 0, ...add });
+      };
+      for (const a of all) {
         if (!a.p.cfg.id) continue;
-        const add = { attempts: 1, wins: a.row.id === winnerId ? 1 : 0, scoreSum: a.score, costMicroUsd: ctx.costs.get(a.p.cfg.id) || 0 };
-        const st = tx.find('WorkerStats', (x) => x.configId === a.p.cfg.id && x.taskType === ctx.spec.taskType);
-        if (st) tx.update('WorkerStats', st.id, { attempts: st.attempts + add.attempts, wins: st.wins + add.wins, scoreSum: Math.round((st.scoreSum + add.scoreSum) * 1000) / 1000, costMicroUsd: (st.costMicroUsd || 0) + add.costMicroUsd });
-        else tx.insert('WorkerStats', { configId: a.p.cfg.id, taskType: ctx.spec.taskType, ...add });
+        bump(a.p.cfg.id, ctx.spec.taskType, { attempts: 1, wins: a.row.id === winnerId ? 1 : 0, scoreSum: a.score, costMicroUsd: ctx.costs.get(a.p.cfg.id) || 0, notes: ctx.posted.get(a.p.cfg.id) || 0 });
         if (!a.output) continue;
         // The shared playbook's lessons are trialed on everyone: with them, or (the control) without.
         const trials = [...ctx.playbook.map((l) => ({ l, used: !a.p.control })), ...a.p.lessons.map((l) => ({ l, used: true }))];
@@ -302,11 +421,19 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
         const status = judgeLesson(l, { minTrials: s.lessonTrials });
         if (status !== l.status) tx.update('Lesson', id, { status, decidedAt: tx.now() });
       }
-      const { retire, clones } = evolveConfigs(tx.all('WorkerConfig'), tx.all('WorkerStats'));
+      // Authors of notes the winner relied on earn assists (on the task type the note came from).
+      for (const x of assists) bump(x.configId, x.taskType, { assists: 1 });
+      // The challenger stays out of evolution: it is there to test a cheaper model, and Settings decide it.
+      const evolving = tx.all('WorkerConfig').filter((c) => !c.challenger);
+      const { retire, clones } = evolveConfigs(evolving, tx.all('WorkerStats'), { downshift: s.cheaperClones ? downshiftFor(s) : null });
       for (const id of retire) tx.update('WorkerConfig', id, { status: 'retired', retiredAt: tx.now(), why: 'Kept losing: under 15% of its tasks won.' });
       for (const c of clones) {
         const parent = tx.get('WorkerConfig', c.parentId);
-        tx.insert('WorkerConfig', { key: `${parent.key}-${tx.count('WorkerConfig') + 1}`, name: c.name, strategyHint: c.strategyHint, model: parent.model, status: 'active', parentConfigId: parent.id, generation: (parent.generation || 1) + 1, why: `Cloned from ${parent.name}, which wins over half its tasks, with a new strategy.` });
+        const cheaper = c.model !== (parent.model || null);
+        tx.insert('WorkerConfig', {
+          key: `${parent.key}-${tx.count('WorkerConfig') + 1}`, name: c.name, strategyHint: c.strategyHint, model: c.model ?? parent.model ?? null, status: 'active', parentConfigId: parent.id, generation: (parent.generation || 1) + 1,
+          why: cheaper ? `Cloned from ${parent.name}, which wins over half its tasks, to see whether a cheaper model does as well.` : `Cloned from ${parent.name}, which wins over half its tasks, with a new strategy.`,
+        });
       }
     });
   }
@@ -330,7 +457,8 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     const win = scored.scored.find((a) => a.row.id === d.winnerId);
     const flagged = d.action === 'accept_flag';
     recordAction(ctx, scored, d);
-    if (win.p.cfg.id) recordOutcome(ctx, scored, win.row.id);
+    const assists = assistsFrom(win.row.usedMessageIds || [], T.db.filter('AgentMessage', (m) => m.commissionId === ctx.tile.commissionId), win.p.cfg.id);
+    if (win.p.cfg.id) recordOutcome(ctx, scored, win.row.id, assists);
     const others = scored.scored.filter((a) => a !== win);
     const reflect = ctx.s.learning && others.some((a) => a.output) && win.p.cfg.id;
     closeSpec(ctx, {
@@ -373,10 +501,14 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
       let scored = await scoreRound(ctx, attempts, blind ? 'blind' : 'revise', cycle);
       let d = decision(ctx, scored, failures);
       if (blind && attempts.filter((a) => a.output).length >= 2 && needReveal(ctx.s.reveal, d)) {
-        recordAction(ctx, scored, { ...d, action: 'reveal', winnerId: null, reason: `${d.reason} The workers see each other's blind drafts and revise.` });
-        const drafts = scored.scored.filter((a) => a.output).map((a) => ({ label: a.p.label, files: a.output.files.map((f) => ({ name: f.name, content: clipText(f.content, 6000) })), notes: clipText(a.output.notes, 1000) }));
-        const revealed = await runRound(ctx, 'reveal', cycle, { round: { drafts } });
-        const rescored = await scoreRound(ctx, revealed, 'reveal', cycle);
+        // The second round: the finalists read the scores and each other's notes (or full drafts) and revise their own drafts.
+        const drafts = ctx.s.exchange === 'drafts';
+        const mode = drafts ? 'reveal' : 'notes';
+        const { only } = finalistsOf(ctx, scored);
+        recordAction(ctx, scored, { ...d, action: 'reveal', winnerId: null, reason: `${d.reason} ${ctx.s.finalists > 0 && only.size < scored.scored.filter((a) => a.output).length ? `The best ${only.size} go on and` : 'The workers'} ${drafts ? 'see each other’s blind drafts' : 'read the scores and each other’s notes'} and revise.` });
+        const own = sendBackNotes(scored, { sentBack: false });
+        const revealed = await runRound(ctx, mode, cycle, { round: roundNotes(ctx, scored, { drafts }), only, prior: own.prior, feedback: own.feedback });
+        const rescored = await scoreRound(ctx, revealed, mode, cycle);
         const text = (a) => (a.output?.files || []).map((f) => f.content).join('\n');
         const herd = herding(scored.scored.filter((a) => a.output).map((a) => ({ configId: a.p.cfg.id, text: text(a), score: a.score })), rescored.scored.filter((a) => a.output).map((a) => ({ configId: a.p.cfg.id, text: text(a) })));
         patch('TaskSpec', ctx.spec.id, { herding: herd });
@@ -390,7 +522,9 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
       if (d.action === 'send_back') {
         recordAction(ctx, scored, d);
         failures++;
-        notes = sendBackNotes(scored);
+        // The finalists go back with the supervisor's notes, the scores and everyone's notes to learn from.
+        const { only } = finalistsOf(ctx, scored);
+        notes = { ...sendBackNotes(scored), round: roundNotes(ctx, scored), only: only.size ? only : null };
         continue;
       }
       if (d.action === 'resplit') {
@@ -543,7 +677,8 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
       // Kept with the task, so an attempt you accept from an escalation hands them in too.
       patch('TaskSpec', spec.id, { mergedFiles: await storeFiles(T, `attempts/${spec.id}/merged`, input.precomputedFiles) });
     }
-    const ctx = taskContext({ tile, route, checkRoute, s, rows, userFeedback, upstream: upstreamOf(tile), warm: false }, spec, input);
+    const challenger = ensureChallenger(T, s);
+    const ctx = taskContext({ tile, route, checkRoute, s, rows, userFeedback, upstream: upstreamOf(tile), warm: false, challenger }, spec, input);
     if (offer) {
       const plan = await decideSplit(ctx, offer);
       if (plan) {
@@ -562,7 +697,7 @@ export function createCompetition(T, { setActivity = () => {}, pace = () => null
     const c = T.db.get('Commission', spec.commissionId);
     let out;
     try {
-      out = (await runAgent({ agent: AGENTS.reflection, input: spec.reflectInput, route: T.llm.forCommission(c, 'light'), log: T.log, meta: { commissionId: c.id, tileId: spec.tileId } })).output;
+      out = (await runAgent({ agent: AGENTS.reflection, input: spec.reflectInput, route: T.llm.forCommission(c, 'light'), log: T.log, meta: { commissionId: c.id, tileId: spec.tileId }, batch: !!T.db.meta.settings.swarm?.batch })).output;
     } catch (e) {
       patch('TaskSpec', spec.id, { reflect: 'failed', reflectError: String(e.message || e).slice(0, 300) });
       return;

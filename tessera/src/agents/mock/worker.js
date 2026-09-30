@@ -81,6 +81,20 @@ export function mockWorker(input) {
   // Every file the tile owes is handed in (the supervisor's hard checks look for each one).
   if (!part) for (const name of t.outputs || []) if (!pre.has(name) && !files.some((f) => f.name === name)) { const stub = stubFile(name, t.title); if (stub) files.push({ name, content: stub }); }
   if (!files.length) files.push({ name: 'notes.md', content: `# ${t.title}\n\nThe merged files were computed from the accepted batches.\n` });
+  const wire = mockWire(input);
+  // Revising its own draft, the mock hands back one edit to its first document instead of rewriting it.
+  const prior = input.agent?.priorDraft?.files || [];
+  const doc = prior.find((f) => /\.(md|markdown|txt)$/i.test(f.name) && f.content.split('\n')[0].trim() && f.content.split(f.content.split('\n')[0]).length === 2);
+  if (doc && !part) {
+    const first = doc.content.split('\n')[0];
+    return {
+      approach: ['Read the scores, the notes and my prior draft.', `Revised ${doc.name} with one edit; the rest of the draft stands.`],
+      files: [], edits: [{ file: doc.name, find: first, replace: `${first} (revised)` }],
+      notes: 'Mock agent: revised by edit. Connect Claude in Settings for real work.',
+      checklist: (t.acceptanceCriteria || []).map((c) => ({ criterionId: c.id, done: true, note: 'Checked.' })),
+      handoff: t.handoff || '', ...wire,
+    };
+  }
   return {
     approach: [
       'Read the spec, the acceptance criteria and the input files.',
@@ -91,6 +105,20 @@ export function mockWorker(input) {
     files,
     notes: 'Mock agent: these files are placeholders that meet the automatic checks. Connect Claude in Settings for real work.',
     checklist: (t.acceptanceCriteria || []).map((c) => ({ criterionId: c.id, done: true, note: 'Checked.' })),
-    handoff: t.handoff || '',
+    handoff: t.handoff || '', ...wire,
   };
+}
+
+/**
+ * The mock's use of the wire: in the blind round the “Reader first” config posts a note to the team and one
+ * to its rivals; every worker cites the first note it was shown (on the wire, or from its rivals).
+ */
+function mockWire(input) {
+  const a = input.agent;
+  const shown = [...(input.round?.notes || []).filter((n) => n.from !== a?.yourDraft), ...(input.wire || [])];
+  const messages = a?.mode === 'blind' && /reader/i.test(a.config || '') ? [
+    { to: 'team', kind: 'tip', text: `Mock note from “${input.tile?.title || 'a tile'}”: the ids in the inputs are unique, so join on them directly.` },
+    { to: 'rivals', kind: 'warning', text: 'Mock note: two input rows share a date; count them separately.' },
+  ] : [];
+  return { messages, usedMessages: shown.length ? [shown[0].id] : [] };
 }

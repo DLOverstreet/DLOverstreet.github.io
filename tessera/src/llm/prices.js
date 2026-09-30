@@ -29,11 +29,15 @@ export function modelCaps(model) {
   return MODEL_PRICES[model] || { effort: false, webTools: false, fallbacks: false };
 }
 
+/** Message Batches bill every token (cache writes and reads too) at half the standard rate. */
+export const BATCH_DISCOUNT = 0.5;
+
 function costAt(p, run) {
   if (!p) return 0;
   const hour = run.tokensCacheWrite1h || 0;
   const cached = ((run.tokensCacheWrite || 0) - hour) * p.in * CACHE_WRITE + hour * p.in * CACHE_WRITE_1H + (run.tokensCacheRead || 0) * (p.cacheRead ?? p.in * 0.1);
-  return ((run.tokensIn || 0) * p.in + cached + (run.tokensOut || 0) * p.out) / 1e6 + (run.webSearches || 0) * WEB_SEARCH_USD;
+  const tokens = ((run.tokensIn || 0) * p.in + cached + (run.tokensOut || 0) * p.out) / 1e6;
+  return tokens * (run.batch ? BATCH_DISCOUNT : 1) + (run.webSearches || 0) * WEB_SEARCH_USD;
 }
 
 /** Dollars for a run. tokensIn is uncached input; cache writes and reads are priced apart. Mock runs cost nothing. */
@@ -48,4 +52,26 @@ export function shadowCostUsd(run) {
 
 export function estimateTokens(text) {
   return Math.max(1, Math.round(String(text || '').length / 4));
+}
+
+/**
+ * What a run saved against paying full price for every token: the prompt cache (reads at the cache
+ * price, less the premium on writes), a Message Batch (half price), and a free model answering in
+ * Claude's place (what the Claude model it stood in for would have cost). Dollars.
+ */
+export function savingsUsd(run) {
+  const out = { cache: 0, batch: 0, free: 0 };
+  if (String(run.provider || '').startsWith('free:')) {
+    if (!run.error) out.free = shadowCostUsd({ ...run, model: run.shadowModel || run.model, batch: false });
+    return out;
+  }
+  const p = MODEL_PRICES[run.model];
+  if (!p) return out;
+  const f = run.batch ? BATCH_DISCOUNT : 1;
+  const hour = run.tokensCacheWrite1h || 0;
+  const read = (run.tokensCacheRead || 0) * (p.in - (p.cacheRead ?? p.in * 0.1));
+  const premium = ((run.tokensCacheWrite || 0) - hour) * p.in * (CACHE_WRITE - 1) + hour * p.in * (CACHE_WRITE_1H - 1);
+  out.cache = ((read - premium) / 1e6) * f;
+  if (run.batch) out.batch = runCostUsd(run) - (run.webSearches || 0) * WEB_SEARCH_USD;
+  return out;
 }

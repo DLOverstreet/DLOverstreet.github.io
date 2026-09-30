@@ -37,7 +37,7 @@ function table(rows) {
   const cells = rows.map((r) => r.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map((c) => c.trim()));
   const width = Math.max(...cells.map((r) => r.length));
   const border = '<w:tblBorders><w:top w:val="single" w:sz="4"/><w:left w:val="single" w:sz="4"/><w:bottom w:val="single" w:sz="4"/><w:right w:val="single" w:sz="4"/><w:insideH w:val="single" w:sz="4"/><w:insideV w:val="single" w:sz="4"/></w:tblBorders>';
-  return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>${border}</w:tblPr>${cells.map((r, i) => `<w:tr>${Array.from({ length: width }, (_, j) => `<w:tc>${para(i === 0 ? runs(`**${r[j] ?? ''}**`) : runs(r[j] ?? ''))}</w:tc>`).join('')}</w:tr>`).join('')}</w:tbl>`;
+  return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/>${border}</w:tblPr>${cells.map((r, i) => `<w:tr>${Array.from({ length: width }, (_, j) => `<w:tc>${para(i === 0 && r[j] ? runs(`**${r[j]}**`) : runs(r[j] ?? ''))}</w:tc>`).join('')}</w:tr>`).join('')}</w:tbl>`;
 }
 
 /** The body XML for a Markdown document. */
