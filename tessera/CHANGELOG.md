@@ -1,6 +1,11 @@
 # Changelog
 
 ## 2026-10-03
+- **Free models get room to think.** Gemini's current models think before they answer, and the
+  thinking counts against the reply limit, so the 20-token connection test (and any short call) was
+  cut off before it said anything. Free calls now get at least 8,192 tokens (they cost nothing), and
+  a reply cut off at its limit is asked once more with four times the room, up to the provider's
+  ceiling. The model list in Settings hides image, speech, embedding and live-audio models.
 - **Free models keep working when a provider retires one.** Google stopped serving
   `gemini-2.5-flash` to new keys (404 "no longer available"), so every free-only call failed. A
   model a provider no longer serves is now replaced by the best one its model list offers (a Flash

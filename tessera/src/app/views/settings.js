@@ -127,6 +127,9 @@ export function SettingsView() {
   </div>`;
 }
 
+/** Models a provider lists that can't do the agents' text work (images, speech, embeddings, live audio, computer use). */
+const NOT_TEXT = /image|imagen|veo|tts|audio|embed|aqa|live|computer-use|robotics/i;
+
 /** Free model providers tried before Claude: which ones, their models and keys, and what they may do. */
 function FreeModels() {
   const T = useT();
@@ -158,7 +161,7 @@ function FreeModels() {
         <label class="choice"><input type="checkbox" checked=${!!r.on} onChange=${(e) => setRow(id, { on: e.target.checked })} /><span><b>${def.label}</b><span>${def.limits} ${def.privacy}</span></span></label>
         ${r.on ? html`<div class="inline-fields">
           <${Field} label="Model" id=${`free-model-${id}`} hint=${lists[id] ? `${lists[id].length} available${id === 'openrouter' ? '; free ones end in :free' : ''}.` : 'List the models to see what your key can use.'}>
-            ${lists[id] ? html`<select id=${`free-model-${id}`} value=${r.model} onChange=${(e) => setRow(id, { model: e.target.value })}>${[r.model, ...lists[id].filter((m) => m !== r.model && (id !== 'openrouter' || /:free$/.test(m)))].filter(Boolean).map((m) => html`<option value=${m} selected=${m === r.model}>${m}</option>`)}</select>`
+            ${lists[id] ? html`<select id=${`free-model-${id}`} value=${r.model} onChange=${(e) => setRow(id, { model: e.target.value })}>${[r.model, ...lists[id].filter((m) => m !== r.model && (id !== 'openrouter' || /:free$/.test(m)) && !NOT_TEXT.test(m))].filter(Boolean).map((m) => html`<option value=${m} selected=${m === r.model}>${m}</option>`)}</select>`
               : html`<input id=${`free-model-${id}`} type="text" value=${r.model} onChange=${(e) => setRow(id, { model: e.target.value.trim() })} />`}<//>
           ${def.local ? html`<${Field} label="Address" id=${`free-url-${id}`}><input id=${`free-url-${id}`} type="url" value=${r.baseUrl || def.baseUrl} onChange=${(e) => setRow(id, { baseUrl: e.target.value.trim() })} /><//>`
             : html`<${Field} label=${hasKey ? 'Key (saved in this browser)' : 'Key'} id=${`free-key-${id}`} hint=${def.keyHint}><div class="row"><input id=${`free-key-${id}`} type="password" autocomplete="off" placeholder=${hasKey ? '••••••••' : ''} value=${keys[id] || ''} onInput=${(e) => setKeys({ ...keys, [id]: e.target.value })} style=${{ flex: 1, width: 'auto' }} />
