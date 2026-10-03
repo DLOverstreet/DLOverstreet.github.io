@@ -1,6 +1,10 @@
 # Changelog
 
 ## 2026-10-03
+- **Busy free models.** Gemini's free tier answers 503 "high demand" at busy times. An overloaded
+  free model now hands the call to the provider's lighter model (Gemini Flash-Lite) at once; if
+  that is busy too, the provider rests 20 seconds and, in free-only mode, the call waits and asks
+  again (within the three-minute patience) instead of failing.
 - **Free models get room to think.** Gemini's current models think before they answer, and the
   thinking counts against the reply limit, so the 20-token connection test (and any short call) was
   cut off before it said anything. Free calls now get at least 8,192 tokens (they cost nothing), and

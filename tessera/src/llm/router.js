@@ -113,7 +113,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
       const key = secrets.get(`free.${p.id}`) || '';
       if (!def.local && !key) continue;
       const baseUrl = p.baseUrl || def.baseUrl;
-      out.push({ id: p.id, label: def.label, model: p.model, maxOutput: def.maxOutput || null, provider: cached(`free:${p.id}:${baseUrl}:${key}`, () => makeOpenAi({ baseUrl, apiKey: key })) });
+      out.push({ id: p.id, label: def.label, model: p.model, maxOutput: def.maxOutput || null, backups: def.backups || [], provider: cached(`free:${p.id}:${baseUrl}:${key}`, () => makeOpenAi({ baseUrl, apiKey: key })) });
     }
     return out;
   }

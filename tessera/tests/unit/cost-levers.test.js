@@ -302,3 +302,28 @@ test('a free call gets room to think: a tiny allowance is raised, and a reply cu
   assert.equal(res.text, 'OK');
   assert.deepEqual(seen, [8192, 32768], 'a 20-token connection test gets 8,192, then four times that');
 });
+
+test('an overloaded free model hands the call to the provider’s lighter model, and free-only mode waits out a busy spell', async () => {
+  const asked = [];
+  let busy = true;
+  const gemini = {
+    name: 'x',
+    async complete(req) {
+      asked.push(req.model);
+      if (req.model === 'gemini-flash-latest' && busy) throw new LlmError('503: The model is currently experiencing high demand.', { retryable: true, code: 'overloaded' });
+      return { text: 'OK', model: req.model, usage: {} };
+    },
+  };
+  const entry = () => ({ id: 'gemini', label: 'Gemini', model: 'gemini-flash-latest', backups: ['gemini-flash-lite-latest'], provider: gemini });
+  const res = await createFreeChain([entry()]).complete({ system: 's', messages: [] });
+  assert.equal(res.model, 'gemini-flash-lite-latest');
+  assert.deepEqual(asked, ['gemini-flash-latest', 'gemini-flash-lite-latest']);
+  // No lighter model, or it is busy too: free-only mode rests the provider for a few seconds and asks again.
+  let t = 0;
+  const waits = [];
+  asked.length = 0;
+  const later = createFreeChain([{ ...entry(), backups: [] }], { now: () => t, patience: 180000, wait: async (ms) => { waits.push(ms); t += ms; busy = false; } });
+  assert.equal((await later.complete({ system: 's', messages: [] })).model, 'gemini-flash-latest');
+  assert.equal(waits.length, 1);
+  assert.ok(waits[0] >= 20000 && waits[0] < 60000);
+});
