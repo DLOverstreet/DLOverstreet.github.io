@@ -14,7 +14,7 @@ import { LlmError } from './errors.js';
  */
 export const FREE_PROVIDERS = Object.freeze({
   gemini: {
-    label: 'Google Gemini (free tier)', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-flash-latest', maxOutput: 65536,
+    label: 'Google Gemini (free tier)', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-flash-latest', backups: ['gemini-flash-lite-latest'], maxOutput: 65536,
     keyHint: 'A Google AI Studio key (aistudio.google.com/apikey).', limits: 'About 10 requests a minute and 250 a day on Flash (Flash-Lite: 15 and 1,000).',
     privacy: 'Google may use free-tier prompts and replies to improve its products, and people may review them.', local: false,
   },
@@ -38,6 +38,9 @@ export const FREE_PROVIDERS = Object.freeze({
 const QUOTA = /per[ -]?day|daily|RPD|quota|exhausted|limit: 0/i;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** How long an overloaded provider rests before it is asked again (free-only mode waits that long). */
+const BUSY_MS = 20 * 1000;
 
 /**
  * The least reply room a free call gets. Free models think before they answer, and the thinking counts
@@ -70,7 +73,8 @@ export function pickReplacement(names, gone = '') {
 }
 
 /**
- * @param {{ id: string, label: string, provider: { complete: (req: any) => Promise<any> }, model: string, maxOutput?: number|null }[]} entries in the order to try
+ * @param {{ id: string, label: string, provider: { complete: (req: any) => Promise<any> }, model: string, maxOutput?: number|null, backups?: string[] }[]} entries in the order to try;
+ *   backups: lighter models of the same provider to try while the main one is overloaded
  * @param {{ now?: () => number, cooldown?: Map<string, number>, patience?: number, wait?: (ms: number) => Promise<void>, onModelChange?: (id: string, model: string) => void }} [opts]
  *   cooldown: shared across chains, provider id → time it may be tried again. patience: how long to
  *   wait for a provider resting after a per-minute limit before giving up (free-only mode waits;
@@ -118,6 +122,20 @@ export function createFreeChain(entries, { now = () => Date.now(), cooldown = ne
             return await ask(e, req);
           } catch (err) {
             const msg = String(err?.message || err);
+            // Overloaded ("high demand"): try the provider's lighter models now, then rest it briefly.
+            if (err instanceof LlmError && err.code === 'overloaded') {
+              for (const model of (e.backups || []).filter((m) => m !== e.model)) {
+                try {
+                  const res = await ask({ ...e, model }, req);
+                  return { ...res, model: res.model || model };
+                } catch (err2) {
+                  tried.push(`${e.label} (${model}): ${String(err2?.message || err2).slice(0, 120)}`);
+                }
+              }
+              tried.push(`${e.label}: busy (${msg.slice(0, 120)})`);
+              cooldown.set(e.id, now() + Math.max(err.retryAfterMs || 0, BUSY_MS));
+              continue;
+            }
             // The model was retired: switch to one the provider still serves and try again.
             if (GONE.test(msg) && await replace(e)) {
               try {

@@ -42,6 +42,8 @@ export function createOpenAiCompatibleProvider({ baseUrl, apiKey = '', fetchImpl
         const detail = await res.text().catch(() => '');
         const msg = `${root} answered ${res.status}: ${detail.slice(0, 300)}`;
         if (res.status === 429) throw new LlmError(msg, { retryable: true, code: 'rate_limit', retryAfterMs: retryAfter(res) });
+        // Busy or briefly down ("the model is currently experiencing high demand"): worth a short wait.
+        if ([500, 502, 503, 504, 529].includes(res.status) || /overloaded|high demand|unavailable/i.test(detail)) throw new LlmError(msg, { retryable: true, code: 'overloaded', retryAfterMs: retryAfter(res) });
         if (res.status === 401 || res.status === 403) throw new LlmError(`${root} rejected the key (${res.status}).`, { retryable: false, code: 'auth' });
         throw new LlmError(msg, { retryable: res.status >= 500, code: `http_${res.status}` });
       }
