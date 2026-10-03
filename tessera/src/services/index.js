@@ -78,7 +78,12 @@ export async function createTessera({ worldStore, blobs, keystore, secrets, seed
   const clock = createClock(world.meta.clock);
   const db = createDb(world, clock);
   const mock = createMockProvider({ brains: mockBrains, fixtures });
-  const llm = createLlmRouter({ getSettings: () => db.meta.settings.llm, secrets, mock, providerFactory });
+  // A free provider that retired its model switches to one it still serves; the new name is kept in Settings.
+  const saveFreeModel = (id, model) => db.tx((tx) => {
+    const free = tx.meta.settings.llm.free || { providers: [] };
+    tx.setMeta({ settings: { ...tx.meta.settings, llm: { ...tx.meta.settings.llm, free: { ...free, providers: (free.providers || []).map((p) => (p.id === id ? { ...p, model } : p)) } } } });
+  });
+  const llm = createLlmRouter({ getSettings: () => db.meta.settings.llm, secrets, mock, providerFactory, saveFreeModel });
   /** @type {any} */
   const T = { db, clock, blobs, keystore, secrets, llm, mock, debug };
   T.log = (row) => db.tx((tx) => tx.insert('AgentRun', row));

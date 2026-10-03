@@ -14,7 +14,7 @@ import { LlmError } from './errors.js';
  */
 export const FREE_PROVIDERS = Object.freeze({
   gemini: {
-    label: 'Google Gemini (free tier)', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-2.5-flash', maxOutput: 65536,
+    label: 'Google Gemini (free tier)', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai', model: 'gemini-flash-latest', maxOutput: 65536,
     keyHint: 'A Google AI Studio key (aistudio.google.com/apikey).', limits: 'About 10 requests a minute and 250 a day on Flash (Flash-Lite: 15 and 1,000).',
     privacy: 'Google may use free-tier prompts and replies to improve its products, and people may review them.', local: false,
   },
@@ -39,14 +39,43 @@ const QUOTA = /per[ -]?day|daily|RPD|quota|exhausted|limit: 0/i;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** A "model not found / no longer available" answer: the provider retired the model (or never had it). */
+const GONE = /\b404\b|not[ _-]?found|no longer available|does not exist|unknown model|not supported for generateContent/i;
+
+/**
+ * The best stand-in from a provider's model list for a model it no longer serves: a text model of the
+ * same family (Flash before Flash-Lite, newest version first), never image, audio, embedding or live models.
+ * @param {string[]} names @param {string} gone
+ */
+export function pickReplacement(names, gone = '') {
+  const text = names.filter((n) => n !== gone && !/image|tts|audio|live|embed|vision|imagen|veo|aqa|learnlm|gemma|robotics|computer|native/i.test(n));
+  const version = (n) => Number((/(\d+(?:\.\d+)?)/.exec(n) || [])[1] || 0);
+  const family = /flash/i.test(gone) ? text.filter((n) => /flash/i.test(n)) : text;
+  const pool = (family.length ? family : text).filter((n) => !/preview|exp/i.test(n));
+  const ranked = (pool.length ? pool : family.length ? family : text).sort((a, b) => (/latest/.test(b) ? 1 : 0) - (/latest/.test(a) ? 1 : 0) || (/lite/i.test(a) ? 1 : 0) - (/lite/i.test(b) ? 1 : 0) || version(b) - version(a) || a.localeCompare(b));
+  return ranked[0] || null;
+}
+
 /**
  * @param {{ id: string, label: string, provider: { complete: (req: any) => Promise<any> }, model: string, maxOutput?: number|null }[]} entries in the order to try
- * @param {{ now?: () => number, cooldown?: Map<string, number>, patience?: number, wait?: (ms: number) => Promise<void> }} [opts]
+ * @param {{ now?: () => number, cooldown?: Map<string, number>, patience?: number, wait?: (ms: number) => Promise<void>, onModelChange?: (id: string, model: string) => void }} [opts]
  *   cooldown: shared across chains, provider id → time it may be tried again. patience: how long to
  *   wait for a provider resting after a per-minute limit before giving up (free-only mode waits;
  *   free-first gives up at once, since Claude is there to take the call)
  */
-export function createFreeChain(entries, { now = () => Date.now(), cooldown = new Map(), patience = 0, wait = sleep } = {}) {
+export function createFreeChain(entries, { now = () => Date.now(), cooldown = new Map(), patience = 0, wait = sleep, onModelChange = () => {} } = {}) {
+  /** A provider whose model was retired: ask it which models it has, switch to the best one, and remember it. */
+  async function replace(e) {
+    if (e.replaced || typeof e.provider.models !== 'function') return false;
+    e.replaced = true;
+    let names;
+    try { names = await e.provider.models(); } catch { return false; }
+    const next = pickReplacement(names, e.model);
+    if (!next) return false;
+    e.model = next;
+    onModelChange(e.id, next);
+    return true;
+  }
   return {
     name: 'free',
     async complete(req) {
@@ -62,6 +91,17 @@ export function createFreeChain(entries, { now = () => Date.now(), cooldown = ne
             return { ...res, model: res.model || e.model, freeProvider: e.id };
           } catch (err) {
             const msg = String(err?.message || err);
+            // The model was retired: switch to one the provider still serves and try again.
+            if (GONE.test(msg) && await replace(e)) {
+              try {
+                const maxTokens = e.maxOutput && req.maxTokens ? Math.min(req.maxTokens, e.maxOutput) : req.maxTokens;
+                const res = await e.provider.complete({ ...req, model: e.model, maxTokens });
+                return { ...res, model: res.model || e.model, freeProvider: e.id };
+              } catch (err2) {
+                tried.push(`${e.label} (${e.model}): ${String(err2?.message || err2).slice(0, 160)}`);
+                continue;
+              }
+            }
             tried.push(`${e.label}: ${msg.slice(0, 160)}`);
             // Out of requests: rest the provider (a daily quota for an hour, a per-minute limit for as long as it asks).
             if (err instanceof LlmError && (err.code === 'rate_limit' || err.code === 'http_429')) {
