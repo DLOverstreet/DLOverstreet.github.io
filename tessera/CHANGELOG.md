@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-03
+- **Free models keep working when a provider retires one.** Google stopped serving
+  `gemini-2.5-flash` to new keys (404 "no longer available"), so every free-only call failed. A
+  model a provider no longer serves is now replaced by the best one its model list offers (a Flash
+  model, newest first), the call is retried, and the new name is saved in Settings. Gemini's default
+  is now `gemini-flash-latest`, Google's alias that follows the current Flash model.
+
 ## 2026-09-30 (later)
 - **Free models only.** A new platform provider in Settings runs every agent (scoping, planning,
   workers, supervisors, reviewers, assembly) on the free providers you set up (Gemini, Groq,

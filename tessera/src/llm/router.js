@@ -15,8 +15,8 @@ import { rateLimitCheck } from '../domain/limits.js';
 import { config } from '../domain/config.js';
 import { LlmError } from './errors.js';
 
-/** @param {{ getSettings: () => any, secrets: any, mock: any, now?: () => number, providerFactory?: { anthropic?: Function, openai?: Function } }} opts */
-export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.now(), providerFactory = {} }) {
+/** @param {{ getSettings: () => any, secrets: any, mock: any, now?: () => number, providerFactory?: { anthropic?: Function, openai?: Function }, saveFreeModel?: (id: string, model: string) => void }} opts */
+export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.now(), providerFactory = {}, saveFreeModel = () => {} }) {
   const makeAnthropic = providerFactory.anthropic || createAnthropicProvider;
   const makeOpenAi = providerFactory.openai || createOpenAiCompatibleProvider;
   const calls = new Map();
@@ -128,7 +128,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
     if (!entries.length) return paid;
     const label = entries.length > 1 ? `${entries[0].model} (free, then ${entries.slice(1).map((e) => e.model).join(', ')})` : `${entries[0].model} (free)`;
     return {
-      provider: createFreeChain(entries, { now, cooldown }), model: entries[0].model, providerName: 'free', label: `${label}, then ${paid.label}`,
+      provider: createFreeChain(entries, { now, cooldown, onModelChange: saveFreeModel }), model: entries[0].model, providerName: 'free', label: `${label}, then ${paid.label}`,
       shadowModel: paid.shadowModel || paid.model, fallback: paid, free: true,
     };
   }
@@ -146,7 +146,7 @@ export function createLlmRouter({ getSettings, secrets, mock, now = () => Date.n
       return { provider: { name: 'free', async complete() { throw new LlmError(why, { retryable: false, code: 'no_key' }); } }, model: 'free', providerName: 'free', label: 'Free models (none ready)', shadowModel: shadow, free: true };
     }
     const label = entries.length > 1 ? `${entries[0].model} (free, then ${entries.slice(1).map((e) => e.model).join(', ')})` : `${entries[0].model} (free)`;
-    return { provider: createFreeChain(entries, { now, cooldown, patience: 3 * 60 * 1000 }), model: entries[0].model, providerName: 'free', label, shadowModel: shadow, free: true };
+    return { provider: createFreeChain(entries, { now, cooldown, patience: 3 * 60 * 1000, onModelChange: saveFreeModel }), model: entries[0].model, providerName: 'free', label, shadowModel: shadow, free: true };
   }
 
   /** The route for work on a commission: swarm jobs draw on the swarm's pool; light work tries free models first when Settings say so. @param {any} commission @param {'heavy'|'light'} [tier] */

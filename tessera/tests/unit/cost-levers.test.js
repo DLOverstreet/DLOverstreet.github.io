@@ -267,3 +267,22 @@ test('reply length is capped at each free provider’s maximum', async () => {
   await createFreeChain([{ id: 'q', label: 'Groq', model: 'm', provider: p, maxOutput: 32768 }]).complete({ system: 's', messages: [], maxTokens: 64000 });
   assert.deepEqual(seen, [32768]);
 });
+
+test('a free model the provider retired is replaced by the best one it still serves, and the choice is kept', async () => {
+  const { pickReplacement } = await import('../../src/llm/free-chain.js');
+  const names = ['gemini-2.5-flash', 'gemini-2.5-flash-image', 'gemini-3.5-flash-lite', 'gemini-3.8-flash', 'gemini-3.8-flash-preview-tts', 'text-embedding-004', 'gemini-2.5-pro'];
+  assert.equal(pickReplacement(names, 'gemini-2.5-flash'), 'gemini-3.8-flash');
+  assert.equal(pickReplacement([...names, 'gemini-flash-latest'], 'gemini-2.5-flash'), 'gemini-flash-latest');
+  const asked = [];
+  const p = {
+    name: 'x',
+    async complete(req) { asked.push(req.model); if (req.model === 'gemini-2.5-flash') throw new LlmError('answered 404: model models/gemini-2.5-flash is no longer available to new users', { retryable: false, code: 'http_404' }); return { text: '{"ok":true}', model: req.model, usage: {} }; },
+    async models() { return names; },
+  };
+  const saved = [];
+  const chain = createFreeChain([{ id: 'gemini', label: 'Gemini', model: 'gemini-2.5-flash', provider: p }], { onModelChange: (id, m) => saved.push([id, m]) });
+  const res = await chain.complete({ system: 's', messages: [] });
+  assert.equal(res.model, 'gemini-3.8-flash');
+  assert.deepEqual(asked, ['gemini-2.5-flash', 'gemini-3.8-flash']);
+  assert.deepEqual(saved, [['gemini', 'gemini-3.8-flash']]);
+});
