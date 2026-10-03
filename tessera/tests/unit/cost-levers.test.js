@@ -286,3 +286,19 @@ test('a free model the provider retired is replaced by the best one it still ser
   assert.deepEqual(asked, ['gemini-2.5-flash', 'gemini-3.8-flash']);
   assert.deepEqual(saved, [['gemini', 'gemini-3.8-flash']]);
 });
+
+test('a free call gets room to think: a tiny allowance is raised, and a reply cut off at its length limit is asked again with more room', async () => {
+  const seen = [];
+  const thinker = {
+    name: 'x',
+    async complete(req) {
+      seen.push(req.maxTokens);
+      // A thinking model that needs more than 8,192 tokens of room before it writes its answer.
+      if (req.maxTokens < 20000) throw new LlmError('The reply from gemini-flash-latest was cut off at its length limit.', { retryable: true, code: 'max_tokens' });
+      return { text: 'OK', model: req.model, usage: {} };
+    },
+  };
+  const res = await createFreeChain([{ id: 'gemini', label: 'Gemini', model: 'gemini-flash-latest', provider: thinker, maxOutput: 65536 }]).complete({ system: 's', messages: [], maxTokens: 20 });
+  assert.equal(res.text, 'OK');
+  assert.deepEqual(seen, [8192, 32768], 'a 20-token connection test gets 8,192, then four times that');
+});

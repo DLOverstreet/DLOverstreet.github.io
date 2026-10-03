@@ -39,6 +39,19 @@ const QUOTA = /per[ -]?day|daily|RPD|quota|exhausted|limit: 0/i;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/**
+ * The least reply room a free call gets. Free models think before they answer, and the thinking counts
+ * against max_tokens, so a small allowance (a 20-token connection test, a short note) is used up
+ * before any text comes back. Free tokens cost nothing, so every call gets at least this much.
+ */
+export const MIN_FREE_TOKENS = 8192;
+
+/** The reply allowance for a free call: at least MIN_FREE_TOKENS, at most the provider's ceiling. */
+export function freeBudget(asked, cap) {
+  const want = Math.max(asked || 0, MIN_FREE_TOKENS);
+  return cap ? Math.min(want, cap) : want;
+}
+
 /** A "model not found / no longer available" answer: the provider retired the model (or never had it). */
 const GONE = /\b404\b|not[ _-]?found|no longer available|does not exist|unknown model|not supported for generateContent/i;
 
@@ -76,6 +89,23 @@ export function createFreeChain(entries, { now = () => Date.now(), cooldown = ne
     onModelChange(e.id, next);
     return true;
   }
+  /**
+   * One provider, one call: enough room to think and answer (never past the provider's ceiling), and a
+   * reply cut off at its length limit is asked once more with four times the room.
+   */
+  async function ask(e, req) {
+    const cap = e.maxOutput || 65536;
+    let maxTokens = freeBudget(req.maxTokens, cap);
+    for (let tries = 0; ; tries++) {
+      try {
+        const res = await e.provider.complete({ ...req, model: e.model, maxTokens });
+        return { ...res, model: res.model || e.model, freeProvider: e.id };
+      } catch (err) {
+        if (!(err instanceof LlmError) || err.code !== 'max_tokens' || tries >= 1 || maxTokens >= cap) throw err;
+        maxTokens = Math.min(cap, maxTokens * 4);
+      }
+    }
+  }
   return {
     name: 'free',
     async complete(req) {
@@ -85,18 +115,13 @@ export function createFreeChain(entries, { now = () => Date.now(), cooldown = ne
         for (const e of entries) {
           if ((cooldown.get(e.id) || 0) > now()) { tried.push(`${e.label}: resting after its limit`); continue; }
           try {
-            // Each provider has its own ceiling on reply length; asking for more is refused.
-            const maxTokens = e.maxOutput && req.maxTokens ? Math.min(req.maxTokens, e.maxOutput) : req.maxTokens;
-            const res = await e.provider.complete({ ...req, model: e.model, maxTokens });
-            return { ...res, model: res.model || e.model, freeProvider: e.id };
+            return await ask(e, req);
           } catch (err) {
             const msg = String(err?.message || err);
             // The model was retired: switch to one the provider still serves and try again.
             if (GONE.test(msg) && await replace(e)) {
               try {
-                const maxTokens = e.maxOutput && req.maxTokens ? Math.min(req.maxTokens, e.maxOutput) : req.maxTokens;
-                const res = await e.provider.complete({ ...req, model: e.model, maxTokens });
-                return { ...res, model: res.model || e.model, freeProvider: e.id };
+                return await ask(e, req);
               } catch (err2) {
                 tried.push(`${e.label} (${e.model}): ${String(err2?.message || err2).slice(0, 160)}`);
                 continue;
