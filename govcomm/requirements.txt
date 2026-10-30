@@ -1,0 +1,9 @@
+pandas>=2.2
+pyarrow>=15
+scikit-learn>=1.5
+scipy>=1.13
+statsmodels>=0.14
+vaderSentiment==3.3.2
+ftfy>=6.2
+pyyaml>=6
+joblib>=1.4

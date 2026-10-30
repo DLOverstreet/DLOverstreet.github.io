@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+# Rebuilt from the public archives by build_corpus.py; scored_posts.* carries the same rows.
+govcomm/data/corpus.parquet
+govcomm/data/derived/student_scores.parquet
+govcomm/data/derived/party_slant.parquet

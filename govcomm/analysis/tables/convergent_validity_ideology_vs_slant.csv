@@ -1,0 +1,10 @@
+voice,post_r,N
+@POTUS / @WhiteHouse / @VP (2017),0.22363703356948975,471
+@StateDept,0.11692199123268937,29356
+Trump · Truth Social (President),0.2638792361768254,2353
+Trump · Truth Social (out of office),0.23633332728333917,9420
+Trump · Twitter (President),0.1400227595767038,13524
+Trump · Twitter (private citizen/candidate),-0.036798146178687055,30463
+WhiteHouse.gov,0.11159119511635184,2235
+ALL (voice-quarter means),0.6483590801949444,126
+Teacher labels vs slant (labeled posts),0.24763232155415663,1400

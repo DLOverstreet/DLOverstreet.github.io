@@ -1,0 +1,80 @@
+voice,villain,share
+@POTUS / @WhiteHouse / @VP (2017),none,0.8343949044585988
+@POTUS / @WhiteHouse / @VP (2017),pol,0.06581740976645435
+@POTUS / @WhiteHouse / @VP (2017),foreign,0.04670912951167728
+@POTUS / @WhiteHouse / @VP (2017),legal,0.01910828025477707
+@POTUS / @WhiteHouse / @VP (2017),bureau,0.014861995753715499
+@POTUS / @WhiteHouse / @VP (2017),immig,0.006369426751592357
+@POTUS / @WhiteHouse / @VP (2017),crime,0.006369426751592357
+@POTUS / @WhiteHouse / @VP (2017),corp,0.004246284501061571
+@POTUS / @WhiteHouse / @VP (2017),media,0.0021231422505307855
+@StateDept,none,0.7460825725575692
+@StateDept,foreign,0.20677203978743697
+@StateDept,crime,0.01682790570922469
+@StateDept,pol,0.014102738792751056
+@StateDept,media,0.005280010900667666
+@StateDept,other,0.003678975337239406
+@StateDept,legal,0.0031339419539446792
+@StateDept,immig,0.0022141981196348278
+@StateDept,bureau,0.0017713584957078621
+@StateDept,corp,0.0001362583458236817
+Staff accounts,none,0.7474402730375427
+Staff accounts,pol,0.09215017064846416
+Staff accounts,media,0.08873720136518772
+Staff accounts,foreign,0.023890784982935155
+Staff accounts,bureau,0.020477815699658702
+Staff accounts,crime,0.010238907849829351
+Staff accounts,immig,0.006825938566552901
+Staff accounts,other,0.0034129692832764505
+Staff accounts,legal,0.0034129692832764505
+Staff accounts,corp,0.0034129692832764505
+Trump · Truth Social (President),none,0.4951126221844454
+Trump · Truth Social (President),pol,0.22524436889077773
+Trump · Truth Social (President),foreign,0.1066723331916702
+Trump · Truth Social (President),media,0.05397365065873353
+Trump · Truth Social (President),bureau,0.05184870378240544
+Trump · Truth Social (President),legal,0.022949426264343393
+Trump · Truth Social (President),crime,0.0208244793880153
+Trump · Truth Social (President),other,0.013599660008499787
+Trump · Truth Social (President),immig,0.0055248618784530384
+Trump · Truth Social (President),corp,0.004249893752656183
+Trump · Truth Social (out of office),pol,0.3955414012738854
+Trump · Truth Social (out of office),none,0.36369426751592354
+Trump · Truth Social (out of office),legal,0.08641188959660297
+Trump · Truth Social (out of office),media,0.07547770700636942
+Trump · Truth Social (out of office),bureau,0.0321656050955414
+Trump · Truth Social (out of office),foreign,0.02781316348195329
+Trump · Truth Social (out of office),crime,0.006794055201698514
+Trump · Truth Social (out of office),other,0.004564755838641189
+Trump · Truth Social (out of office),immig,0.0044585987261146496
+Trump · Truth Social (out of office),corp,0.0030785562632696392
+Trump · Twitter (President),none,0.4415113871635611
+Trump · Twitter (President),pol,0.3101153504880213
+Trump · Twitter (President),media,0.10314995563442768
+Trump · Twitter (President),foreign,0.07290742383910086
+Trump · Twitter (President),legal,0.027580597456373854
+Trump · Twitter (President),bureau,0.02077787636793848
+Trump · Twitter (President),crime,0.007320319432120674
+Trump · Twitter (President),other,0.006580893226855959
+Trump · Twitter (President),immig,0.006433007985803017
+Trump · Twitter (President),corp,0.0036231884057971015
+Trump · Twitter (private citizen/candidate),none,0.624889209861143
+Trump · Twitter (private citizen/candidate),pol,0.19131405311361324
+Trump · Twitter (private citizen/candidate),media,0.09953057807832452
+Trump · Twitter (private citizen/candidate),foreign,0.03564980468108853
+Trump · Twitter (private citizen/candidate),bureau,0.01247414896760004
+Trump · Twitter (private citizen/candidate),legal,0.011193907363030562
+Trump · Twitter (private citizen/candidate),other,0.01030758625217477
+Trump · Twitter (private citizen/candidate),immig,0.006663821685323179
+Trump · Twitter (private citizen/candidate),crime,0.005613367035420018
+Trump · Twitter (private citizen/candidate),corp,0.0023635229622821128
+WhiteHouse.gov,none,0.5038031319910514
+WhiteHouse.gov,foreign,0.19910514541387025
+WhiteHouse.gov,pol,0.08993288590604027
+WhiteHouse.gov,bureau,0.08993288590604027
+WhiteHouse.gov,immig,0.053691275167785234
+WhiteHouse.gov,other,0.025950782997762864
+WhiteHouse.gov,legal,0.0174496644295302
+WhiteHouse.gov,crime,0.012080536912751677
+WhiteHouse.gov,media,0.004026845637583893
+WhiteHouse.gov,corp,0.004026845637583893
