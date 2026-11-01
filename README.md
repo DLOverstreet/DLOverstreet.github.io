@@ -33,10 +33,12 @@ once links are removed (all WhiteHouse.gov items are kept).
 | Voice | Archive | Coverage |
 |---|---|---|
 | @realDonaldTrump (Twitter) | MarkHershey/CompleteTrumpTweetsArchive | May 2009 – Jan 8, 2021, including deleted tweets |
-| @realDonaldTrump (Truth Social) | stiles/trump-truth-social-archive | Feb 2022 – Oct 2025, with a few posts from Apr–May 2026 (gap Nov 2025 – Mar 2026) |
+| @realDonaldTrump (Truth Social) | stiles/trump-truth-social-archive | Feb 2022 – Oct 2025 (continued by Transparency47/socials below) |
 | @StateDept | lockdown-systems/statedept-archive | Jan 2008 – Jan 20, 2025 (dense from May 2012) |
 | WhiteHouse.gov | Transparency47/WhiteHouse | Jan 20, 2025 – Oct 29, 2026 (actions, briefings, fact sheets, releases, research) |
 | @POTUS, @WhiteHouse, @VP and staff accounts | bpb27/political_twitter_archive | Jan 20 – Mar 1, 2017 |
+| 70 federal X accounts: @DHSgov, @ICEgov, @CBP, @USCIS, @USCG, @fema, @TSA, @FBI, @TheJusticeDept, @DeptofWar, @USDOL, @StateDept (2026), ICE field offices, officials, and the institutional White House account across administrations (@ObamaWhiteHouse, @WhiteHouse45, @WhiteHouse46, @WhiteHouse) | vidproject/x (browser captures of public timelines; depth varies by year) | 2016 – Aug 2026 |
+| Truth Social (Jan 2025 – Aug 2026, fills the gap above), @VP, @RapidResponse47, @PressSec, @POTUS and others | Transparency47/socials | 2025 – 2026 |
 | Congress (benchmark only) | alexlitel/congresstweets, unitedstates/congress-legislators | Every 14th day, Jun 2017 – Jul 2023 |
 
 ## Measurement
@@ -114,6 +116,35 @@ Read ideology with the party-slant benchmark beside it.
   (+0.43) keep institutional form; Releases (−0.01) and Fact Sheets (+0.19) read like campaign
   material. Releases score highest on party slant (+0.40).
 
+
+## The second Trump administration (added Nov 2026)
+
+`govcomm/pipeline/trump2.py` compares every government account with 100+ scored posts on both sides
+of Jan 20, 2025 against its own earlier record, with topic fixed effects. The 300 round-2 teacher
+labels (`labels/teacher_labels2.csv`, agency and White House posts, stratified before/after 2025)
+were added to training; agreement on that subset is r = 0.75–0.82 except ideology (0.58).
+
+- **Pooled, institutional accounts, account and topic fixed effects, Biden = 0:** norms index
+  −0.25 under Trump II vs −0.02 under Trump I (difference −0.22, SE 0.01). Professionalism −0.24,
+  partisanship −0.25, function −0.28, personalization −0.23, threat/hope −0.17, ideology +0.19.
+  Party-language slant is +0.32 under Trump I and +0.33 under Trump II: the first term changed
+  whose language agencies used, the second also changed their register.
+- **By account (norms index, topic-adjusted change):** @StateDept −0.46 (2026 posts),
+  @DHSgov −0.36, @ICEgov −0.23, @TheJusticeDept −0.21, @WhiteHouse −0.20, @CBP −0.17,
+  ICE field offices −0.17, @USCIS −0.16. Service accounts barely moved: @fema −0.06,
+  @CBPJobs 0.00, @USCG +0.04.
+- **@DHSgov by administration (norms index):** Obama 0.51, Trump I 0.45, Biden 0.55, Trump II 0.12;
+  threat/hope 0.20, 0.09, 0.19, −0.35.
+- **Agenda (within-account, equal-weighted):** immigration 18% → 32% of posts; immigrants as
+  villain 12% → 29%; posts naming no villain 59% → 41%.
+- **Trump's own Truth Social, in office (Jan 2025 – Aug 2026) vs 2022–24:** professionalism +0.06,
+  threat/hope +0.08 (topic-adjusted); still below zero on the norms dimensions.
+
+Caveat: vidproject/x captures are uneven by year and centred on DHS and immigration accounts.
+Comparisons stay within account and hold topic fixed, but capture depth could still correlate with
+content. The Transparency47 Truth Social mirror writes "_No text content captured._" for media-only
+posts and splits links at hidden spans; `build_corpus.py` removes both.
+
 ## Reproduce
 
 ```
@@ -122,9 +153,7 @@ python3 -I govcomm/pipeline/build_corpus.py /home/user govcomm/data/corpus.parqu
 python3 -I govcomm/pipeline/congress_slant.py <congresstweets/data> <congress-legislators> govcomm/data/corpus.parquet govcomm/data/derived
 python3 -I govcomm/pipeline/make_label_sample.py govcomm/data/corpus.parquet govcomm/labels   # only for a new sample
 python3 -I govcomm/pipeline/student.py govcomm/data/corpus.parquet govcomm/labels glove-twitter-100.gz govcomm/data/derived
-python3 -I govcomm/pipeline/assemble.py govcomm/data
-python3 -I govcomm/pipeline/analysis.py govcomm/data govcomm/labels govcomm/analysis
-python3 -I govcomm/pipeline/dashboard_data.py govcomm/data govcomm/labels govcomm/analysis
+cd govcomm/pipeline && ./run_after_scoring.sh   # assemble, analysis, trump2, dashboard tables, interval series
 ```
 
 GloVe-Twitter-100 comes from the gensim-data GitHub release. Python packages: pandas, pyarrow,

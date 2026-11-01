@@ -31,8 +31,11 @@ df = pd.read_parquet(corpus_path)
 df["unit"] = [unit_text(p, t, x) for p, t, x in zip(df.platform, df.title, df.text)]
 df["mtext"] = df["unit"].map(clean_for_model)
 
-key = pd.read_csv(os.path.join(labels_dir, "label_sample_key.csv"))
-lab = pd.read_csv(os.path.join(labels_dir, "teacher_labels.csv")).merge(key[["lid", "post_id"]], on="lid")
+# Round 1 (L*, Trump / State / WhiteHouse.gov) and round 2 (N*, agencies and White House accounts added later).
+key = pd.concat([pd.read_csv(os.path.join(labels_dir, f)) for f in ("label_sample_key.csv", "label_sample2_key.csv")
+                 if os.path.exists(os.path.join(labels_dir, f))])
+lab = pd.concat([pd.read_csv(os.path.join(labels_dir, f)) for f in ("teacher_labels.csv", "teacher_labels2.csv")
+                 if os.path.exists(os.path.join(labels_dir, f))]).merge(key[["lid", "post_id"]], on="lid")
 idx = pd.Series(np.arange(len(df)), index=df.post_id)
 li = idx.loc[lab.post_id].values
 print(f"labels: {len(lab)}  corpus: {len(df):,}")
@@ -82,6 +85,13 @@ for j, d in enumerate(DIMS):
     rep.append(row)
 rep = pd.DataFrame(rep)
 print(rep.round(3).to_string(index=False))
+new = lab.lid.str.startswith("N").values
+if new.any():
+    sub = [{"dimension": d, "r_round1": pearsonr(Y[~new, j], oof["ens"][~new, j])[0],
+            "r_round2_agencies": pearsonr(Y[new, j], oof["ens"][new, j])[0], "n_round2": int(new.sum())} for j, d in enumerate(DIMS)]
+    sub = pd.DataFrame(sub)
+    rep = rep.merge(sub, on="dimension")
+    print(sub.round(3).to_string(index=False))
 
 # Final regressors on all labels; score every post.
 scores = pd.DataFrame({"post_id": df.post_id})

@@ -20,7 +20,9 @@ LABEL = {"Trump · Twitter (private citizen/candidate)": "Trump on Twitter, befo
          "Trump · Truth Social (out of office)": "Trump on Truth Social, out of office",
          "Trump · Truth Social (President)": "Trump on Truth Social, as President",
          "@StateDept": "@StateDept", "WhiteHouse.gov": "WhiteHouse.gov",
-         "@POTUS / @WhiteHouse / @VP (2017)": "@POTUS, @WhiteHouse, @VP (early 2017)",
+         "@WhiteHouse (all administrations)": "@WhiteHouse (Obama, Trump I, Biden, Trump II)",
+         "@DHSgov": "@DHSgov", "@ICEgov": "@ICEgov", "@CBP": "@CBP", "ICE field offices (ERO, pooled)": "ICE field offices (pooled)",
+         "@RapidResponse47": "@RapidResponse47", "@PressSec": "@PressSec", "@POTUS": "@POTUS",
          "Staff accounts": "White House staff accounts (early 2017)"}
 
 
@@ -60,7 +62,7 @@ ms["n"] = m.size()
 dump("state_monthly", ms[ms.n >= 15].reset_index())
 
 rows = []
-for s in ["Clinton", "Kerry", "Tillerson", "Pompeo", "Blinken"]:
+for s in ["Clinton", "Kerry", "Tillerson", "Pompeo", "Blinken", "Rubio"]:
     g = sd[sd.secretary_of_state == s]
     r = {"secretary": s, "n": len(g), "start": g.created_at.min().strftime("%Y-%m-%d"), "end": g.created_at.max().strftime("%Y-%m-%d")}
     for d in ALL:
@@ -108,7 +110,7 @@ dump("teacher_corr", [{"key": f"{a} | {b}", "a": a, "b": b, "r": round(float(cm.
 val = pd.read_csv(os.path.join(data_dir, "derived", "validation_dimensions.csv"))
 rt = pd.read_csv(os.path.join(labels_dir, "retest_reliability.csv")).set_index("dimension")
 val["retest_r"] = val.dimension.map(rt["r"])
-dump("validation", val[["dimension", "teacher_sd", "r_ridge", "r_gbm", "r_ens", "rho_ens", "mae_ens", "retest_r"]].round(3))
+dump("validation", val[["dimension", "teacher_sd", "r_ridge", "r_gbm", "r_ens", "rho_ens", "mae_ens", "r_round2_agencies", "retest_r"]].round(3))
 cv = pd.read_csv(os.path.join(tab, "convergent_validity_ideology_vs_slant.csv"))
 cv["voice"] = cv.voice.map(lambda v: LABEL.get(v, v))
 dump("convergent", cv.round(3))

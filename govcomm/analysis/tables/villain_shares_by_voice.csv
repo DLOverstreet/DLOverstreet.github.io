@@ -1,80 +1,401 @@
 voice,villain,share
-@POTUS / @WhiteHouse / @VP (2017),none,0.8343949044585988
-@POTUS / @WhiteHouse / @VP (2017),pol,0.06581740976645435
-@POTUS / @WhiteHouse / @VP (2017),foreign,0.04670912951167728
-@POTUS / @WhiteHouse / @VP (2017),legal,0.01910828025477707
-@POTUS / @WhiteHouse / @VP (2017),bureau,0.014861995753715499
-@POTUS / @WhiteHouse / @VP (2017),immig,0.006369426751592357
-@POTUS / @WhiteHouse / @VP (2017),crime,0.006369426751592357
-@POTUS / @WhiteHouse / @VP (2017),corp,0.004246284501061571
-@POTUS / @WhiteHouse / @VP (2017),media,0.0021231422505307855
-@StateDept,none,0.7460825725575692
-@StateDept,foreign,0.20677203978743697
-@StateDept,crime,0.01682790570922469
-@StateDept,pol,0.014102738792751056
-@StateDept,media,0.005280010900667666
-@StateDept,other,0.003678975337239406
-@StateDept,legal,0.0031339419539446792
-@StateDept,immig,0.0022141981196348278
-@StateDept,bureau,0.0017713584957078621
-@StateDept,corp,0.0001362583458236817
-Staff accounts,none,0.7474402730375427
-Staff accounts,pol,0.09215017064846416
-Staff accounts,media,0.08873720136518772
-Staff accounts,foreign,0.023890784982935155
+@AGPamBondi,crime,0.2777777777777778
+@AGPamBondi,immig,0.2777777777777778
+@AGPamBondi,pol,0.16666666666666666
+@AGPamBondi,legal,0.1111111111111111
+@AGPamBondi,none,0.1111111111111111
+@AGPamBondi,foreign,0.05555555555555555
+@ATFHQ,crime,0.6666666666666666
+@ATFHQ,immig,0.3333333333333333
+@CBP,none,0.3774973711882229
+@CBP,immig,0.3048720644935156
+@CBP,crime,0.28699614440939364
+@CBP,foreign,0.01934805467928496
+@CBP,pol,0.005117420259376095
+@CBP,bureau,0.0022432527164388365
+@CBP,media,0.0022432527164388365
+@CBP,other,0.000981423063441991
+@CBP,corp,0.0006309148264984228
+@CBP,legal,7.010164738871364e-05
+@CBPAMO,none,0.5537525354969574
+@CBPAMO,crime,0.2150101419878296
+@CBPAMO,immig,0.15010141987829614
+@CBPAMO,foreign,0.032454361054766734
+@CBPAMO,media,0.014198782961460446
+@CBPAMO,pol,0.014198782961460446
+@CBPAMO,bureau,0.012170385395537525
+@CBPAMO,corp,0.004056795131845842
+@CBPAMO,other,0.002028397565922921
+@CBPAMO,legal,0.002028397565922921
+@CBPCommissioner,none,0.5782312925170068
+@CBPCommissioner,crime,0.20408163265306123
+@CBPCommissioner,immig,0.09523809523809523
+@CBPCommissioner,foreign,0.06802721088435375
+@CBPCommissioner,pol,0.027210884353741496
+@CBPCommissioner,bureau,0.02040816326530612
+@CBPCommissioner,other,0.006802721088435374
+@CBPJobs,none,0.7447058823529412
+@CBPJobs,crime,0.21294117647058824
+@CBPJobs,immig,0.03764705882352941
+@CBPJobs,foreign,0.002352941176470588
+@CBPJobs,bureau,0.002352941176470588
+@CISAgov,none,0.8378378378378378
+@CISAgov,crime,0.13513513513513514
+@CISAgov,corp,0.02702702702702703
+@DHSBlueCampaign,crime,0.6875
+@DHSBlueCampaign,none,0.3125
+@DHSgov,none,0.5632229440659167
+@DHSgov,crime,0.1698621454603074
+@DHSgov,immig,0.168277610521312
+@DHSgov,foreign,0.04508001901441927
+@DHSgov,pol,0.03287909998415465
+@DHSgov,bureau,0.007130407225479322
+@DHSgov,media,0.004674378070036444
+@DHSgov,legal,0.004040564094438283
+@DHSgov,other,0.002693709396292188
+@DHSgov,corp,0.0021391221676437967
+@DOWResponse,none,0.49443207126948774
+@DOWResponse,foreign,0.29175946547884185
+@DOWResponse,pol,0.11581291759465479
+@DOWResponse,crime,0.031180400890868598
+@DOWResponse,bureau,0.022271714922048998
+@DOWResponse,media,0.022271714922048998
+@DOWResponse,immig,0.017817371937639197
+@DOWResponse,other,0.004454342984409799
+@DeptofWar,none,0.8385093167701864
+@DeptofWar,crime,0.08850931677018634
+@DeptofWar,foreign,0.05434782608695652
+@DeptofWar,immig,0.007763975155279503
+@DeptofWar,pol,0.004658385093167702
+@DeptofWar,bureau,0.003105590062111801
+@DeptofWar,media,0.0015527950310559005
+@DeptofWar,legal,0.0015527950310559005
+@EnvoyNoem,none,0.3046875
+@EnvoyNoem,immig,0.234375
+@EnvoyNoem,pol,0.1875
+@EnvoyNoem,crime,0.1328125
+@EnvoyNoem,foreign,0.1015625
+@EnvoyNoem,media,0.015625
+@EnvoyNoem,legal,0.0078125
+@EnvoyNoem,other,0.0078125
+@EnvoyNoem,bureau,0.0078125
+@FBI,crime,0.6866359447004609
+@FBI,none,0.13671274961597543
+@FBI,foreign,0.07219662058371736
+@FBI,immig,0.06605222734254992
+@FBI,bureau,0.018433179723502304
+@FBI,pol,0.009216589861751152
+@FBI,legal,0.006144393241167435
+@FBI,media,0.0015360983102918587
+@FBI,other,0.0015360983102918587
+@FBI,corp,0.0015360983102918587
+@FBIDirectorKash,crime,0.4594594594594595
+@FBIDirectorKash,none,0.1891891891891892
+@FBIDirectorKash,foreign,0.12162162162162163
+@FBIDirectorKash,immig,0.06756756756756757
+@FBIDirectorKash,bureau,0.04054054054054054
+@FBIDirectorKash,pol,0.04054054054054054
+@FBIDirectorKash,media,0.04054054054054054
+@FBIDirectorKash,corp,0.04054054054054054
+@FPSDHS,none,0.7951807228915663
+@FPSDHS,crime,0.1927710843373494
+@FPSDHS,immig,0.012048192771084338
+@GregoryKBovino,none,0.5132957292506044
+@GregoryKBovino,pol,0.19500402900886382
+@GregoryKBovino,media,0.09186140209508462
+@GregoryKBovino,immig,0.08058017727639001
+@GregoryKBovino,crime,0.035455278001611606
+@GregoryKBovino,bureau,0.03384367445608381
+@GregoryKBovino,other,0.0273972602739726
+@GregoryKBovino,foreign,0.0128928283642224
+@GregoryKBovino,legal,0.004834810636583401
+@GregoryKBovino,corp,0.004834810636583401
+@HSI_HQ,crime,0.5244755244755245
+@HSI_HQ,none,0.23776223776223776
+@HSI_HQ,immig,0.18181818181818182
+@HSI_HQ,foreign,0.04895104895104895
+@HSI_HQ,media,0.006993006993006993
+@ICEgov,crime,0.3484818017293384
+@ICEgov,immig,0.3305851598632616
+@ICEgov,none,0.26804745626382465
+@ICEgov,foreign,0.020175614987599705
+@ICEgov,pol,0.011260808365171928
+@ICEgov,bureau,0.006434747637241102
+@ICEgov,media,0.0057644614250284875
+@ICEgov,legal,0.005697432803807225
+@ICEgov,corp,0.0020108586366378444
+@ICEgov,other,0.001541658288089014
+@OFOEAC,crime,0.49019607843137253
+@OFOEAC,none,0.3903186274509804
+@OFOEAC,immig,0.10355392156862746
+@OFOEAC,foreign,0.011029411764705883
+@OFOEAC,pol,0.0024509803921568627
+@OFOEAC,corp,0.0012254901960784314
+@OFOEAC,bureau,0.0006127450980392157
+@OFOEAC,media,0.0006127450980392157
+@POTUS,none,0.7758620689655172
+@POTUS,foreign,0.09195402298850575
+@POTUS,pol,0.06321839080459771
+@POTUS,bureau,0.028735632183908046
+@POTUS,immig,0.017241379310344827
+@POTUS,legal,0.005747126436781609
+@POTUS,corp,0.005747126436781609
+@POTUS,media,0.005747126436781609
+@POTUS,other,0.005747126436781609
+@PeteHegseth,none,0.6477272727272727
+@PeteHegseth,media,0.09090909090909091
+@PeteHegseth,bureau,0.07954545454545454
+@PeteHegseth,foreign,0.07954545454545454
+@PeteHegseth,pol,0.045454545454545456
+@PeteHegseth,other,0.022727272727272728
+@PeteHegseth,immig,0.022727272727272728
+@PeteHegseth,corp,0.011363636363636364
+@PressSec,none,0.5550811272416738
+@PressSec,pol,0.20324508966695132
+@PressSec,immig,0.08198121263877028
+@PressSec,foreign,0.07173356105892399
+@PressSec,media,0.03159692570452605
+@PressSec,crime,0.02049530315969257
+@PressSec,bureau,0.016225448334756618
+@PressSec,legal,0.009393680614859094
+@PressSec,other,0.007685738684884714
+@PressSec,corp,0.0025619128949615714
+@RapidResponse47,none,0.5027821939586645
+@RapidResponse47,pol,0.2217806041335453
+@RapidResponse47,foreign,0.12837837837837837
+@RapidResponse47,immig,0.04213036565977742
+@RapidResponse47,crime,0.038553259141494434
+@RapidResponse47,media,0.029809220985691574
+@RapidResponse47,bureau,0.02384737678855326
+@RapidResponse47,legal,0.006359300476947536
+@RapidResponse47,other,0.003577106518282989
+@RapidResponse47,corp,0.0027821939586645467
+@Readygov,crime,0.6666666666666666
+@Readygov,none,0.3333333333333333
+@RealTomHoman,none,0.6090534979423868
+@RealTomHoman,pol,0.13991769547325103
+@RealTomHoman,immig,0.09876543209876543
+@RealTomHoman,crime,0.06172839506172839
+@RealTomHoman,foreign,0.05761316872427984
+@RealTomHoman,media,0.0205761316872428
+@RealTomHoman,legal,0.00823045267489712
+@RealTomHoman,bureau,0.00411522633744856
+@SecMullinDHS,none,0.42063492063492064
+@SecMullinDHS,immig,0.23015873015873015
+@SecMullinDHS,crime,0.16666666666666666
+@SecMullinDHS,pol,0.1111111111111111
+@SecMullinDHS,foreign,0.06349206349206349
+@SecMullinDHS,other,0.007936507936507936
+@SecRubio,none,0.6723646723646723
+@SecRubio,foreign,0.28774928774928776
+@SecRubio,immig,0.014245014245014245
+@SecRubio,crime,0.011396011396011397
+@SecRubio,media,0.005698005698005698
+@SecRubio,bureau,0.005698005698005698
+@SecRubio,pol,0.002849002849002849
+@SecWar,none,0.8253968253968254
+@SecWar,foreign,0.09523809523809523
+@SecWar,bureau,0.031746031746031744
+@SecWar,pol,0.031746031746031744
+@SecWar,crime,0.015873015873015872
+@SecretService,none,0.8648648648648649
+@SecretService,crime,0.13513513513513514
+@Sonderling47,none,0.8141592920353983
+@Sonderling47,pol,0.09734513274336283
+@Sonderling47,crime,0.048672566371681415
+@Sonderling47,bureau,0.01327433628318584
+@Sonderling47,media,0.01327433628318584
+@Sonderling47,foreign,0.008849557522123894
+@Sonderling47,immig,0.004424778761061947
+@StateDept,none,0.7329621232328621
+@StateDept,foreign,0.20822219258468924
+@StateDept,crime,0.026773806348359564
+@StateDept,pol,0.01543744998666311
+@StateDept,immig,0.006935182715390771
+@StateDept,media,0.004134435849559883
+@StateDept,legal,0.0022005868231528406
+@StateDept,other,0.0017004534542544678
+@StateDept,bureau,0.0015004001066951187
+@StateDept,corp,0.00013336889837289943
+@StephenM,pol,0.3206429780033841
+@StephenM,none,0.25888324873096447
+@StephenM,immig,0.17681895093062605
+@StephenM,foreign,0.09306260575296109
+@StephenM,legal,0.046531302876480544
+@StephenM,media,0.03299492385786802
+@StephenM,crime,0.031302876480541454
+@StephenM,bureau,0.0194585448392555
+@StephenM,other,0.016074450084602367
+@StephenM,corp,0.004230118443316413
+@TSA,none,0.6170212765957447
+@TSA,crime,0.19858156028368795
+@TSA,pol,0.11347517730496454
+@TSA,immig,0.028368794326241134
+@TSA,foreign,0.014184397163120567
+@TSA,other,0.0070921985815602835
+@TSA,corp,0.0070921985815602835
+@TSA,media,0.0070921985815602835
+@TSA,bureau,0.0070921985815602835
+@TheJusticeDept,none,0.26881720430107525
+@TheJusticeDept,crime,0.26881720430107525
+@TheJusticeDept,immig,0.16282642089093702
+@TheJusticeDept,foreign,0.09831029185867896
+@TheJusticeDept,pol,0.09523809523809523
+@TheJusticeDept,legal,0.059907834101382486
+@TheJusticeDept,bureau,0.03533026113671275
+@TheJusticeDept,corp,0.004608294930875576
+@TheJusticeDept,other,0.0030721966205837174
+@TheJusticeDept,media,0.0030721966205837174
+@USBPChief,immig,0.5948453608247423
+@USBPChief,none,0.2536082474226804
+@USBPChief,crime,0.0979381443298969
+@USBPChief,foreign,0.031958762886597936
+@USBPChief,pol,0.006185567010309278
+@USBPChief,other,0.005154639175257732
+@USBPChief,bureau,0.005154639175257732
+@USBPChief,media,0.002061855670103093
+@USBPChief,legal,0.002061855670103093
+@USBPChief,corp,0.0010309278350515464
+@USBPChiefELC,none,0.5474452554744526
+@USBPChiefELC,crime,0.19177173191771732
+@USBPChiefELC,immig,0.10948905109489052
+@USBPChiefELC,pol,0.06436629064366291
+@USBPChiefELC,media,0.0378234903782349
+@USBPChiefELC,bureau,0.0165892501658925
+@USBPChiefELC,other,0.015925680159256803
+@USBPChiefELC,foreign,0.0092899800928998
+@USBPChiefELC,legal,0.005972130059721301
+@USBPChiefELC,corp,0.0013271400132714001
+@USCG,none,0.770663562281723
+@USCG,crime,0.18626309662398138
+@USCG,foreign,0.020954598370197905
+@USCG,immig,0.018626309662398137
+@USCG,legal,0.002328288707799767
+@USCG,pol,0.0011641443538998836
+@USCIS,none,0.4465753424657534
+@USCIS,immig,0.2821917808219178
+@USCIS,crime,0.14977168949771688
+@USCIS,pol,0.04474885844748858
+@USCIS,foreign,0.034703196347031964
+@USCIS,corp,0.0182648401826484
+@USCIS,bureau,0.011872146118721462
+@USCIS,media,0.0073059360730593605
+@USCIS,legal,0.0045662100456621
+@USCISJoe,none,0.4375
+@USCISJoe,pol,0.375
+@USCISJoe,immig,0.09375
+@USCISJoe,foreign,0.0625
+@USCISJoe,crime,0.03125
+@USDOL,none,0.7592592592592593
+@USDOL,pol,0.14285714285714285
+@USDOL,crime,0.041005291005291
+@USDOL,media,0.015873015873015872
+@USDOL,bureau,0.011904761904761904
+@USDOL,immig,0.011904761904761904
+@USDOL,foreign,0.010582010582010581
+@USDOL,other,0.005291005291005291
+@USDOL,legal,0.0013227513227513227
+@VP,none,0.7257142857142858
+@VP,pol,0.21142857142857144
+@VP,foreign,0.03142857142857143
+@VP,legal,0.011428571428571429
+@VP,bureau,0.005714285714285714
+@VP,immig,0.005714285714285714
+@VP,corp,0.005714285714285714
+@VP,crime,0.002857142857142857
+@WhiteHouse (all administrations),none,0.7230689553122226
+@WhiteHouse (all administrations),pol,0.1331754957087896
+@WhiteHouse (all administrations),foreign,0.05219739567919503
+@WhiteHouse (all administrations),immig,0.02811482687185558
+@WhiteHouse (all administrations),crime,0.025118378218407813
+@WhiteHouse (all administrations),bureau,0.012725658478839894
+@WhiteHouse (all administrations),corp,0.00980319621189701
+@WhiteHouse (all administrations),media,0.008989345960343297
+@WhiteHouse (all administrations),legal,0.005142053862089375
+@WhiteHouse (all administrations),other,0.0016646936963598698
+@fema,none,0.74
+@fema,crime,0.19428571428571428
+@fema,pol,0.02
+@fema,immig,0.011428571428571429
+@fema,other,0.011428571428571429
+@fema,foreign,0.01
+@fema,corp,0.007142857142857143
+@fema,media,0.002857142857142857
+@fema,bureau,0.002857142857142857
+"ICE field offices (ERO, pooled)",immig,0.8593187482691775
+"ICE field offices (ERO, pooled)",none,0.07864857380227083
+"ICE field offices (ERO, pooled)",crime,0.04209360288008862
+"ICE field offices (ERO, pooled)",foreign,0.005815563555801717
+"ICE field offices (ERO, pooled)",legal,0.005538631957906397
+"ICE field offices (ERO, pooled)",pol,0.005261700360011078
+"ICE field offices (ERO, pooled)",media,0.0013846579894765993
+"ICE field offices (ERO, pooled)",bureau,0.0011077263915812794
+"ICE field offices (ERO, pooled)",corp,0.0005538631957906397
+"ICE field offices (ERO, pooled)",other,0.00027693159789531985
+Staff accounts,none,0.7747440273037542
+Staff accounts,pol,0.08191126279863481
+Staff accounts,media,0.07849829351535836
 Staff accounts,bureau,0.020477815699658702
+Staff accounts,foreign,0.017064846416382253
+Staff accounts,immig,0.010238907849829351
 Staff accounts,crime,0.010238907849829351
-Staff accounts,immig,0.006825938566552901
-Staff accounts,other,0.0034129692832764505
 Staff accounts,legal,0.0034129692832764505
 Staff accounts,corp,0.0034129692832764505
-Trump · Truth Social (President),none,0.4951126221844454
-Trump · Truth Social (President),pol,0.22524436889077773
-Trump · Truth Social (President),foreign,0.1066723331916702
-Trump · Truth Social (President),media,0.05397365065873353
-Trump · Truth Social (President),bureau,0.05184870378240544
-Trump · Truth Social (President),legal,0.022949426264343393
-Trump · Truth Social (President),crime,0.0208244793880153
-Trump · Truth Social (President),other,0.013599660008499787
-Trump · Truth Social (President),immig,0.0055248618784530384
-Trump · Truth Social (President),corp,0.004249893752656183
-Trump · Truth Social (out of office),pol,0.3955414012738854
-Trump · Truth Social (out of office),none,0.36369426751592354
-Trump · Truth Social (out of office),legal,0.08641188959660297
-Trump · Truth Social (out of office),media,0.07547770700636942
-Trump · Truth Social (out of office),bureau,0.0321656050955414
+Trump · Truth Social (President),none,0.48441291767780476
+Trump · Truth Social (President),pol,0.24621989919731194
+Trump · Truth Social (President),foreign,0.11741646443905171
+Trump · Truth Social (President),bureau,0.04834795594549188
+Trump · Truth Social (President),media,0.04573455292141124
+Trump · Truth Social (President),legal,0.022960612282994213
+Trump · Truth Social (President),crime,0.012693671831248834
+Trump · Truth Social (President),immig,0.010080268807168192
+Trump · Truth Social (President),other,0.007653537427664738
+Trump · Truth Social (President),corp,0.00448011946985253
+Trump · Truth Social (out of office),pol,0.39819532908704885
+Trump · Truth Social (out of office),none,0.36050955414012736
+Trump · Truth Social (out of office),legal,0.08365180467091295
+Trump · Truth Social (out of office),media,0.07579617834394904
 Trump · Truth Social (out of office),foreign,0.02781316348195329
-Trump · Truth Social (out of office),crime,0.006794055201698514
-Trump · Truth Social (out of office),other,0.004564755838641189
-Trump · Truth Social (out of office),immig,0.0044585987261146496
-Trump · Truth Social (out of office),corp,0.0030785562632696392
-Trump · Twitter (President),none,0.4415113871635611
-Trump · Twitter (President),pol,0.3101153504880213
-Trump · Twitter (President),media,0.10314995563442768
-Trump · Twitter (President),foreign,0.07290742383910086
-Trump · Twitter (President),legal,0.027580597456373854
-Trump · Twitter (President),bureau,0.02077787636793848
-Trump · Twitter (President),crime,0.007320319432120674
-Trump · Twitter (President),other,0.006580893226855959
-Trump · Twitter (President),immig,0.006433007985803017
-Trump · Twitter (President),corp,0.0036231884057971015
-Trump · Twitter (private citizen/candidate),none,0.624889209861143
-Trump · Twitter (private citizen/candidate),pol,0.19131405311361324
-Trump · Twitter (private citizen/candidate),media,0.09953057807832452
-Trump · Twitter (private citizen/candidate),foreign,0.03564980468108853
-Trump · Twitter (private citizen/candidate),bureau,0.01247414896760004
-Trump · Twitter (private citizen/candidate),legal,0.011193907363030562
-Trump · Twitter (private citizen/candidate),other,0.01030758625217477
-Trump · Twitter (private citizen/candidate),immig,0.006663821685323179
-Trump · Twitter (private citizen/candidate),crime,0.005613367035420018
-Trump · Twitter (private citizen/candidate),corp,0.0023635229622821128
-WhiteHouse.gov,none,0.5038031319910514
-WhiteHouse.gov,foreign,0.19910514541387025
-WhiteHouse.gov,pol,0.08993288590604027
-WhiteHouse.gov,bureau,0.08993288590604027
-WhiteHouse.gov,immig,0.053691275167785234
-WhiteHouse.gov,other,0.025950782997762864
-WhiteHouse.gov,legal,0.0174496644295302
-WhiteHouse.gov,crime,0.012080536912751677
-WhiteHouse.gov,media,0.004026845637583893
+Trump · Truth Social (out of office),bureau,0.027070063694267517
+Trump · Truth Social (out of office),immig,0.012314225053078557
+Trump · Truth Social (out of office),crime,0.006475583864118896
+Trump · Truth Social (out of office),other,0.004883227176220807
+Trump · Truth Social (out of office),corp,0.0032908704883227178
+Trump · Twitter (President),none,0.44469091984619935
+Trump · Twitter (President),pol,0.30952380952380953
+Trump · Twitter (President),media,0.1028541851523218
+Trump · Twitter (President),foreign,0.06743566992014197
+Trump · Twitter (President),legal,0.024105294291629695
+Trump · Twitter (President),bureau,0.01929902395740905
+Trump · Twitter (President),immig,0.012348417627920733
+Trump · Twitter (President),crime,0.010499852114758948
+Trump · Twitter (President),other,0.0048802129547471165
+Trump · Twitter (President),corp,0.004362614611061816
+Trump · Twitter (private citizen/candidate),none,0.6217174369747899
+Trump · Twitter (private citizen/candidate),pol,0.19124212184873948
+Trump · Twitter (private citizen/candidate),media,0.09850971638655462
+Trump · Twitter (private citizen/candidate),foreign,0.03591123949579832
+Trump · Twitter (private citizen/candidate),bureau,0.012637867647058824
+Trump · Twitter (private citizen/candidate),legal,0.01053702731092437
+Trump · Twitter (private citizen/candidate),immig,0.010307247899159664
+Trump · Twitter (private citizen/candidate),crime,0.008534663865546218
+Trump · Twitter (private citizen/candidate),other,0.00820640756302521
+Trump · Twitter (private citizen/candidate),corp,0.0023962710084033615
+"Trump · X (President, 2025–)",none,0.48214285714285715
+"Trump · X (President, 2025–)",pol,0.19642857142857142
+"Trump · X (President, 2025–)",foreign,0.10714285714285714
+"Trump · X (President, 2025–)",bureau,0.07142857142857142
+"Trump · X (President, 2025–)",media,0.05357142857142857
+"Trump · X (President, 2025–)",legal,0.03571428571428571
+"Trump · X (President, 2025–)",crime,0.03571428571428571
+"Trump · X (President, 2025–)",immig,0.017857142857142856
+WhiteHouse.gov,none,0.5069351230425055
+WhiteHouse.gov,foreign,0.21252796420581654
+WhiteHouse.gov,pol,0.09306487695749441
+WhiteHouse.gov,bureau,0.0756152125279642
+WhiteHouse.gov,immig,0.052796420581655484
+WhiteHouse.gov,other,0.026398210290827742
+WhiteHouse.gov,legal,0.015212527964205816
+WhiteHouse.gov,crime,0.01029082774049217
 WhiteHouse.gov,corp,0.004026845637583893
+WhiteHouse.gov,media,0.003131991051454139

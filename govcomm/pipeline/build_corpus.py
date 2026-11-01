@@ -113,9 +113,48 @@ for fn in glob.glob(f"{WH}/**/*.md", recursive=True):
         created_at=pd.Timestamp(m.group(1)), title=clean(title), text=clean(body), url=src.group(1) if src else None,
         source="Transparency47/WhiteHouse", wh_category=cat)
 
+# 6. Federal X accounts, 2016-2026 (vidproject/x: browser captures of public timelines)
+VP = f"{ROOT}/vidproject/x/data"
+for fn in sorted(glob.glob(f"{VP}/*.parquet")):
+    handle = os.path.basename(fn)[:-8]
+    if handle.startswith(("catalog", "_misc")):
+        continue
+    x = pd.read_parquet(fn, columns=["tweet_id", "posted_at", "tweet_type", "text", "tweet_url", "like_count", "media"])
+    for r in x.itertuples(index=False):
+        t = clean(r.text)
+        if r.tweet_type == "retweet" and not t.startswith("RT"):
+            t = "RT " + t
+        add(post_id="tw:" + str(r.tweet_id), platform="Twitter", account="@" + handle, created_at=pd.Timestamp(r.posted_at),
+            text=t, url=r.tweet_url, source="vidproject/x", engagement=r.like_count,
+            n_media=len(r.media) if r.media is not None else 0, priority=1)
+
+# 7. Truth Social and X posts mirrored by Transparency47/socials (2025-2026)
+SO = f"{ROOT}/transparency47/socials"
+for fn in glob.glob(f"{SO}/TruthSocial/RealDonaldTrump/**/POST.md", recursive=True) + glob.glob(f"{SO}/X/**/POST.md", recursive=True):
+    raw = open(fn, encoding="utf-8", errors="replace").read()
+    meta = dict(re.findall(r"<!--\s*(\w+):\s*(.*?)\s*-->", raw))
+    if "post_id" not in meta or "date_published" not in meta:
+        continue
+    body = re.sub(r"<!--.*?-->", "", raw, flags=re.S)
+    body = re.sub(r"^#\s.*$", "", body, count=1, flags=re.M)
+    body = body.split("\n## Media")[0]
+    body = re.sub(r"\[@\s*([^\]]+)\]\([^)]*\)", r"@\1", body)
+    body = re.sub(r"\[([^\]]*)\]\(([^)]*)\)", r"\1 \2", body).strip()
+    body = re.sub(r"^Repost of (@\w+):", r"RT \1:", body)
+    body = body.replace("_No text content captured._", "")  # image- or video-only post
+    # Truth Social links arrive split at Mastodon's hidden spans ("https://www. site.com/pa th"); drop them whole.
+    body = re.sub(r"https?://(?:www\.)?\s\S+(?:\s(?=\S*[/\-.?=_%0-9])\S+)?", " ", body)
+    ts = meta.get("platform") == "TruthSocial"
+    add(post_id=("ts:" if ts else "tw:") + meta["post_id"], platform="Truth Social" if ts else "Twitter",
+        account="@realDonaldTrump (Truth Social)" if ts else ("@realDonaldTrump" if meta.get("account", "").lower() == "realdonaldtrump" else "@" + meta.get("account", "")),
+        created_at=pd.Timestamp(meta["date_published"]), text=clean(body), url=meta.get("source"),
+        source="Transparency47/socials", priority=2)
+
 df = pd.DataFrame(rows)
 df["created_at"] = pd.to_datetime(df["created_at"], utc=True)
-df = df.drop_duplicates("post_id").sort_values("created_at").reset_index(drop=True)
+df["priority"] = df["priority"].fillna(0)
+df = df.sort_values("priority").drop_duplicates("post_id").drop(columns="priority")
+df = df.sort_values("created_at").reset_index(drop=True)
 adm = df["created_at"].map(admin_of)
 df["administration"] = [a for a, _ in adm]
 df["admin_party"] = [p for _, p in adm]
@@ -136,6 +175,38 @@ def role(r):
         return "Agency"
     return "White House staff (personal)"
 df["role"] = df.apply(role, axis=1)
+
+WH_INST = {"@WhiteHouse", "@WhiteHouse45", "@WhiteHouse46", "@ObamaWhiteHouse", "@POTUS", "WhiteHouse.gov", "@PressSec", "@RapidResponse47"}
+OFFICIALS = {"@SecRubio", "@SecWar", "@PeteHegseth", "@FBIDirectorKash", "@AGPamBondi", "@SecMullinDHS", "@Sonderling47", "@USCISJoe",
+             "@CBPCommissioner", "@USBPChief", "@OFOEAC", "@GregoryKBovino", "@RealTomHoman", "@StephenM", "@EnvoyNoem", "@VP"}
+DEPT = {"White House": WH_INST | {"@StephenM", "@RealTomHoman", "@VP"},
+        "Justice": {"@TheJusticeDept", "@FBI", "@ATFHQ", "@FBIDirectorKash", "@AGPamBondi"},
+        "Defense/War": {"@DeptofWar", "@DOWResponse", "@SecWar", "@PeteHegseth"},
+        "State": {"@StateDept", "@SecRubio"}, "Labor": {"@USDOL", "@Sonderling47"}}
+def dept(a):
+    if a.startswith("@realDonaldTrump"):
+        return "President (personal)"
+    for k, v in DEPT.items():
+        if a in v:
+            return k
+    if a in ("@SeanSpicer", "@KellyannePolls", "@DanScavino"):
+        return "White House"
+    return "Homeland Security"
+def acct_type(a):
+    if a.startswith("@realDonaldTrump"):
+        return "President's personal account"
+    if a in WH_INST:
+        return "White House (institutional)"
+    if a in OFFICIALS or a in ("@SeanSpicer", "@KellyannePolls", "@DanScavino"):
+        return "Official's account"
+    if a.startswith(("@ERO", "@Ero")) or a == "@USBPChiefELC":
+        return "Agency field office"
+    return "Agency headquarters"
+df["department"] = df["account"].map(dept)
+df["account_type"] = df["account"].map(acct_type)
+# Every account other than Trump's own and the 2017 staff accounts takes its account type as its role.
+other = ~df["account"].str.startswith("@realDonaldTrump") & ~df["account"].isin(["@SeanSpicer", "@KellyannePolls", "@DanScavino"])
+df.loc[other, "role"] = df.loc[other, "account_type"]
 staff_terms = {"@SeanSpicer": ("2017-01-20", "2017-07-21"), "@KellyannePolls": ("2017-01-20", "2020-08-31"),
                "@DanScavino": ("2017-01-20", "2021-01-20")}
 for a, (s, e) in staff_terms.items():

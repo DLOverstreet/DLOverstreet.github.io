@@ -1,0 +1,45 @@
+key,kind,category,period,share
+topic | ceremony | Before Jan 2025,topic,ceremony,Before Jan 2025,0.11440899418872896
+topic | culture | Before Jan 2025,topic,culture,Before Jan 2025,0.014011085525919832
+topic | econ | Before Jan 2025,topic,econ,Before Jan 2025,0.046275989449211956
+topic | elections | Before Jan 2025,topic,elections,Before Jan 2025,0.005275149349959727
+topic | energy | Before Jan 2025,topic,energy,Before Jan 2025,0.01578577570864949
+topic | foreign | Before Jan 2025,topic,foreign,Before Jan 2025,0.13788750399367514
+topic | gov | Before Jan 2025,topic,gov,Before Jan 2025,0.14465853845509313
+topic | health | Before Jan 2025,topic,health,Before Jan 2025,0.05613540124920405
+topic | immig | Before Jan 2025,topic,immig,Before Jan 2025,0.17464638642344632
+topic | justice | Before Jan 2025,topic,justice,Before Jan 2025,0.17864517537240338
+topic | media | Before Jan 2025,topic,media,Before Jan 2025,0.006575982192821564
+topic | other | Before Jan 2025,topic,other,Before Jan 2025,0.10569401809088644
+topic | ceremony | Trump II,topic,ceremony,Trump II,0.0541714138693016
+topic | culture | Trump II,topic,culture,Trump II,0.00976682209131055
+topic | econ | Trump II,topic,econ,Trump II,0.041935277029085644
+topic | elections | Trump II,topic,elections,Trump II,0.009500752337731098
+topic | energy | Trump II,topic,energy,Trump II,0.018818074463845088
+topic | foreign | Trump II,topic,foreign,Trump II,0.11134704619735301
+topic | gov | Trump II,topic,gov,Trump II,0.14531867909643162
+topic | health | Trump II,topic,health,Trump II,0.024435413417782756
+topic | immig | Trump II,topic,immig,Trump II,0.3222775893951419
+topic | justice | Trump II,topic,justice,Trump II,0.1739556325440122
+topic | media | Trump II,topic,media,Trump II,0.00486928047953547
+topic | other | Trump II,topic,other,Trump II,0.08360401907846905
+villain | bureau | Before Jan 2025,villain,bureau,Before Jan 2025,0.008488604641801468
+villain | corp | Before Jan 2025,villain,corp,Before Jan 2025,0.005296070353527304
+villain | crime | Before Jan 2025,villain,crime,Before Jan 2025,0.19916486565346042
+villain | foreign | Before Jan 2025,villain,foreign,Before Jan 2025,0.04699174074729615
+villain | immig | Before Jan 2025,villain,immig,Before Jan 2025,0.11611430209741652
+villain | legal | Before Jan 2025,villain,legal,Before Jan 2025,0.0056901135844458625
+villain | media | Before Jan 2025,villain,media,Before Jan 2025,0.005425191672589743
+villain | none | Before Jan 2025,villain,none,Before Jan 2025,0.5902717710526257
+villain | other | Before Jan 2025,villain,other,Before Jan 2025,0.0013546842812861332
+villain | pol | Before Jan 2025,villain,pol,Before Jan 2025,0.02120265591555066
+villain | bureau | Trump II,villain,bureau,Trump II,0.008803180984481372
+villain | corp | Trump II,villain,corp,Trump II,0.0036557325787501993
+villain | crime | Trump II,villain,crime,Trump II,0.1435052434258323
+villain | foreign | Trump II,villain,foreign,Trump II,0.0766628939296887
+villain | immig | Trump II,villain,immig,Trump II,0.28738855299317867
+villain | legal | Trump II,villain,legal,Trump II,0.00911755027335054
+villain | media | Trump II,villain,media,Trump II,0.0048556151943896005
+villain | none | Trump II,villain,none,Trump II,0.4085215080880125
+villain | other | Trump II,villain,other,Trump II,0.0023043350224223854
+villain | pol | Trump II,villain,pol,Trump II,0.05518538750989376

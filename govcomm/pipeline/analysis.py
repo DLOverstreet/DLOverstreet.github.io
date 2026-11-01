@@ -34,7 +34,7 @@ t1.to_csv(os.path.join(tab, "table1_descriptives_by_voice.csv"), index=False)
 
 # B. @StateDept by Secretary of State.
 sd = df[df.voice == "@StateDept"].copy()
-order = ["Clinton", "Kerry", "Tillerson", "Pompeo", "Blinken"]
+order = ["Clinton", "Kerry", "Tillerson", "Pompeo", "Blinken", "Rubio"]
 sd = sd[sd.created_at >= pd.Timestamp("2012-05-01", tz="UTC")]  # archive is sparse before May 2012
 rows = []
 for s in order:
@@ -45,8 +45,9 @@ for s in order:
 pd.DataFrame(rows).to_csv(os.path.join(tab, "statedept_by_secretary.csv"), index=False)
 
 # C. Interrupted time series for @StateDept (monthly means, Newey-West SEs).
-mon = sd.groupby("month")[ALL].mean().reset_index()
-mon["n"] = sd.groupby("month").size().values
+sdi = sd[sd.created_at < pd.Timestamp("2025-01-20 17:00", tz="UTC")]  # ITS covers 2012-2025; Trump II is analysed in trump2.py
+mon = sdi.groupby("month")[ALL].mean().reset_index()
+mon["n"] = sdi.groupby("month").size().values
 mon = mon[mon.n >= 15].reset_index(drop=True)
 mon["t"] = (mon.month.dt.year - 2012) * 12 + mon.month.dt.month
 t17 = (2017 - 2012) * 12 + 2
@@ -69,11 +70,10 @@ tr = df[df.voice.str.startswith("Trump")].copy()
 tw = tr[(tr.platform == "Twitter") & (tr.created_at >= pd.Timestamp("2015-06-16", tz="UTC"))].copy()
 tw["office"] = tw.voice.str.contains("President").astype(int)
 ts = tr[tr.platform == "Truth Social"].copy()
-ts = ts[ts.created_at < pd.Timestamp("2025-11-01", tz="UTC")]  # archive gap after Oct 2025
 ts["office"] = ts.voice.str.contains("President").astype(int)
 rows = []
 for name, g in [("Twitter: candidate (Jun 2015-Jan 2017) vs President (Jan 2017-Jan 2021)", tw),
-                ("Truth Social: out of office (2022-Jan 2025) vs President (Jan-Oct 2025)", ts)]:
+                ("Truth Social: out of office (2022-Jan 2025) vs President (Jan 2025-Aug 2026)", ts)]:
     g = g.copy()
     g["ym"] = g.month.astype(str)
     for d in ALL:

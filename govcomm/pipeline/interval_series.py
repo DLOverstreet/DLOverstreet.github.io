@@ -18,7 +18,10 @@ LABEL = {"Trump · Twitter (private citizen/candidate)": "Trump on Twitter, befo
          "Trump · Twitter (President)": "Trump on Twitter, as President",
          "Trump · Truth Social (out of office)": "Trump on Truth Social, out of office",
          "Trump · Truth Social (President)": "Trump on Truth Social, as President",
-         "@StateDept": "@StateDept", "WhiteHouse.gov": "WhiteHouse.gov"}
+         "@StateDept": "@StateDept", "WhiteHouse.gov": "WhiteHouse.gov",
+         "@WhiteHouse (all administrations)": "@WhiteHouse (Obama, Trump I, Biden, Trump II)",
+         "@DHSgov": "@DHSgov", "@ICEgov": "@ICEgov", "@CBP": "@CBP", "ICE field offices (ERO, pooled)": "ICE field offices (pooled)",
+         "@RapidResponse47": "@RapidResponse47", "@PressSec": "@PressSec"}
 # freq, minimum posts per period, running-average window in periods, max gap (days) treated as continuous
 SPECS = {"weekly": ("W-SUN", 10, 8), "monthly": ("M", 20, 6), "quarterly": ("Q", 25, 4), "yearly": ("Y", 50, 1)}
 

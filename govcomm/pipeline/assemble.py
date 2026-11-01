@@ -17,19 +17,27 @@ bare = df["text"].fillna("").str.replace(r"https?://\S+", "", regex=True).str.st
 df["analysis_sample"] = (~df["is_repost"]) & ((bare.str.split().str.len() >= 4) | (df.platform == "WhiteHouse.gov"))
 
 
+WH_ACCOUNTS = {"@ObamaWhiteHouse", "@WhiteHouse45", "@WhiteHouse46", "@WhiteHouse"}
+T2 = pd.Timestamp("2025-01-20 17:00", tz="UTC")
+
+
 def voice(r):
     a = r["account"]
     if a == "@realDonaldTrump":
-        return "Trump · Twitter (President)" if r["role"].startswith("President") else "Trump · Twitter (private citizen/candidate)"
+        if not r["role"].startswith("President"):
+            return "Trump · Twitter (private citizen/candidate)"
+        return "Trump · X (President, 2025–)" if r["created_at"] >= T2 else "Trump · Twitter (President)"
     if a.startswith("@realDonaldTrump (Truth"):
         return "Trump · Truth Social (President)" if r["role"].startswith("President") else "Trump · Truth Social (out of office)"
-    if a == "@StateDept":
-        return "@StateDept"
-    if a == "WhiteHouse.gov":
-        return "WhiteHouse.gov"
-    if a in ("@POTUS", "@WhiteHouse", "@VP"):
-        return "@POTUS / @WhiteHouse / @VP (2017)"
-    return "Staff accounts" if r["role"] == "White House staff (personal)" else "Staff (before office)"
+    if a in WH_ACCOUNTS:
+        return "@WhiteHouse (all administrations)"
+    if r["role"] == "White House staff (personal)":
+        return "Staff accounts"
+    if r["role"] == "Staff out of office":
+        return "Staff (before office)"
+    if a.startswith(("@ERO", "@Ero")):
+        return "ICE field offices (ERO, pooled)"
+    return a
 
 
 df["voice"] = df.apply(voice, axis=1)
