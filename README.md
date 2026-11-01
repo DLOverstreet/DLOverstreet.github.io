@@ -16,7 +16,9 @@ Interactive dashboard: https://claude.ai/artifact/QL6GppsoFQLRmuDqbNHT15 (privat
 | Path | Contents |
 |---|---|
 | `govcomm/CODEBOOK.md` | Dimensions, anchor texts at −1/0/+1, categorical codes, pipeline summary |
-| `govcomm/data/scored_posts.csv.gz` / `.parquet` | 144,600 posts with all scores, party slant, villain, topic, metadata and text |
+| `govcomm/CODEBOOK_FASCISM.md` | Fascist Rhetoric Index: seven markers, sources, coding rules, model |
+| `govcomm/labels/fri_labels*.csv` | 1,100 blind teacher codes on the seven markers (join to `fri_sample*_key.csv` on `lid`) |
+| `govcomm/data/scored_posts.csv.gz` / `.parquet` | 254,082 posts (207,594 in the analysis sample) with all scores, party slant, Fascist Rhetoric Index (`fri`, `fri_p_syndrome`, `fri_RE` … `fri_VG`), villain, topic, metadata and text |
 | `govcomm/labels/teacher_labels.csv` | 1,400 blind teacher labels by Claude (join to `label_sample_key.csv` on `lid`) |
 | `govcomm/labels/retest_*` | 80-post same-session retest (see the caveat below) |
 | `govcomm/validation/` | 120-post human coding packet, key and scoring script |
@@ -145,6 +147,88 @@ Comparisons stay within account and hold topic fixed, but capture depth could st
 content. The Transparency47 Truth Social mirror writes "_No text content captured._" for media-only
 posts and splits links at hidden spans; `build_corpus.py` removes both.
 
+## Fascist Rhetoric Index (added Nov 2026)
+
+`govcomm/CODEBOOK_FASCISM.md` defines seven rhetorical markers drawn from Paxton, Griffin, Eco,
+Stanley, and Levitsky and Ziblatt:
+
+- decline and rebirth
+- existential enemy or plot
+- dehumanization or purity
+- leader cult
+- anti-democratic delegitimization
+- violence as virtue
+- victimhood and retribution
+
+Each marker is scored 0, 1 or 2. **FRI** = 100 × sum ÷ 14. A **syndrome post** has three or more
+markers, at least one of them enemy, dehumanization, anti-democratic or violence. The index measures
+rhetoric. It does not classify any person, party or government as fascist. The same rules apply to
+every account; for example, calling opponents an existential threat to democracy counts whoever
+says it.
+
+**Labels and model.** Claude coded 1,100 posts blind to source in three rounds: an 800-post
+stratified sample, then 200 and 100 posts chosen on model scores to add rare positives and catch
+false alarms. All 37 top-scoring Bush-, Obama- and Biden-era government posts in round 3 were coded
+zero; the model learned from them.
+
+`fri_student.py` fits a calibrated hurdle model per marker. Cross-validated against the coder:
+
+| Output | Agreement |
+|---|---|
+| Index | r = 0.75; AUC 0.89 for any marker |
+| Syndrome | AUC 0.96 |
+| Markers: enemy, anti-democratic, victimhood | AUC 0.94–0.95 |
+| Markers: rebirth, dehumanization | AUC 0.91–0.92 |
+| Markers: leader cult, violence | AUC 0.77–0.80, noisy (35 and 19 positives) |
+
+Posts with no marker still score about 0.1–0.5, because the model is never fully certain.
+
+**Findings** (`analysis/tables/fri_*.csv`; index mean, with syndrome posts as % of posts in
+parentheses):
+
+| Voice | Obama | Trump I | Biden | Trump II |
+|---|---|---|---|---|
+| @WhiteHouse and other institutional White House accounts | 0.32 (0.07%) | 0.61 (0.11%) | 0.50 (0.09%) | 1.53 (1.28%) |
+| Agencies (HQ and field) | 0.19 (0.03%) | 0.36 (0.14%) | 0.35 (0.12%) | 1.07 (0.59%) |
+| Officials and staff (in office) | — | 0.56 (0.46%) | 0.34 (0.04%) | 1.36 (1.29%) |
+
+- **Trump's own accounts:**
+  - Twitter before office: 0.91 (0.29%)
+  - Twitter as President, 2017–21: 2.91 (1.96%)
+  - Truth Social out of office, 2021–25: 5.56 (9.07%)
+  - Truth Social as President, 2025–: 4.54 (6.30%)
+  - Peak: Dec 2022 – Feb 2023, three-month average 7.2, with 11.5% syndrome posts.
+- **Pooled, institutional accounts present on both sides of Jan 20, 2025, account fixed effects,
+  Biden = reference:**
+  - Trump II: +0.93 (SE 0.06) on a Biden-era mean of 0.39, and +0.85 holding topic fixed.
+  - Trump I: +0.05 (SE 0.01).
+  - Syndrome share under Trump II: +0.59 percentage points (SE 0.07) from 0.11%.
+  - The second term, not the first, brought this rhetoric into government accounts.
+- **By account (change at Jan 20, 2025):**
+  - Largest increases: @DHSgov 0.31 → 2.15 (+1.85), @ICEgov +0.96, @StateDept +0.78 (2026 posts),
+    @TheJusticeDept +0.76, @WhiteHouse +0.73.
+  - Service accounts barely moved: @fema +0.10, @CBPJobs +0.04, @OFOEAC −0.03.
+- **What drives it:**
+  - In Trump II agency posts: dehumanization and purity (immigrants as an invading or criminal
+    class), then enemy framing.
+  - In Trump II White House posts: enemy framing, decline and rebirth, leader praise,
+    dehumanization and attacks on the press.
+  - Trump's own posts lean on enemy and anti-democratic markers, plus victimhood when out of office.
+- **Timing:** the White House peaked in Sep–Oct 2026 (three-month average 2.3, with 3.6% syndrome
+  posts).
+- **Relation to the other scores:** the index correlates with partisanship (r = −0.55),
+  professionalism (−0.54) and ideology (+0.50). Most partisan posts carry no marker, so it is not
+  the same measure.
+
+**Caveats.**
+
+- The codes come from one LLM coder; human validation is still to do.
+- Agency capture is uneven by year.
+- Biden-era posts attacking Republicans over January 6, such as "MAGA Republican officials refuse to
+  accept the results of free and fair elections", were coded 0. They criticize opponents rather than
+  delegitimize institutions or cast opponents as existential enemies. Coders could reasonably differ
+  on such posts.
+
 ## Reproduce
 
 ```
@@ -153,7 +237,8 @@ python3 -I govcomm/pipeline/build_corpus.py /home/user govcomm/data/corpus.parqu
 python3 -I govcomm/pipeline/congress_slant.py <congresstweets/data> <congress-legislators> govcomm/data/corpus.parquet govcomm/data/derived
 python3 -I govcomm/pipeline/make_label_sample.py govcomm/data/corpus.parquet govcomm/labels   # only for a new sample
 python3 -I govcomm/pipeline/student.py govcomm/data/corpus.parquet govcomm/labels glove-twitter-100.gz govcomm/data/derived
-cd govcomm/pipeline && ./run_after_scoring.sh   # assemble, analysis, trump2, dashboard tables, interval series
+python3 -I govcomm/pipeline/fri_student.py govcomm/data/corpus.parquet govcomm/labels glove-twitter-100.gz govcomm/data/derived <feature_cache_dir>
+cd govcomm/pipeline && ./run_after_scoring.sh   # assemble, analysis, trump2, FRI analysis, dashboard tables, interval series
 ```
 
 GloVe-Twitter-100 comes from the gensim-data GitHub release. Python packages: pandas, pyarrow,

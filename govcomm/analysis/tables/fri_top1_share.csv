@@ -1,0 +1,17 @@
+group,period,n,top1_share
+Agencies (HQ and field),Biden,25982,0.0
+Agencies (HQ and field),Obama,17063,0.0
+Agencies (HQ and field),Trump I,22795,0.0
+Agencies (HQ and field),Trump II,18786,0.11710848504205258
+Officials and staff,Biden,745,0.0
+Officials and staff,Trump I,613,0.0
+Officials and staff,Trump II,5160,0.29069767441860467
+"Trump, personal accounts","Truth Social, President (2025-)",5357,5.917491133096883
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,12.346072186836517
+"Trump, personal accounts","Twitter, President (2017-21)",13524,2.9281277728482697
+"Trump, personal accounts","Twitter, before office",30464,0.019695378151260504
+"Trump, personal accounts","X, President (2025-)",56,16.071428571428573
+"White House, institutional",Biden,9340,0.0
+"White House, institutional",Obama,3508,0.0
+"White House, institutional",Trump I,11530,0.05203816131830009
+"White House, institutional",Trump II,8750,0.4114285714285714

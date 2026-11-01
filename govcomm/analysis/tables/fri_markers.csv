@@ -1,0 +1,113 @@
+group,period,n,marker,mean_score,marker_name,fri_points,key
+"Trump, personal accounts","Twitter, before office",30464,RE,0.04165543,Decline and rebirth,0.2975388,"Trump, personal accounts | Twitter, before office | RE"
+"Trump, personal accounts","Twitter, President (2017-21)",13524,RE,0.054486006,Decline and rebirth,0.38918576,"Trump, personal accounts | Twitter, President (2017-21) | RE"
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,RE,0.12982354,Decline and rebirth,0.92731094,"Trump, personal accounts | Truth Social, out of office (2021-25) | RE"
+"Trump, personal accounts","Truth Social, President (2025-)",5357,RE,0.14111002,Decline and rebirth,1.0079287,"Trump, personal accounts | Truth Social, President (2025-) | RE"
+"Trump, personal accounts","X, President (2025-)",56,RE,0.2221757,Decline and rebirth,1.5869693,"Trump, personal accounts | X, President (2025-) | RE"
+"White House, institutional",Obama,3508,RE,0.011634799,Decline and rebirth,0.083105706,"White House, institutional | Obama | RE"
+"White House, institutional",Trump I,11530,RE,0.019873513,Decline and rebirth,0.14195366,"White House, institutional | Trump I | RE"
+"White House, institutional",Biden,9340,RE,0.014357437,Decline and rebirth,0.10255312,"White House, institutional | Biden | RE"
+"White House, institutional",Trump II,8750,RE,0.045207422,Decline and rebirth,0.32291016,"White House, institutional | Trump II | RE"
+Agencies (HQ and field),Obama,17063,RE,0.0071292375,Decline and rebirth,0.050923128,Agencies (HQ and field) | Obama | RE
+Agencies (HQ and field),Trump I,22795,RE,0.007707448,Decline and rebirth,0.0550532,Agencies (HQ and field) | Trump I | RE
+Agencies (HQ and field),Biden,25982,RE,0.010233715,Decline and rebirth,0.07309796,Agencies (HQ and field) | Biden | RE
+Agencies (HQ and field),Trump II,18786,RE,0.016667513,Decline and rebirth,0.11905366,Agencies (HQ and field) | Trump II | RE
+Officials and staff,Trump I,613,RE,0.02333738,Decline and rebirth,0.16669556,Officials and staff | Trump I | RE
+Officials and staff,Biden,745,RE,0.015700802,Decline and rebirth,0.11214859,Officials and staff | Biden | RE
+Officials and staff,Trump II,5160,RE,0.019258901,Decline and rebirth,0.13756359,Officials and staff | Trump II | RE
+"Trump, personal accounts","Twitter, before office",30464,EN,0.01811869,Existential enemy / plot,0.12941922,"Trump, personal accounts | Twitter, before office | EN"
+"Trump, personal accounts","Twitter, President (2017-21)",13524,EN,0.13698152,Existential enemy / plot,0.9784394,"Trump, personal accounts | Twitter, President (2017-21) | EN"
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,EN,0.27695036,Existential enemy / plot,1.9782169,"Trump, personal accounts | Truth Social, out of office (2021-25) | EN"
+"Trump, personal accounts","Truth Social, President (2025-)",5357,EN,0.17489833,Existential enemy / plot,1.2492737,"Trump, personal accounts | Truth Social, President (2025-) | EN"
+"Trump, personal accounts","X, President (2025-)",56,EN,0.12034975,Existential enemy / plot,0.8596411,"Trump, personal accounts | X, President (2025-) | EN"
+"White House, institutional",Obama,3508,EN,0.0053942767,Existential enemy / plot,0.03853055,"White House, institutional | Obama | EN"
+"White House, institutional",Trump I,11530,EN,0.018701194,Existential enemy / plot,0.13357995,"White House, institutional | Trump I | EN"
+"White House, institutional",Biden,9340,EN,0.01269507,Existential enemy / plot,0.09067907,"White House, institutional | Biden | EN"
+"White House, institutional",Trump II,8750,EN,0.05179873,Existential enemy / plot,0.36999092,"White House, institutional | Trump II | EN"
+Agencies (HQ and field),Obama,17063,EN,0.0032114307,Existential enemy / plot,0.02293879,Agencies (HQ and field) | Obama | EN
+Agencies (HQ and field),Trump I,22795,EN,0.008513263,Existential enemy / plot,0.060809024,Agencies (HQ and field) | Trump I | EN
+Agencies (HQ and field),Biden,25982,EN,0.0062732687,Existential enemy / plot,0.044809062,Agencies (HQ and field) | Biden | EN
+Agencies (HQ and field),Trump II,18786,EN,0.028815884,Existential enemy / plot,0.20582774,Agencies (HQ and field) | Trump II | EN
+Officials and staff,Trump I,613,EN,0.0100057935,Existential enemy / plot,0.071469955,Officials and staff | Trump I | EN
+Officials and staff,Biden,745,EN,0.0037861518,Existential enemy / plot,0.02704394,Officials and staff | Biden | EN
+Officials and staff,Trump II,5160,EN,0.04962404,Existential enemy / plot,0.35445744,Officials and staff | Trump II | EN
+"Trump, personal accounts","Twitter, before office",30464,DH,0.0060403487,Dehumanization / purity,0.043145347,"Trump, personal accounts | Twitter, before office | DH"
+"Trump, personal accounts","Twitter, President (2017-21)",13524,DH,0.013333368,Dehumanization / purity,0.09523834,"Trump, personal accounts | Twitter, President (2017-21) | DH"
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,DH,0.026065765,Dehumanization / purity,0.18618403,"Trump, personal accounts | Truth Social, out of office (2021-25) | DH"
+"Trump, personal accounts","Truth Social, President (2025-)",5357,DH,0.09892101,Dehumanization / purity,0.7065787,"Trump, personal accounts | Truth Social, President (2025-) | DH"
+"Trump, personal accounts","X, President (2025-)",56,DH,0.16547939,Dehumanization / purity,1.1819956,"Trump, personal accounts | X, President (2025-) | DH"
+"White House, institutional",Obama,3508,DH,0.007686543,Dehumanization / purity,0.054903876,"White House, institutional | Obama | DH"
+"White House, institutional",Trump I,11530,DH,0.01185363,Dehumanization / purity,0.08466878,"White House, institutional | Trump I | DH"
+"White House, institutional",Biden,9340,DH,0.0095260395,Dehumanization / purity,0.068043135,"White House, institutional | Biden | DH"
+"White House, institutional",Trump II,8750,DH,0.03246174,Dehumanization / purity,0.23186958,"White House, institutional | Trump II | DH"
+Agencies (HQ and field),Obama,17063,DH,0.0027450805,Dehumanization / purity,0.019607719,Agencies (HQ and field) | Obama | DH
+Agencies (HQ and field),Trump I,22795,DH,0.010791162,Dehumanization / purity,0.07707973,Agencies (HQ and field) | Trump I | DH
+Agencies (HQ and field),Biden,25982,DH,0.008596074,Dehumanization / purity,0.06140053,Agencies (HQ and field) | Biden | DH
+Agencies (HQ and field),Trump II,18786,DH,0.05059467,Dehumanization / purity,0.3613905,Agencies (HQ and field) | Trump II | DH
+Officials and staff,Trump I,613,DH,0.0063787056,Dehumanization / purity,0.04556218,Officials and staff | Trump I | DH
+Officials and staff,Biden,745,DH,0.009675351,Dehumanization / purity,0.06910965,Officials and staff | Biden | DH
+Officials and staff,Trump II,5160,DH,0.053083967,Dehumanization / purity,0.3791712,Officials and staff | Trump II | DH
+"Trump, personal accounts","Twitter, before office",30464,LC,0.025718981,Leader cult,0.18370701,"Trump, personal accounts | Twitter, before office | LC"
+"Trump, personal accounts","Twitter, President (2017-21)",13524,LC,0.011824103,Leader cult,0.08445788,"Trump, personal accounts | Twitter, President (2017-21) | LC"
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,LC,0.018658394,Leader cult,0.13327424,"Trump, personal accounts | Truth Social, out of office (2021-25) | LC"
+"Trump, personal accounts","Truth Social, President (2025-)",5357,LC,0.03758409,Leader cult,0.26845777,"Trump, personal accounts | Truth Social, President (2025-) | LC"
+"Trump, personal accounts","X, President (2025-)",56,LC,0.016530791,Leader cult,0.118077084,"Trump, personal accounts | X, President (2025-) | LC"
+"White House, institutional",Obama,3508,LC,0.007988227,Leader cult,0.05705876,"White House, institutional | Obama | LC"
+"White House, institutional",Trump I,11530,LC,0.0140953325,Leader cult,0.10068095,"White House, institutional | Trump I | LC"
+"White House, institutional",Biden,9340,LC,0.01368717,Leader cult,0.0977655,"White House, institutional | Biden | LC"
+"White House, institutional",Trump II,8750,LC,0.033629104,Leader cult,0.2402079,"White House, institutional | Trump II | LC"
+Agencies (HQ and field),Obama,17063,LC,0.0023762977,Leader cult,0.016973555,Agencies (HQ and field) | Obama | LC
+Agencies (HQ and field),Trump I,22795,LC,0.0037286205,Leader cult,0.026633004,Agencies (HQ and field) | Trump I | LC
+Agencies (HQ and field),Biden,25982,LC,0.0040277313,Leader cult,0.028769508,Agencies (HQ and field) | Biden | LC
+Agencies (HQ and field),Trump II,18786,LC,0.005158538,Leader cult,0.0368467,Agencies (HQ and field) | Trump II | LC
+Officials and staff,Trump I,613,LC,0.008958613,Leader cult,0.063990094,Officials and staff | Trump I | LC
+Officials and staff,Biden,745,LC,0.0029874984,Leader cult,0.021339273,Officials and staff | Biden | LC
+Officials and staff,Trump II,5160,LC,0.010815733,Leader cult,0.07725524,Officials and staff | Trump II | LC
+"Trump, personal accounts","Twitter, before office",30464,AD,0.022045955,Anti-democratic delegitimization,0.1574711,"Trump, personal accounts | Twitter, before office | AD"
+"Trump, personal accounts","Twitter, President (2017-21)",13524,AD,0.13622719,Anti-democratic delegitimization,0.97305137,"Trump, personal accounts | Twitter, President (2017-21) | AD"
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,AD,0.19119799,Anti-democratic delegitimization,1.3656999,"Trump, personal accounts | Truth Social, out of office (2021-25) | AD"
+"Trump, personal accounts","Truth Social, President (2025-)",5357,AD,0.1223966,Anti-democratic delegitimization,0.87426144,"Trump, personal accounts | Truth Social, President (2025-) | AD"
+"Trump, personal accounts","X, President (2025-)",56,AD,0.13029495,Anti-democratic delegitimization,0.93067825,"Trump, personal accounts | X, President (2025-) | AD"
+"White House, institutional",Obama,3508,AD,0.0065245894,Anti-democratic delegitimization,0.046604212,"White House, institutional | Obama | AD"
+"White House, institutional",Trump I,11530,AD,0.010193362,Anti-democratic delegitimization,0.07280973,"White House, institutional | Trump I | AD"
+"White House, institutional",Biden,9340,AD,0.009748468,Anti-democratic delegitimization,0.06963192,"White House, institutional | Biden | AD"
+"White House, institutional",Trump II,8750,AD,0.029457098,Anti-democratic delegitimization,0.21040784,"White House, institutional | Trump II | AD"
+Agencies (HQ and field),Obama,17063,AD,0.004847506,Anti-democratic delegitimization,0.034625042,Agencies (HQ and field) | Obama | AD
+Agencies (HQ and field),Trump I,22795,AD,0.010336575,Anti-democratic delegitimization,0.07383268,Agencies (HQ and field) | Trump I | AD
+Agencies (HQ and field),Biden,25982,AD,0.010574638,Anti-democratic delegitimization,0.07553313,Agencies (HQ and field) | Biden | AD
+Agencies (HQ and field),Trump II,18786,AD,0.022378447,Anti-democratic delegitimization,0.15984605,Agencies (HQ and field) | Trump II | AD
+Officials and staff,Trump I,613,AD,0.018074114,Anti-democratic delegitimization,0.12910081,Officials and staff | Trump I | AD
+Officials and staff,Biden,745,AD,0.006316587,Anti-democratic delegitimization,0.045118477,Officials and staff | Biden | AD
+Officials and staff,Trump II,5160,AD,0.030354472,Anti-democratic delegitimization,0.21681765,Officials and staff | Trump II | AD
+"Trump, personal accounts","Twitter, before office",30464,VI,0.005051526,Violence as virtue,0.036082327,"Trump, personal accounts | Twitter, before office | VI"
+"Trump, personal accounts","Twitter, President (2017-21)",13524,VI,0.005431285,Violence as virtue,0.038794894,"Trump, personal accounts | Twitter, President (2017-21) | VI"
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,VI,0.0062704715,Violence as virtue,0.04478908,"Trump, personal accounts | Truth Social, out of office (2021-25) | VI"
+"Trump, personal accounts","Truth Social, President (2025-)",5357,VI,0.0114814695,Violence as virtue,0.0820105,"Trump, personal accounts | Truth Social, President (2025-) | VI"
+"Trump, personal accounts","X, President (2025-)",56,VI,0.052680764,Violence as virtue,0.3762912,"Trump, personal accounts | X, President (2025-) | VI"
+"White House, institutional",Obama,3508,VI,0.0021600905,Violence as virtue,0.015429218,"White House, institutional | Obama | VI"
+"White House, institutional",Trump I,11530,VI,0.0033554488,Violence as virtue,0.023967491,"White House, institutional | Trump I | VI"
+"White House, institutional",Biden,9340,VI,0.0033235885,Violence as virtue,0.023739917,"White House, institutional | Biden | VI"
+"White House, institutional",Trump II,8750,VI,0.0083586415,Violence as virtue,0.05970458,"White House, institutional | Trump II | VI"
+Agencies (HQ and field),Obama,17063,VI,0.0037620275,Violence as virtue,0.026871625,Agencies (HQ and field) | Obama | VI
+Agencies (HQ and field),Trump I,22795,VI,0.004498866,Violence as virtue,0.032134756,Agencies (HQ and field) | Trump I | VI
+Agencies (HQ and field),Biden,25982,VI,0.005363785,Violence as virtue,0.03831275,Agencies (HQ and field) | Biden | VI
+Agencies (HQ and field),Trump II,18786,VI,0.012393584,Violence as virtue,0.08852559,Agencies (HQ and field) | Trump II | VI
+Officials and staff,Trump I,613,VI,0.004684709,Violence as virtue,0.033462208,Officials and staff | Trump I | VI
+Officials and staff,Biden,745,VI,0.004690447,Violence as virtue,0.033503193,Officials and staff | Biden | VI
+Officials and staff,Trump II,5160,VI,0.011232343,Violence as virtue,0.08023102,Officials and staff | Trump II | VI
+"Trump, personal accounts","Twitter, before office",30464,VG,0.009279115,Victimhood and retribution,0.0662794,"Trump, personal accounts | Twitter, before office | VG"
+"Trump, personal accounts","Twitter, President (2017-21)",13524,VG,0.048963178,Victimhood and retribution,0.349737,"Trump, personal accounts | Twitter, President (2017-21) | VG"
+"Trump, personal accounts","Truth Social, out of office (2021-25)",9420,VG,0.12970395,Victimhood and retribution,0.9264568,"Trump, personal accounts | Truth Social, out of office (2021-25) | VG"
+"Trump, personal accounts","Truth Social, President (2025-)",5357,VG,0.049193915,Victimhood and retribution,0.35138512,"Trump, personal accounts | Truth Social, President (2025-) | VG"
+"Trump, personal accounts","X, President (2025-)",56,VG,0.07892612,Victimhood and retribution,0.563758,"Trump, personal accounts | X, President (2025-) | VG"
+"White House, institutional",Obama,3508,VG,0.0029720145,Victimhood and retribution,0.021228675,"White House, institutional | Obama | VG"
+"White House, institutional",Trump I,11530,VG,0.0071579292,Victimhood and retribution,0.051128063,"White House, institutional | Trump I | VG"
+"White House, institutional",Biden,9340,VG,0.0069065215,Victimhood and retribution,0.049332295,"White House, institutional | Biden | VG"
+"White House, institutional",Trump II,8750,VG,0.013568617,Victimhood and retribution,0.096918695,"White House, institutional | Trump II | VG"
+Agencies (HQ and field),Obama,17063,VG,0.0024027263,Victimhood and retribution,0.01716233,Agencies (HQ and field) | Obama | VG
+Agencies (HQ and field),Trump I,22795,VG,0.004457478,Victimhood and retribution,0.03183913,Agencies (HQ and field) | Trump I | VG
+Agencies (HQ and field),Biden,25982,VG,0.0043658535,Victimhood and retribution,0.031184668,Agencies (HQ and field) | Biden | VG
+Agencies (HQ and field),Trump II,18786,VG,0.013851536,Victimhood and retribution,0.098939545,Agencies (HQ and field) | Trump II | VG
+Officials and staff,Trump I,613,VG,0.0071799923,Victimhood and retribution,0.051285658,Officials and staff | Trump I | VG
+Officials and staff,Biden,745,VG,0.0037726269,Victimhood and retribution,0.026947334,Officials and staff | Biden | VG
+Officials and staff,Trump II,5160,VG,0.016268823,Victimhood and retribution,0.11620588,Officials and staff | Trump II | VG

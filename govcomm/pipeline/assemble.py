@@ -2,6 +2,7 @@
 
 Usage: python3 -I assemble.py <data_dir>
 """
+import os
 import re
 import sys
 
@@ -12,6 +13,12 @@ df = pd.read_parquet(f"{d}/corpus.parquet")
 sc = pd.read_parquet(f"{d}/derived/student_scores.parquet")
 sl = pd.read_parquet(f"{d}/derived/party_slant.parquet")
 df = df.merge(sc, on="post_id").merge(sl, on="post_id")
+# Fascist Rhetoric Index (fri_student.py): seven marker scores, the 0-100 index and P(syndrome).
+FRI_COLS = []
+if os.path.exists(f"{d}/derived/fri_scores.parquet"):
+    fri = pd.read_parquet(f"{d}/derived/fri_scores.parquet")
+    FRI_COLS = [c for c in fri.columns if c != "post_id"]
+    df = df.merge(fri, on="post_id", how="left")
 
 bare = df["text"].fillna("").str.replace(r"https?://\S+", "", regex=True).str.strip()
 df["analysis_sample"] = (~df["is_repost"]) & ((bare.str.split().str.len() >= 4) | (df.platform == "WhiteHouse.gov"))
@@ -54,7 +61,7 @@ df.loc[df.account != "@StateDept", "secretary_of_state"] = None
 df.to_parquet(f"{d}/scored_posts.parquet", index=False)
 cols = ["post_id", "created_at", "platform", "account", "voice", "role", "administration", "admin_party", "is_repost",
         "is_reply", "analysis_sample", "ideology", "professionalism", "partisanship", "threat_hope", "personalization",
-        "function", "party_slant", "villain", "topic", "wh_category", "secretary_of_state", "engagement", "n_words",
+        "function", "party_slant"] + FRI_COLS + ["villain", "topic", "wh_category", "secretary_of_state", "engagement", "n_words",
         "url", "title", "text", "source"]
 df[cols].to_csv(f"{d}/scored_posts.csv.gz", index=False, compression="gzip")
 print(df.groupby("voice").agg(n=("post_id", "size"), analysis=("analysis_sample", "sum")).to_string())

@@ -1,0 +1,201 @@
+lid,post_id,voice,administration,stratum,selected_on_signal
+G0001,ts:115617658912008194,Trump · Truth Social (President),Trump II,trump_top,True
+G0002,tw:899989808851832832,@WhiteHouse (all administrations),Trump I,mid_random,True
+G0003,tw:1573791000442576896,@WhiteHouse (all administrations),Biden,mid_random,True
+G0004,ts:115939889414201547,Trump · Truth Social (President),Trump II,trump_top,True
+G0005,tw:2034229397956309068,@WhiteHouse (all administrations),Trump II,gov_t2_top,True
+G0006,ts:111386448888653942,Trump · Truth Social (out of office),Biden,trump_top,True
+G0007,wh:https://www.whitehouse.gov/releases/2025/04/100-days-of-hoaxes-cutting-through-the-fake-news/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0008,tw:1261672792484917248,Trump · Twitter (President),Trump I,trump_top,True
+G0009,tw:214775676472000512,Trump · Twitter (private citizen/candidate),Obama,mid_random,True
+G0010,ts:112191452263257064,Trump · Truth Social (out of office),Biden,trump_top,True
+G0011,tw:2005305530651189719,@FBIDirectorKash,Trump II,gov_t2_top,True
+G0012,tw:381548395154124800,Trump · Twitter (private citizen/candidate),Obama,mid_random,True
+G0013,tw:697516520541417472,@ICEgov,Obama,gov_pre_top,True
+G0014,tw:1854349323573575754,@StephenM,Biden,gov_pre_top,True
+G0015,tw:2035142802896548063,@StephenM,Trump II,gov_t2_top,True
+G0016,tw:1629914761012862978,@StephenM,Biden,gov_pre_top,True
+G0017,tw:1186257181689237504,Trump · Twitter (President),Trump I,trump_top,True
+G0018,ts:114636148473122568,Trump · Truth Social (President),Trump II,trump_top,True
+G0019,tw:1761021120650543431,@ICEgov,Biden,mid_random,True
+G0020,tw:2003601696610549849,@FBI,Trump II,gov_t2_top,True
+G0021,tw:1844545050010857479,@StateDept,Biden,mid_random,True
+G0022,tw:1885500155203326414,@USBPChiefELC,Trump II,mid_random,True
+G0023,tw:2003573956482335007,@USBPChiefELC,Trump II,gov_t2_top,True
+G0024,tw:825531821173637121,Staff accounts,Trump I,gov_pre_top,True
+G0025,tw:1976614438859088106,@USBPChiefELC,Trump II,gov_t2_top,True
+G0026,tw:609823516670693379,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0027,tw:1175401233747795970,@CBP,Trump I,mid_random,True
+G0028,tw:2042362116447830508,@FBI,Trump II,gov_t2_top,True
+G0029,tw:2047128940540739789,@GregoryKBovino,Trump II,gov_t2_top,True
+G0030,tw:1394819772248956929,@StephenM,Biden,gov_pre_top,True
+G0031,tw:1130433207487336450,Trump · Twitter (President),Trump I,trump_top,True
+G0032,wh:https://www.whitehouse.gov/releases/2026/01/make-driving-great-again-president-trump-showcases-american-auto-industrys-revival-in-michigan/,WhiteHouse.gov,Trump II,mid_random,True
+G0033,tw:687658502,@StateDept,Bush (43),gov_pre_top,True
+G0034,tw:2057987148540698887,@FBI,Trump II,gov_t2_top,True
+G0035,ts:114087937627204152,Trump · Truth Social (President),Trump II,mid_random,True
+G0036,tw:1434246137746268162,@WhiteHouse (all administrations),Biden,gov_pre_top,True
+G0037,tw:548990989411831810,Trump · Twitter (private citizen/candidate),Obama,mid_random,True
+G0038,tw:1909258878035828788,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0039,ts:109688539892284835,Trump · Truth Social (out of office),Biden,trump_top,True
+G0040,ts:111642745146668045,Trump · Truth Social (out of office),Biden,trump_top,True
+G0041,wh:https://www.whitehouse.gov/releases/2025/10/radical-lefts-cnn-stunt-fails-to-distract-from-their-shutdown-stranglehold/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0042,tw:787258211283918848,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0043,tw:2045177565933887700,@DHSgov,Trump II,gov_t2_top,True
+G0044,ts:114253297744744441,Trump · Truth Social (President),Trump II,trump_top,True
+G0045,tw:1913359413215142354,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0046,tw:1207079366817128448,@WhiteHouse (all administrations),Trump I,gov_pre_top,True
+G0047,ts:110016873030134030,Trump · Truth Social (out of office),Biden,trump_top,True
+G0048,tw:1131510378423308288,@WhiteHouse (all administrations),Trump I,gov_pre_top,True
+G0049,tw:1640150974730829826,@StephenM,Biden,gov_pre_top,True
+G0050,ts:115987465493616768,Trump · Truth Social (President),Trump II,trump_top,True
+G0051,ts:111877250618902021,Trump · Truth Social (out of office),Biden,trump_top,True
+G0052,tw:1919396921593958754,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0053,wh:https://www.whitehouse.gov/releases/2025/08/american-leadership-is-back-under-president-trump/,WhiteHouse.gov,Trump II,mid_random,True
+G0054,tw:1220766924897968128,@WhiteHouse (all administrations),Trump I,gov_pre_top,True
+G0055,tw:611967410992730113,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0056,tw:720329656029683712,@DHSgov,Obama,gov_pre_top,True
+G0057,tw:1226594759436881921,Trump · Twitter (President),Trump I,trump_top,True
+G0058,tw:783413139823931392,@DHSgov,Obama,gov_pre_top,True
+G0059,tw:1027585937163931648,Trump · Twitter (President),Trump I,trump_top,True
+G0060,tw:771324900225191936,Staff (before office),Obama,mid_random,True
+G0061,tw:2062557652815655035,@RapidResponse47,Trump II,gov_t2_top,True
+G0062,ts:110550283506811833,Trump · Truth Social (out of office),Biden,trump_top,True
+G0063,tw:688938649879212032,Staff (before office),Obama,mid_random,True
+G0064,tw:1001150366107488256,@WhiteHouse (all administrations),Trump I,gov_pre_top,True
+G0065,tw:761275654260166657,@DHSgov,Obama,gov_pre_top,True
+G0066,tw:515635087275474944,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0067,tw:709595310939643905,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0068,tw:1938358105999384988,@DHSgov,Trump II,gov_t2_top,True
+G0069,ts:115488069736938548,Trump · Truth Social (President),Trump II,trump_top,True
+G0070,tw:379928139285422080,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0071,tw:1002965829175169025,Trump · Twitter (President),Trump I,trump_top,True
+G0072,wh:https://www.whitehouse.gov/releases/2026/07/setting-the-record-straight-president-trump-declassifies-intel-on-foreign-election-interference-deep-state-coverup/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0073,tw:1901680805271019685,@CBP,Trump II,mid_random,True
+G0074,tw:2004012442427277591,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0075,tw:1994438728237064270,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0076,tw:2050199369094238235,@FBI,Trump II,gov_t2_top,True
+G0077,tw:2061593910250471537,@FBIDirectorKash,Trump II,gov_t2_top,True
+G0078,tw:738093459282747392,@WhiteHouse (all administrations),Obama,gov_pre_top,True
+G0079,ts:115126310071570564,Trump · Truth Social (President),Trump II,trump_top,True
+G0080,tw:1761126282165662137,@WhiteHouse (all administrations),Biden,mid_random,True
+G0081,tw:780518546430451716,Staff (before office),Obama,mid_random,True
+G0082,tw:1940085621483098348,@DHSgov,Trump II,gov_t2_top,True
+G0083,tw:274180942799720450,@StateDept,Obama,gov_pre_top,True
+G0084,tw:1032365025585848320,@WhiteHouse (all administrations),Trump I,gov_pre_top,True
+G0085,tw:834203726,@StateDept,Bush (43),gov_pre_top,True
+G0086,tw:728976091428233216,Trump · Twitter (private citizen/candidate),Obama,mid_random,True
+G0087,tw:1915847030779318281,@StephenM,Trump II,gov_t2_top,True
+G0088,tw:1993408132559654976,@PressSec,Trump II,gov_t2_top,True
+G0089,tw:1190042086743166976,@WhiteHouse (all administrations),Trump I,gov_pre_top,True
+G0090,tw:583842442,@StateDept,Bush (43),gov_pre_top,True
+G0091,tw:2050644698008781298,@GregoryKBovino,Trump II,gov_t2_top,True
+G0092,ts:114573871728757682,Trump · Truth Social (President),Trump II,trump_top,True
+G0093,tw:1960803291195118047,@EnvoyNoem,Trump II,gov_t2_top,True
+G0094,tw:1945134451614248977,@DHSgov,Trump II,gov_t2_top,True
+G0095,ts:110374542486721971,Trump · Truth Social (out of office),Biden,mid_random,True
+G0096,ts:114715950565535905,Trump · Truth Social (President),Trump II,trump_top,True
+G0097,tw:646126121394827264,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0098,tw:1923432648103333919,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0099,tw:616897546024304640,Trump · Twitter (private citizen/candidate),Obama,mid_random,True
+G0100,tw:1022808452677160960,Trump · Twitter (President),Trump I,trump_top,True
+G0101,tw:1262056521447419906,@StateDept,Trump I,mid_random,True
+G0102,wh:https://www.whitehouse.gov/releases/2026/01/heres-what-the-trump-administration-is-doing-to-crush-minnesotas-fraud-epidemic/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0103,tw:725361456502419456,Staff (before office),Obama,mid_random,True
+G0104,tw:895589010,@StateDept,Bush (43),gov_pre_top,True
+G0105,tw:313976195265986560,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0106,tw:1641614879583772674,@StephenM,Biden,gov_pre_top,True
+G0107,tw:698303565232623616,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0108,tw:1068896595155001344,@StateDept,Trump I,mid_random,True
+G0109,ts:108952306401700134,Trump · Truth Social (out of office),Biden,trump_top,True
+G0110,tw:1026086905539174400,Trump · Twitter (President),Trump I,trump_top,True
+G0111,tw:788923532868591617,Staff (before office),Obama,mid_random,True
+G0112,tw:761241615729958912,@DHSgov,Obama,gov_pre_top,True
+G0113,ts:113282874299753124,Trump · Truth Social (out of office),Biden,trump_top,True
+G0114,tw:2004555409835868229,@USBPChiefELC,Trump II,gov_t2_top,True
+G0115,wh:https://www.whitehouse.gov/releases/2025/04/these-sick-criminals-are-who-democrats-and-the-legacy-media-are-defending/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0116,tw:1441388518111014922,@ICEgov,Biden,mid_random,True
+G0117,tw:841792559,@StateDept,Bush (43),gov_pre_top,True
+G0118,tw:1085973893008015360,@WhiteHouse (all administrations),Trump I,mid_random,True
+G0119,tw:1201476231759302656,Trump · Twitter (President),Trump I,mid_random,True
+G0120,tw:1883676833687670925,@StephenM,Trump II,gov_t2_top,True
+G0121,tw:1982547412804862255,@USBPChiefELC,Trump II,gov_t2_top,True
+G0122,tw:2012016866890276996,@StephenM,Trump II,gov_t2_top,True
+G0123,tw:1322576324704243712,@CBP,Trump I,mid_random,True
+G0124,tw:1994272683387687053,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0125,tw:1906780560141250562,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0126,tw:2047391730635313661,@DHSgov,Trump II,gov_t2_top,True
+G0127,tw:845120066,@StateDept,Bush (43),gov_pre_top,True
+G0128,tw:2021948075145593122,@FBI,Trump II,gov_t2_top,True
+G0129,tw:2047434774533349534,@TheJusticeDept,Trump II,gov_t2_top,True
+G0130,tw:1999194653401182341,"ICE field offices (ERO, pooled)",Trump II,gov_t2_top,True
+G0131,ts:111704041981709985,Trump · Truth Social (out of office),Biden,trump_top,True
+G0132,tw:763789897664651264,@DHSgov,Obama,gov_pre_top,True
+G0133,tw:731956362,@StateDept,Bush (43),gov_pre_top,True
+G0134,tw:1707440565942419624,@CBP,Biden,mid_random,True
+G0135,tw:2012208729542844636,"ICE field offices (ERO, pooled)",Trump II,gov_t2_top,True
+G0136,tw:1948859278636580908,@USBPChiefELC,Trump II,gov_t2_top,True
+G0137,tw:581302772,@StateDept,Bush (43),gov_pre_top,True
+G0138,tw:1951720526319390935,@USBPChiefELC,Trump II,gov_t2_top,True
+G0139,tw:801494647495393287,@DHSgov,Obama,gov_pre_top,True
+G0140,ts:116132366318011545,Trump · Truth Social (President),Trump II,trump_top,True
+G0141,tw:610712329462882304,Trump · Twitter (private citizen/candidate),Obama,mid_random,True
+G0142,tw:269135667882258432,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0143,tw:2006210311318024331,@USBPChiefELC,Trump II,gov_t2_top,True
+G0144,tw:1178446179320942593,Trump · Twitter (President),Trump I,trump_top,True
+G0145,tw:835923804983603202,@POTUS,Trump I,gov_pre_top,True
+G0146,tw:1950939276637536628,"ICE field offices (ERO, pooled)",Trump II,gov_t2_top,True
+G0147,tw:2002227108274205055,@USDOL,Trump II,gov_t2_top,True
+G0148,tw:1906772680805646368,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0149,tw:1913358867708493982,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0150,tw:2062555567554462168,@RapidResponse47,Trump II,mid_random,True
+G0151,tw:874626492310978564,Trump · Twitter (President),Trump I,mid_random,True
+G0152,wh:https://www.whitehouse.gov/releases/2025/12/icymi-white-house-launches-media-bias-portal-to-expose-fake-news/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0153,wh:https://www.whitehouse.gov/releases/2026/06/radical-lunatics-deface-americas-reflecting-pool-and-president-trump-was-right-again/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0154,tw:1888669342797283372,@EnvoyNoem,Trump II,gov_t2_top,True
+G0155,tw:1907174400144589035,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0156,wh:https://www.whitehouse.gov/releases/2026/04/while-president-trump-directed-heroic-rescue-radical-left-spread-deranged-lies/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0157,tw:1993682151238238593,"ICE field offices (ERO, pooled)",Trump II,gov_t2_top,True
+G0158,tw:497793382602014720,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0159,wh:https://www.whitehouse.gov/fact-sheets/2026/01/fact-sheet-president-donald-j-trump-establishes-new-department-of-justice-division-for-national-fraud-enforcement/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0160,ts:114523195208653918,Trump · Truth Social (President),Trump II,trump_top,True
+G0161,tw:2056827052851105947,"Trump · X (President, 2025–)",Trump II,trump_top,True
+G0162,ts:114517896576879203,Trump · Truth Social (President),Trump II,trump_top,True
+G0163,tw:2045213160542478649,@TheJusticeDept,Trump II,gov_t2_top,True
+G0164,tw:1107981131012628481,Trump · Twitter (President),Trump I,trump_top,True
+G0165,tw:1904197639446712717,@RealTomHoman,Trump II,gov_t2_top,True
+G0166,tw:445598059557576704,Trump · Twitter (private citizen/candidate),Obama,mid_random,True
+G0167,tw:386931677022265344,Staff (before office),Obama,mid_random,True
+G0168,tw:2055069928756036004,@RapidResponse47,Trump II,gov_t2_top,True
+G0169,tw:2061959014439616765,@GregoryKBovino,Trump II,gov_t2_top,True
+G0170,tw:1861118453077172281,@DHSgov,Biden,gov_pre_top,True
+G0171,tw:515317762957537281,Staff (before office),Obama,mid_random,True
+G0172,tw:760856550978166786,@DHSgov,Obama,gov_pre_top,True
+G0173,tw:2042335524615053771,@SecMullinDHS,Trump II,gov_t2_top,True
+G0174,tw:1940534757575872610,@USBPChiefELC,Trump II,gov_t2_top,True
+G0175,tw:901949655,@StateDept,Bush (43),gov_pre_top,True
+G0176,tw:1180309422557597697,Trump · Twitter (President),Trump I,mid_random,True
+G0177,tw:765258076337401856,@DHSgov,Obama,mid_random,True
+G0178,tw:1976754175825555513,@USBPChiefELC,Trump II,gov_t2_top,True
+G0179,tw:1175409914384125952,Trump · Twitter (President),Trump I,trump_top,True
+G0180,tw:2069465425717653783,@TheJusticeDept,Trump II,gov_t2_top,True
+G0181,tw:2084405497537388649,@DHSgov,Trump II,gov_t2_top,True
+G0182,ts:109665862875076607,Trump · Truth Social (out of office),Biden,trump_top,True
+G0183,tw:2032535651774582964,@VP,Trump II,gov_t2_top,True
+G0184,tw:1932067658691645915,"ICE field offices (ERO, pooled)",Trump II,gov_t2_top,True
+G0185,tw:1633973188848766977,@DHSgov,Biden,gov_pre_top,True
+G0186,wh:https://www.whitehouse.gov/releases/2025/11/where-is-democrats-transparency-on-epstein/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0187,tw:2057905944970084559,"ICE field offices (ERO, pooled)",Trump II,gov_t2_top,True
+G0188,tw:1321103651000254464,Trump · Twitter (President),Trump I,mid_random,True
+G0189,tw:1556784005491687426,@WhiteHouse (all administrations),Biden,gov_pre_top,True
+G0190,tw:1372202579585826825,@CBP,Biden,gov_pre_top,True
+G0191,tw:2017680028901740817,@WhiteHouse (all administrations),Trump II,mid_random,True
+G0192,tw:819162968592183298,Trump · Twitter (private citizen/candidate),Obama,trump_top,True
+G0193,tw:1029731513573822464,Trump · Twitter (President),Trump I,trump_top,True
+G0194,tw:2026296763326312772,@FBI,Trump II,mid_random,True
+G0195,wh:https://www.whitehouse.gov/releases/2026/04/democrats-unhinged-rhetoric-incites-third-assassination-attempt-on-president-trump/,WhiteHouse.gov,Trump II,gov_t2_top,True
+G0196,ts:111931583361466464,Trump · Truth Social (out of office),Biden,trump_top,True
+G0197,tw:1007263902814691328,@WhiteHouse (all administrations),Trump I,gov_pre_top,True
+G0198,tw:1022496768326549506,@ICEgov,Trump I,gov_pre_top,True
+G0199,tw:578001172,@StateDept,Bush (43),gov_pre_top,True
+G0200,tw:2060007008997134803,@FBIDirectorKash,Trump II,gov_t2_top,True

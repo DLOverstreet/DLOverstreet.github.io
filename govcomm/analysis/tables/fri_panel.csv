@@ -1,0 +1,91 @@
+measure,spec,contrast,coef,se,p,biden_mean,key
+fri,account FE,Obama vs Biden,-0.1977087067022184,0.012280515945285213,2.576688743781227e-58,0.39227483,fri | account FE | Obama vs Biden
+fri,account FE,Trump I vs Biden,0.045321066601373576,0.014248170454106398,0.0014685169378598959,0.39227483,fri | account FE | Trump I vs Biden
+fri,account FE,Trump II vs Biden,0.9345295542066296,0.056281462540793054,6.457993708840784e-62,0.39227483,fri | account FE | Trump II vs Biden
+fri,account FE,Trump II vs Trump I,0.8892084876052561,0.05529179763290365,3.4060684716774005e-58,0.39227483,fri | account FE | Trump II vs Trump I
+fri,account FE,Trump II vs all earlier,0.9454564340822675,0.05667565575594063,1.7754526964740512e-62,0.39227483,fri | account FE | Trump II vs all earlier
+fri,account + topic FE,Obama vs Biden,-0.21320360034546432,0.011473222070702851,4.435013140649646e-77,0.39227483,fri | account + topic FE | Obama vs Biden
+fri,account + topic FE,Trump I vs Biden,0.019947193938396713,0.012409903052529843,0.10797520439465651,0.39227483,fri | account + topic FE | Trump I vs Biden
+fri,account + topic FE,Trump II vs Biden,0.8480358813515042,0.048307893729047244,5.464984485178704e-69,0.39227483,fri | account + topic FE | Trump II vs Biden
+fri,account + topic FE,Trump II vs Trump I,0.8280886874131075,0.048225549509722805,4.3659714280771574e-66,0.39227483,fri | account + topic FE | Trump II vs Trump I
+fri,account + topic FE,Trump II vs all earlier,0.8700730980775113,0.04863690394289993,1.4326518568639467e-71,0.39227483,fri | account + topic FE | Trump II vs all earlier
+fri_syn,account FE,Obama vs Biden,-0.14135800874925886,0.01934315098388379,2.7132918186859756e-13,0.11201285,fri_syn | account FE | Obama vs Biden
+fri_syn,account FE,Trump I vs Biden,0.024958596936227023,0.018608689828923598,0.17984467481284183,0.11201285,fri_syn | account FE | Trump I vs Biden
+fri_syn,account FE,Trump II vs Biden,0.5898703169348118,0.06766674821924262,2.8495268135767834e-18,0.11201285,fri_syn | account FE | Trump II vs Biden
+fri_syn,account FE,Trump II vs Trump I,0.5649117199985848,0.06612728518171103,1.3101577904969086e-17,0.11201285,fri_syn | account FE | Trump II vs Trump I
+fri_syn,account FE,Trump II vs all earlier,0.6004158158305127,0.06708784629563572,3.5646334122406004e-19,0.11201285,fri_syn | account FE | Trump II vs all earlier
+fri_syn,account + topic FE,Obama vs Biden,-0.1422258834764111,0.01876438912325763,3.46718821336635e-14,0.11201285,fri_syn | account + topic FE | Obama vs Biden
+fri_syn,account + topic FE,Trump I vs Biden,0.01170844461671923,0.018212131221729513,0.5202937834353389,0.11201285,fri_syn | account + topic FE | Trump I vs Biden
+fri_syn,account + topic FE,Trump II vs Biden,0.5677790333712723,0.06483113849711447,1.9907382471061373e-18,0.11201285,fri_syn | account + topic FE | Trump II vs Biden
+fri_syn,account + topic FE,Trump II vs Trump I,0.5560705887545531,0.06411846159110891,4.2254770908211955e-18,0.11201285,fri_syn | account + topic FE | Trump II vs Trump I
+fri_syn,account + topic FE,Trump II vs all earlier,0.5830996801097091,0.06415161052595601,9.958664866435787e-20,0.11201285,fri_syn | account + topic FE | Trump II vs all earlier
+fri_RE,account FE,Obama vs Biden,-0.004679487772220935,0.0005709950810512047,2.4992604131445484e-16,0.011347939,fri_RE | account FE | Obama vs Biden
+fri_RE,account FE,Trump I vs Biden,0.00022324622535216507,0.0005308732652560827,0.6741009445727171,0.011347939,fri_RE | account FE | Trump I vs Biden
+fri_RE,account FE,Trump II vs Biden,0.012830655240330271,0.0016723374261832782,1.689543757364265e-14,0.011347939,fri_RE | account FE | Trump II vs Biden
+fri_RE,account FE,Trump II vs Trump I,0.012607409014978106,0.0017483808631679977,5.558105806671862e-13,0.011347939,fri_RE | account FE | Trump II vs Trump I
+fri_RE,account FE,Trump II vs all earlier,0.013401095287914883,0.001686105533776639,1.8961152574216916e-15,0.011347939,fri_RE | account FE | Trump II vs all earlier
+fri_RE,account + topic FE,Obama vs Biden,-0.0053131868824994,0.000584978766082275,1.0591382974627111e-19,0.011347939,fri_RE | account + topic FE | Obama vs Biden
+fri_RE,account + topic FE,Trump I vs Biden,0.0002589373419732188,0.0005207441849255346,0.6190164274062344,0.011347939,fri_RE | account + topic FE | Trump I vs Biden
+fri_RE,account + topic FE,Trump II vs Biden,0.012756198785714224,0.0016347885375046932,6.046901858044721e-15,0.011347939,fri_RE | account + topic FE | Trump II vs Biden
+fri_RE,account + topic FE,Trump II vs Trump I,0.012497261443741005,0.0016890853129481007,1.3738570755660797e-13,0.011347939,fri_RE | account + topic FE | Trump II vs Trump I
+fri_RE,account + topic FE,Trump II vs all earlier,0.013397755857238151,0.0016500623445177586,4.679337296676176e-16,0.011347939,fri_RE | account + topic FE | Trump II vs all earlier
+fri_EN,account FE,Obama vs Biden,-0.0054424399249446065,0.0005044295408127129,3.867382102352554e-27,0.007973999,fri_EN | account FE | Obama vs Biden
+fri_EN,account FE,Trump I vs Biden,0.0034147036940459334,0.0008079180494469286,2.3730461162107106e-05,0.007973999,fri_EN | account FE | Trump I vs Biden
+fri_EN,account FE,Trump II vs Biden,0.03164537791269603,0.0023952137527437707,7.488726229277625e-40,0.007973999,fri_EN | account FE | Trump II vs Biden
+fri_EN,account FE,Trump II vs Trump I,0.0282306742186501,0.0025199644067681326,3.950165732443926e-29,0.007973999,fri_EN | account FE | Trump II vs Trump I
+fri_EN,account FE,Trump II vs all earlier,0.03115065056350757,0.0024657460932789306,1.3825186345593942e-36,0.007973999,fri_EN | account FE | Trump II vs all earlier
+fri_EN,account + topic FE,Obama vs Biden,-0.005915409570086302,0.0005379278302820241,3.96547870311834e-28,0.007973999,fri_EN | account + topic FE | Obama vs Biden
+fri_EN,account + topic FE,Trump I vs Biden,0.0022630029995856812,0.0007130249332030511,0.001504540788362295,0.007973999,fri_EN | account + topic FE | Trump I vs Biden
+fri_EN,account + topic FE,Trump II vs Biden,0.027968252506174723,0.0021875474278706653,1.9832725225524195e-37,0.007973999,fri_EN | account + topic FE | Trump II vs Biden
+fri_EN,account + topic FE,Trump II vs Trump I,0.02570524950658904,0.002351315525496394,8.078881228754612e-28,0.007973999,fri_EN | account + topic FE | Trump II vs Trump I
+fri_EN,account + topic FE,Trump II vs all earlier,0.027916607898334674,0.0022739294012962385,1.206570937405807e-34,0.007973999,fri_EN | account + topic FE | Trump II vs all earlier
+fri_DH,account FE,Obama vs Biden,-0.004078451215689361,0.0011126009203209814,0.0002466715955088825,0.008816074,fri_DH | account FE | Obama vs Biden
+fri_DH,account FE,Trump I vs Biden,0.003309197493426646,0.0007967134147698666,3.273413912779241e-05,0.008816074,fri_DH | account FE | Trump I vs Biden
+fri_DH,account FE,Trump II vs Biden,0.05048166371269203,0.005148122220373783,1.062589955460752e-22,0.008816074,fri_DH | account FE | Trump II vs Biden
+fri_DH,account FE,Trump II vs Trump I,0.04717246621926539,0.004945527948003068,1.4504086556156698e-21,0.008816074,fri_DH | account FE | Trump II vs Trump I
+fri_DH,account FE,Trump II vs all earlier,0.049835505713895084,0.005126276724856909,2.4396774289826515e-22,0.008816074,fri_DH | account FE | Trump II vs all earlier
+fri_DH,account + topic FE,Obama vs Biden,-0.0038616453000447073,0.000909556240830195,2.1797362770946744e-05,0.008816074,fri_DH | account + topic FE | Obama vs Biden
+fri_DH,account + topic FE,Trump I vs Biden,0.001718443261410375,0.0006569489139283536,0.008902015388209132,0.008816074,fri_DH | account + topic FE | Trump I vs Biden
+fri_DH,account + topic FE,Trump II vs Biden,0.04350211317304631,0.004193480827716903,3.2646364623843896e-25,0.008816074,fri_DH | account + topic FE | Trump II vs Biden
+fri_DH,account + topic FE,Trump II vs Trump I,0.041783669911635936,0.0040963178193817885,1.9766136856153984e-24,0.008816074,fri_DH | account + topic FE | Trump II vs Trump I
+fri_DH,account + topic FE,Trump II vs all earlier,0.04337487378107634,0.004180033087328867,3.165877024107811e-25,0.008816074,fri_DH | account + topic FE | Trump II vs all earlier
+fri_LC,account FE,Obama vs Biden,-0.004016355465337129,0.0003677060092555975,8.975124919425017e-28,0.006591323,fri_LC | account FE | Obama vs Biden
+fri_LC,account FE,Trump I vs Biden,-0.0003623678422327411,0.00031932331541596374,0.25645946236825135,0.006591323,fri_LC | account FE | Trump I vs Biden
+fri_LC,account FE,Trump II vs Biden,0.006719212504459273,0.0011246382621576977,2.3071990388399196e-09,0.006591323,fri_LC | account FE | Trump II vs Biden
+fri_LC,account FE,Trump II vs Trump I,0.007081580346692014,0.0012086060248125022,4.648337459242977e-09,0.006591323,fri_LC | account FE | Trump II vs Trump I
+fri_LC,account FE,Trump II vs all earlier,0.007412171831707099,0.0011640005653004754,1.9170608972464647e-10,0.006591323,fri_LC | account FE | Trump II vs all earlier
+fri_LC,account + topic FE,Obama vs Biden,-0.004252162329606981,0.0003556675891082398,6.081102725754137e-33,0.006591323,fri_LC | account + topic FE | Obama vs Biden
+fri_LC,account + topic FE,Trump I vs Biden,-0.0002512036516607973,0.00031416841683077376,0.4239525759475906,0.006591323,fri_LC | account + topic FE | Trump I vs Biden
+fri_LC,account + topic FE,Trump II vs Biden,0.007197693977088911,0.0011055926981368186,7.502171798088445e-11,0.006591323,fri_LC | account + topic FE | Trump II vs Biden
+fri_LC,account + topic FE,Trump II vs Trump I,0.007448897628749709,0.0011895767178352501,3.805462398147091e-10,0.006591323,fri_LC | account + topic FE | Trump II vs Trump I
+fri_LC,account + topic FE,Trump II vs all earlier,0.0078889431162354,0.001157690736139494,9.467200242440262e-12,0.006591323,fri_LC | account + topic FE | Trump II vs all earlier
+fri_AD,account FE,Obama vs Biden,-0.004825212355137364,0.00038502635735240955,4.978722853413886e-36,0.010337689,fri_AD | account FE | Obama vs Biden
+fri_AD,account FE,Trump I vs Biden,7.122022117254817e-05,0.00048731603811913855,0.8838046245879962,0.010337689,fri_AD | account FE | Trump I vs Biden
+fri_AD,account FE,Trump II vs Biden,0.012029302974388895,0.0012204839807999249,6.445866766697202e-23,0.010337689,fri_AD | account FE | Trump II vs Biden
+fri_AD,account FE,Trump II vs Trump I,0.011958082753216347,0.00124626798888104,8.382482445878587e-22,0.010337689,fri_AD | account FE | Trump II vs Trump I
+fri_AD,account FE,Trump II vs all earlier,0.012675865574336188,0.0012139221769442677,1.5929138365462156e-25,0.010337689,fri_AD | account FE | Trump II vs all earlier
+fri_AD,account + topic FE,Obama vs Biden,-0.00518985918857616,0.0003470996884183188,1.509797760015376e-50,0.010337689,fri_AD | account + topic FE | Obama vs Biden
+fri_AD,account + topic FE,Trump I vs Biden,-0.00011352735130797166,0.0004880413800462073,0.8160578234589344,0.010337689,fri_AD | account + topic FE | Trump I vs Biden
+fri_AD,account + topic FE,Trump II vs Biden,0.011622595013295631,0.0012357436092566424,5.185977655219512e-21,0.010337689,fri_AD | account + topic FE | Trump II vs Biden
+fri_AD,account + topic FE,Trump II vs Trump I,0.011736122364603602,0.0012579040794899177,1.0596838329827289e-20,0.010337689,fri_AD | account + topic FE | Trump II vs Trump I
+fri_AD,account + topic FE,Trump II vs all earlier,0.012391394483761886,0.0012238568380574172,4.285367339326276e-24,0.010337689,fri_AD | account + topic FE | Trump II vs all earlier
+fri_VI,account FE,Obama vs Biden,-0.0019526515488805392,0.00021703936032613444,2.324720273231774e-19,0.0048063705,fri_VI | account FE | Obama vs Biden
+fri_VI,account FE,Trump I vs Biden,-0.0003246658672512102,0.00016219893832066678,0.04532214700307156,0.0048063705,fri_VI | account FE | Trump I vs Biden
+fri_VI,account FE,Trump II vs Biden,0.006361754885805304,0.0004967456844831016,1.5007640541673138e-37,0.0048063705,fri_VI | account FE | Trump II vs Biden
+fri_VI,account FE,Trump II vs Trump I,0.006686420753056514,0.0004939254899226152,9.417928173898487e-42,0.0048063705,fri_VI | account FE | Trump II vs Trump I
+fri_VI,account FE,Trump II vs all earlier,0.006753163358478541,0.0004905357030266945,4.030602276915751e-43,0.0048063705,fri_VI | account FE | Trump II vs all earlier
+fri_VI,account + topic FE,Obama vs Biden,-0.0023884325524014065,0.0002070277771067968,8.6094418646299e-31,0.0048063705,fri_VI | account + topic FE | Obama vs Biden
+fri_VI,account + topic FE,Trump I vs Biden,-0.0006546827552559155,0.0001602478464131926,4.39936123097273e-05,0.0048063705,fri_VI | account + topic FE | Trump I vs Biden
+fri_VI,account + topic FE,Trump II vs Biden,0.005799493149165482,0.0004721741106851925,1.1242518213167871e-34,0.0048063705,fri_VI | account + topic FE | Trump II vs Biden
+fri_VI,account + topic FE,Trump II vs Trump I,0.0064541759044213975,0.0004706805497792496,8.553958969130842e-43,0.0048063705,fri_VI | account + topic FE | Trump II vs Trump I
+fri_VI,account + topic FE,Trump II vs all earlier,0.006386965996243813,0.0004633841802184482,3.212179959644647e-43,0.0048063705,fri_VI | account + topic FE | Trump II vs all earlier
+fri_VG,account FE,Obama vs Biden,-0.0026846206906654423,0.00021218933705676032,1.0905480249870538e-36,0.005045084,fri_VG | account FE | Obama vs Biden
+fri_VG,account FE,Trump I vs Biden,1.3615273766033332e-05,0.0003361796553419815,0.9676945124387304,0.005045084,fri_VG | account FE | Trump I vs Biden
+fri_VG,account FE,Trump II vs Biden,0.010766169524526557,0.001216112807899983,8.5246131905556e-19,0.005045084,fri_VG | account FE | Trump II vs Biden
+fri_VG,account FE,Trump II vs Trump I,0.010752554250760523,0.001289631943385451,7.575442700611929e-17,0.005045084,fri_VG | account FE | Trump II vs Trump I
+fri_VG,account FE,Trump II vs all earlier,0.011135447658687765,0.001239927626867842,2.689910975619197e-19,0.005045084,fri_VG | account FE | Trump II vs all earlier
+fri_VG,account + topic FE,Obama vs Biden,-0.0029278082489286356,0.00021757523872885525,2.8183524472286987e-41,0.005045084,fri_VG | account + topic FE | Obama vs Biden
+fri_VG,account + topic FE,Trump I vs Biden,-0.00042836280340429513,0.000309904045726942,0.16689699661222646,0.005045084,fri_VG | account + topic FE | Trump I vs Biden
+fri_VG,account + topic FE,Trump II vs Biden,0.00987867600203206,0.0011885012279895637,9.420005160908295e-17,0.005045084,fri_VG | account + topic FE | Trump II vs Biden
+fri_VG,account + topic FE,Trump II vs Trump I,0.010307038805436354,0.0012685005602906551,4.459928016332104e-16,0.005045084,fri_VG | account + topic FE | Trump II vs Trump I
+fri_VG,account + topic FE,Trump II vs all earlier,0.010453691861267307,0.0012130758569450098,6.842651246052299e-18,0.005045084,fri_VG | account + topic FE | Trump II vs all earlier

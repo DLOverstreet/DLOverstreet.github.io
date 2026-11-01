@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 data_dir, out = sys.argv[1:3]
-DIMS = ["norms_index", "ideology", "professionalism", "partisanship", "threat_hope", "personalization", "function", "party_slant"]
+DIMS = ["norms_index", "ideology", "professionalism", "partisanship", "threat_hope", "personalization", "function", "party_slant", "fri", "fri_syn"]
 NORM = ["professionalism", "partisanship", "personalization", "function"]
 LABEL = {"Trump · Twitter (private citizen/candidate)": "Trump on Twitter, before office",
          "Trump · Twitter (President)": "Trump on Twitter, as President",
@@ -28,6 +28,7 @@ SPECS = {"weekly": ("W-SUN", 10, 8), "monthly": ("M", 20, 6), "quarterly": ("Q",
 df = pd.read_parquet(os.path.join(data_dir, "scored_posts.parquet"))
 df = df[df.analysis_sample & df.voice.isin(LABEL)].copy()
 df["norms_index"] = df[NORM].mean(axis=1)
+df["fri_syn"] = 100 * df["fri_p_syndrome"]  # percent of posts
 df["voice"] = df.voice.map(LABEL)
 tr = df[df.voice.str.startswith("Trump")].copy()
 tr["voice"] = "Trump, all personal accounts"

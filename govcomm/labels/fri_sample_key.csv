@@ -1,0 +1,801 @@
+lid,post_id,voice,administration,stratum,selected_on_signal
+F0001,tw:2056406914372686146,@RapidResponse47,Trump II,wh_trump2,True
+F0002,ts:111144907158357579,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0003,tw:1126180647956099073,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0004,tw:1182075837962690560,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0005,tw:1881543491089465846,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0006,tw:759173601996206080,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0007,tw:239031295638913025,Staff (before office),Obama,officials,False
+F0008,ts:114347318770577330,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0009,tw:1695810447419601286,@ICEgov,Biden,agency_pre,True
+F0010,tw:1899559706512802284,@RapidResponse47,Trump II,wh_trump2,False
+F0011,ts:109271182097312968,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0012,tw:1181890675375259653,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0013,tw:1674780187618332676,@CBP,Biden,agency_pre,True
+F0014,tw:444491071964577792,Staff (before office),Obama,officials,False
+F0015,tw:846404792209620992,@ICEgov,Trump I,agency_pre,True
+F0016,tw:563753933479616513,Staff (before office),Obama,officials,False
+F0017,ts:115911321115123547,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0018,ts:112470658893291114,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0019,tw:2003590076455080007,@USBPChiefELC,Trump II,agency_t2,False
+F0020,tw:1943358859508081069,@CBP,Trump II,agency_t2,False
+F0021,tw:1101469141213630464,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0022,tw:1013507396558303233,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0023,tw:676167468780412929,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0024,tw:2044184282113921451,@RapidResponse47,Trump II,wh_trump2,False
+F0025,tw:1154202866661363719,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0026,ts:116914697761678481,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0027,tw:2057155826951873020,@RapidResponse47,Trump II,wh_trump2,True
+F0028,tw:1905288714747822258,@USBPChief,Trump II,officials,True
+F0029,tw:1397612599647289345,@StephenM,Biden,officials,False
+F0030,tw:1054811201962688513,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0031,tw:1216399475771682819,@StateDept,Trump I,agency_pre,False
+F0032,tw:2036912462650327137,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0033,ts:115650472826053655,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0034,wh:https://www.whitehouse.gov/briefings-statements/2025/10/presidential-message-on-down-syndrome-awareness-month/,WhiteHouse.gov,Trump II,wh_trump2,False
+F0035,tw:2033710143506952416,@StephenM,Trump II,officials,True
+F0036,tw:1446102432401051649,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0037,ts:116049020221132395,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0038,tw:2003565251816554746,"Trump · X (President, 2025–)",Trump II,trump_ts_pres,True
+F0039,tw:1924841707683668298,@PressSec,Trump II,wh_trump2,False
+F0040,tw:922530448814870529,@ICEgov,Trump I,agency_pre,False
+F0041,tw:870077441401905152,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0042,tw:991402619552845825,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0043,ts:115287641147640374,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0044,tw:1381282148049637383,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0045,tw:789887588178006017,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0046,tw:930563467739910145,@DHSgov,Trump I,agency_pre,True
+F0047,ts:116323992527197622,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0048,ts:111976838348064823,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0049,tw:819008216709402624,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0050,tw:243847310382096384,Staff (before office),Obama,officials,False
+F0051,tw:1638243690178048003,@StateDept,Biden,agency_pre,False
+F0052,tw:923365521847934976,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0053,tw:625737518621851649,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0054,ts:116043090074364624,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0055,tw:2047788816392491085,@DHSgov,Trump II,agency_t2,True
+F0056,tw:304608497482469376,@StateDept,Obama,agency_pre,False
+F0057,tw:1243684482621870081,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0058,ts:111242621828012612,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0059,tw:634536024539013122,Staff (before office),Obama,officials,True
+F0060,tw:1546618541436182528,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0061,tw:1848046521880551540,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0062,ts:115215935113008933,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0063,tw:1649186183010742272,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0064,tw:374969761035063297,@StateDept,Obama,agency_pre,True
+F0065,ts:115487421529452815,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0066,ts:113109583526373402,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0067,tw:1912125431140016342,@ICEgov,Trump II,agency_t2,False
+F0068,tw:937305615218696193,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0069,ts:113217150487623419,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0070,tw:1296854647966175239,@StateDept,Trump I,agency_pre,False
+F0071,ts:115064867714909057,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0072,tw:1261000998178390021,@StateDept,Trump I,agency_pre,True
+F0073,tw:2062207799216468374,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0074,tw:1720520110719332481,@StateDept,Biden,agency_pre,False
+F0075,ts:114732948019406900,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0076,ts:114820563898758883,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0077,ts:108767664783872332,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0078,tw:986218871991492608,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0079,ts:116106466161291676,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0080,wh:https://www.whitehouse.gov/releases/2026/10/nearly-two-years-in-president-trump-is-still-stacking-historic-wins-at-record-speed/,WhiteHouse.gov,Trump II,wh_trump2,False
+F0081,tw:1036695682072158214,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0082,tw:1054451956608049152,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0083,tw:561492534158163969,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0084,tw:1376633718786428935,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0085,tw:1031908531832799232,@DHSgov,Trump I,agency_pre,False
+F0086,ts:110426442847431072,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0087,ts:113171360988521256,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0088,tw:2039329932719907319,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0089,tw:912487929783754755,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0090,tw:976489299393826816,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0091,tw:1315469486821122053,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0092,tw:1179158801179713536,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0093,ts:108458635688595590,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0094,tw:705800463958962176,Staff (before office),Obama,officials,True
+F0095,tw:1937813243809898853,@CBPJobs,Trump II,agency_t2,False
+F0096,ts:111605180315822206,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0097,tw:1096805702109220866,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0098,tw:1208872336339939328,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0099,tw:648540826281340928,@StateDept,Obama,agency_pre,True
+F0100,ts:114310370550367017,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0101,tw:1312361907844767745,@CBP,Trump I,agency_pre,False
+F0102,ts:112304991352988782,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0103,ts:115347732161219225,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0104,ts:116457756634688413,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0105,tw:1885445426066645244,@RapidResponse47,Trump II,wh_trump2,False
+F0106,tw:1931687759447556395,@PressSec,Trump II,wh_trump2,False
+F0107,ts:117039401914044983,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0108,ts:116558195264551168,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0109,ts:115064705209848959,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0110,tw:1307092428097191939,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0111,tw:2047369285685628951,@FBI,Trump II,agency_t2,False
+F0112,tw:798908490152448001,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0113,tw:1980687599103857020,@USBPChiefELC,Trump II,agency_t2,True
+F0114,ts:115577034428518924,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0115,tw:1139977378300645376,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0116,tw:2045268086119694377,@RapidResponse47,Trump II,wh_trump2,True
+F0117,ts:111733975716840979,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0118,tw:367111166231064577,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0119,tw:1405918495695593477,@CBP,Biden,agency_pre,True
+F0120,tw:420035262115090432,Staff (before office),Obama,officials,False
+F0121,tw:2011222536667664608,@RapidResponse47,Trump II,wh_trump2,True
+F0122,tw:1977830114080817539,@DHSgov,Trump II,agency_t2,False
+F0123,tw:449667591792242689,Staff (before office),Obama,officials,True
+F0124,tw:2008198637038223509,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0125,tw:1257283775375040512,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0126,ts:116376634773749603,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0127,tw:1126264280695943171,@CBP,Trump I,agency_pre,True
+F0128,tw:1289224330547789824,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0129,ts:112509265523703312,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0130,tw:423278709974773760,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0131,tw:1893423563681542196,@POTUS,Trump II,wh_trump2,True
+F0132,tw:230006777184391169,@StateDept,Obama,agency_pre,True
+F0133,tw:1175792466592555008,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0134,tw:2069952508638724573,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0135,tw:609755953865461760,Staff (before office),Obama,officials,False
+F0136,tw:410608304348741632,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0137,ts:111182319175813797,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0138,tw:1691857359767830582,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0139,ts:111038278872612127,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0140,tw:206139469403930624,@StateDept,Obama,agency_pre,False
+F0141,ts:115902017280271792,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0142,ts:112094633649247418,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0143,tw:1965551846707396614,@DHSgov,Trump II,agency_t2,False
+F0144,ts:114993652992825116,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0145,tw:968818810005450752,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0146,tw:2075308404277432480,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0147,tw:727634574298255361,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0148,tw:2042402293446767065,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0149,tw:793543151432691712,@DHSgov,Obama,agency_pre,True
+F0150,tw:1303843243277406214,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0151,tw:733438857878904832,Staff (before office),Obama,officials,True
+F0152,tw:2047788846520115272,@DHSgov,Trump II,agency_t2,False
+F0153,tw:1261824268507193344,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0154,tw:1478859235890978816,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0155,tw:695252170535477249,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0156,tw:2054228694059692504,@RapidResponse47,Trump II,wh_trump2,True
+F0157,ts:116083517548295708,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0158,tw:1340333618691002368,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0159,tw:591388084761206784,Staff (before office),Obama,officials,True
+F0160,tw:999793425607221249,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0161,tw:921891186352287744,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0162,tw:1463226167964614657,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0163,ts:116823744965970219,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0164,tw:1205368801438707713,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0165,tw:1955056768142155925,@ICEgov,Trump II,agency_t2,True
+F0166,tw:1991611813063270492,@DHSgov,Trump II,agency_t2,False
+F0167,tw:1232155591537254400,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0168,tw:1947137650944532497,@USBPChiefELC,Trump II,agency_t2,True
+F0169,tw:1337052585547755523,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0170,tw:883345869302398976,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0171,tw:1939735635440365610,@TheJusticeDept,Trump II,agency_t2,False
+F0172,ts:115310630808491399,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0173,ts:116683400326307426,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0174,tw:1454527272648523781,@StateDept,Biden,agency_pre,False
+F0175,tw:1942388164837937559,@ICEgov,Trump II,agency_t2,True
+F0176,tw:428703695292080128,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0177,tw:927644826006425601,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0178,tw:1057325717162213378,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0179,tw:1848809047257993628,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0180,tw:1076655729820471296,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0181,tw:1980754733087457330,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0182,ts:110068963834449450,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0183,ts:108430948641137080,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0184,tw:1054054208935260161,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0185,tw:1756407691499512160,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0186,tw:1641513906098036738,@StateDept,Biden,agency_pre,False
+F0187,ts:114638898863359142,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0188,tw:1683899920376266767,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0189,tw:1822361275596243191,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0190,tw:1259842012632821767,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0191,tw:1684595188805627904,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0192,ts:112099391163380482,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0193,ts:109123698568322659,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0194,tw:1933599098910675340,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0195,tw:777977445714579456,@DHSgov,Obama,agency_pre,False
+F0196,tw:675137559387889664,Staff (before office),Obama,officials,True
+F0197,tw:2052010658669940812,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0198,tw:2066552197664412159,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0199,tw:1407431448022368266,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0200,tw:280742880564371457,@StateDept,Obama,agency_pre,True
+F0201,ts:116694036820867367,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0202,tw:877539582283313153,@ICEgov,Trump I,agency_pre,True
+F0203,tw:2055104631798140960,@ICEgov,Trump II,agency_t2,False
+F0204,tw:1762914084096241909,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0205,tw:687405416175800320,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0206,tw:679410900751802368,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0207,tw:2031362624626061536,@DHSgov,Trump II,agency_t2,False
+F0208,tw:610193828776165376,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0209,tw:230431173761966082,@StateDept,Obama,agency_pre,False
+F0210,tw:852297762599313409,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0211,tw:385081320344256512,Staff (before office),Obama,officials,True
+F0212,tw:1411073474672660481,@DHSgov,Biden,agency_pre,False
+F0213,tw:302490189434081281,Staff (before office),Obama,officials,False
+F0214,tw:1899591196613169627,@PressSec,Trump II,wh_trump2,True
+F0215,tw:1226563498479640576,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0216,tw:1222206219731062789,@ICEgov,Trump I,agency_pre,True
+F0217,tw:1765936052005446121,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0218,wh:https://www.whitehouse.gov/presidential-actions/2025/04/250th-anniversary-of-the-battles-of-lexington-and-concord/,WhiteHouse.gov,Trump II,wh_trump2,True
+F0219,ts:116275668825285445,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0220,tw:1209235458896601088,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0221,tw:1166841398777266179,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0222,tw:2057505383229358541,@RapidResponse47,Trump II,wh_trump2,True
+F0223,tw:1261079096404123648,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0224,tw:1274927241034715138,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0225,tw:1964999361492119605,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0226,tw:1194987728724774913,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0227,ts:112390024816068848,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0228,tw:2044808338890756397,@RapidResponse47,Trump II,wh_trump2,True
+F0229,tw:480178648654180352,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0230,ts:114536534087665403,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0231,ts:115193110827591178,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0232,ts:114455608513522948,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0233,tw:1610757968592572425,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0234,tw:1993469230528790869,"Trump · X (President, 2025–)",Trump II,trump_ts_pres,True
+F0235,tw:1417991169833902080,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0236,tw:458194390834749441,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0237,tw:1202792805753597952,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0238,ts:115551127714537339,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0239,tw:1988314123231531504,@RapidResponse47,Trump II,wh_trump2,False
+F0240,ts:110516041490225492,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0241,tw:1321091050488909824,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0242,tw:1899091814549762057,@PressSec,Trump II,wh_trump2,False
+F0243,tw:417536567054311424,@StateDept,Obama,agency_pre,True
+F0244,tw:494139050908188672,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0245,tw:1965504613161075070,@PressSec,Trump II,wh_trump2,True
+F0246,tw:748276459186364417,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0247,ts:111191595117199632,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0248,tw:1509636655434514452,@StateDept,Biden,agency_pre,False
+F0249,tw:211531062214537216,@StateDept,Obama,agency_pre,True
+F0250,tw:1899501598771982761,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0251,tw:1106520743855251456,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0252,ts:116677945307879259,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0253,tw:1006832813499269120,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0254,tw:1615136820769030151,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0255,tw:1636080966685925378,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0256,tw:2039711712643793350,@RapidResponse47,Trump II,wh_trump2,False
+F0257,tw:819649215655739392,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0258,ts:112977763063216281,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0259,tw:1976281703237988424,@USBPChiefELC,Trump II,agency_t2,False
+F0260,tw:907687455062675457,@ICEgov,Trump I,agency_pre,False
+F0261,wh:https://www.whitehouse.gov/releases/2026/06/white-house-ceq-to-convene-leading-innovators-with-promising-permitting-technology/,WhiteHouse.gov,Trump II,wh_trump2,False
+F0262,tw:377799593137684480,Staff (before office),Obama,officials,False
+F0263,tw:1199811730353905665,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0264,tw:1947763582583890426,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0265,tw:1836903095369883650,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0266,tw:1221443936952233984,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0267,tw:1279906540791779334,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0268,tw:857571631471964160,@ICEgov,Trump I,agency_pre,True
+F0269,tw:1317171227480510464,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0270,tw:1299559244593860608,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0271,ts:111626226780293684,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0272,tw:1006577117306478592,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0273,tw:1719791421014556918,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0274,tw:1911112751482851721,@USBPChiefELC,Trump II,agency_t2,True
+F0275,ts:113235296360076081,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0276,tw:1923347762747146326,@USCIS,Trump II,agency_t2,False
+F0277,tw:842088996826185730,@ICEgov,Trump I,agency_pre,False
+F0278,tw:1301680658423656449,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0279,tw:1140256498561536000,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0280,tw:1582133912645472256,@DHSgov,Biden,agency_pre,False
+F0281,ts:113292039874061190,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0282,tw:1692988729332322561,@DHSgov,Biden,agency_pre,False
+F0283,ts:110879292150876162,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0284,tw:2002815130938286515,@DHSgov,Trump II,agency_t2,True
+F0285,tw:603591079565369344,Staff (before office),Obama,officials,False
+F0286,tw:817872193392496640,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0287,ts:116997857033014116,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0288,tw:771495159318142978,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0289,tw:462729495938871296,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0290,tw:783751803011600384,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0291,tw:713783214159085568,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0292,tw:812761572166795264,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0293,tw:1290785116759961600,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0294,tw:1106228559650213889,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0295,tw:2047668297361960997,@PressSec,Trump II,wh_trump2,False
+F0296,tw:1033031957670776833,@StateDept,Trump I,agency_pre,False
+F0297,tw:712685104942817281,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0298,tw:1588336761658392582,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0299,tw:1524096995392204802,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0300,ts:115466449868630054,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0301,ts:116629952973301768,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0302,tw:2053936259458822357,@RapidResponse47,Trump II,wh_trump2,False
+F0303,tw:694888332099239936,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0304,tw:2018805846529225135,@RapidResponse47,Trump II,wh_trump2,True
+F0305,tw:201094406030372864,@StateDept,Obama,agency_pre,True
+F0306,ts:111800254033963442,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0307,tw:2077929232655634776,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0308,tw:1034072800041099265,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0309,tw:1949569481576943921,@USCG,Trump II,agency_t2,False
+F0310,tw:2023059963959238829,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0311,tw:1973098698469969952,@RapidResponse47,Trump II,wh_trump2,True
+F0312,tw:1237128422712905738,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0313,ts:108319229612158376,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0314,ts:116365273811504261,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0315,tw:1937574673358946499,@DHSgov,Trump II,agency_t2,True
+F0316,tw:167664839664218112,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0317,ts:110573137958957253,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0318,ts:114235104036085271,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0319,tw:1487225992439599107,@CBP,Biden,agency_pre,True
+F0320,tw:1319394271066312704,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0321,tw:1019909066456489986,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0322,ts:111808711296062555,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0323,tw:727582533211295744,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0324,tw:1721316467008745966,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0325,tw:1154832508103667714,@ICEgov,Trump I,agency_pre,True
+F0326,tw:1443994735832666126,@DHSgov,Biden,agency_pre,False
+F0327,ts:114471750357100883,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0328,ts:110687035705979431,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0329,tw:626508731073867776,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0330,tw:2036511652275703864,@RapidResponse47,Trump II,wh_trump2,False
+F0331,tw:1948751402337006052,@CBP,Trump II,agency_t2,False
+F0332,ts:116677925826821244,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0333,ts:115487417269482211,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0334,tw:715701686791233538,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0335,ts:111529773864404243,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0336,ts:117005562901056692,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0337,wh:https://www.whitehouse.gov/briefings-statements/2026/05/presidential-message-on-world-trade-week/,WhiteHouse.gov,Trump II,wh_trump2,False
+F0338,tw:1004735592289132547,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0339,tw:686957452386942976,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0340,ts:115081441604745953,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0341,tw:1955292520201572744,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0342,tw:1206288430721904644,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0343,tw:654403687515860996,Staff (before office),Obama,officials,False
+F0344,ts:117054903519490373,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0345,tw:753260166414557184,@StateDept,Obama,agency_pre,False
+F0346,tw:1772745343769137579,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0347,tw:785505996802236416,Staff (before office),Obama,officials,True
+F0348,ts:114951007246294127,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0349,tw:739867527489200129,Staff (before office),Obama,officials,True
+F0350,tw:1024248479386923009,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0351,ts:112718469656730497,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0352,ts:113679848088418964,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0353,tw:1326877480834240515,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0354,ts:114186510410903319,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0355,tw:1242416827558498304,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0356,ts:116120334071120213,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0357,tw:667932215213473792,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0358,tw:1271163756144279552,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0359,tw:762104411707568128,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0360,ts:112530671112353369,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0361,tw:1591083339888336898,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0362,ts:111905225361836378,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0363,ts:115991701359412321,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0364,tw:1904960291085107628,@DHSgov,Trump II,agency_t2,True
+F0365,tw:1381689585286193160,@CBP,Biden,agency_pre,False
+F0366,tw:2061959791027646832,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0367,tw:1177575947358412800,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0368,tw:793237180567195653,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0369,ts:109255667796782356,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0370,tw:696860953078583296,Staff (before office),Obama,officials,False
+F0371,tw:1940414944845140188,@USCIS,Trump II,agency_t2,True
+F0372,tw:1309246007222382593,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0373,ts:108645307681770740,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0374,ts:115233272162019294,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0375,tw:2028857579028283492,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0376,tw:1974414213373108378,@ICEgov,Trump II,agency_t2,False
+F0377,ts:116037545036564953,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0378,ts:109181220752325194,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0379,tw:1724577961964138638,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0380,tw:895360573092659200,@StateDept,Trump I,agency_pre,False
+F0381,tw:542685559555375104,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0382,tw:330410392687890432,Staff (before office),Obama,officials,True
+F0383,tw:1131919521999183873,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0384,tw:783087361345269760,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0385,ts:114191290196334140,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0386,ts:116144013017188538,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0387,ts:112119195182130508,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0388,ts:108947107193557186,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0389,tw:728621240697692161,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0390,tw:1015286897667522561,@ICEgov,Trump I,agency_pre,True
+F0391,tw:2060558237313663177,@RapidResponse47,Trump II,wh_trump2,False
+F0392,tw:755120605414973440,Staff (before office),Obama,officials,False
+F0393,tw:703291085049700353,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0394,tw:1144406864567947265,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0395,tw:1935000907915092129,@RapidResponse47,Trump II,wh_trump2,True
+F0396,tw:1827707502026236222,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0397,tw:1320168905856397326,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0398,ts:113353343940041618,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0399,tw:1284816646104928256,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0400,tw:2025975226002018309,@DHSgov,Trump II,agency_t2,True
+F0401,ts:112275548835184254,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0402,tw:593194052125724672,Staff (before office),Obama,officials,False
+F0403,tw:918891407896481792,@StateDept,Trump I,agency_pre,False
+F0404,ts:116938558790759096,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0405,tw:2023570508739236048,@USBPChiefELC,Trump II,agency_t2,True
+F0406,tw:1245112145756524544,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0407,tw:1664755864790597635,@ICEgov,Biden,agency_pre,True
+F0408,tw:1194808167307321344,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0409,tw:1881549782377800095,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0410,tw:747538586120093696,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0411,tw:1237845258253131777,@CBP,Trump I,agency_pre,True
+F0412,tw:2017417980594827718,"Trump · X (President, 2025–)",Trump II,trump_ts_pres,True
+F0413,tw:556355591594319872,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0414,tw:2016266180424552472,@RapidResponse47,Trump II,wh_trump2,False
+F0415,tw:1925943139878998425,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0416,ts:116285903958791106,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0417,tw:667819443196588032,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0418,tw:2047621625051328644,@ICEgov,Trump II,agency_t2,True
+F0419,ts:116877256925065925,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0420,tw:1382684142580686850,@ICEgov,Biden,agency_pre,True
+F0421,tw:2028885064025612524,@RapidResponse47,Trump II,wh_trump2,True
+F0422,tw:1062391577807601664,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0423,tw:1906060842988409219,@USBPChiefELC,Trump II,agency_t2,False
+F0424,ts:116367088879643074,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0425,tw:1970572416792625383,@RapidResponse47,Trump II,wh_trump2,True
+F0426,tw:1123285120864092162,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0427,tw:312674433355624448,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0428,tw:1934339773667348482,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0429,ts:115086929873163909,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0430,tw:1950171062089429210,@PressSec,Trump II,wh_trump2,False
+F0431,tw:1632867402881835009,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0432,ts:109261470831895118,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0433,tw:1583186447955243009,@CBP,Biden,agency_pre,True
+F0434,tw:1359697773109641217,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0435,ts:115710698623079249,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0436,tw:1973169770431390081,@PressSec,Trump II,wh_trump2,True
+F0437,tw:1022447980408983552,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0438,tw:1725182133772177723,@USBPChief,Biden,officials,True
+F0439,tw:1353032247809617920,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0440,tw:1233888452283899904,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0441,ts:116513195579187634,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0442,tw:819013125987074053,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0443,tw:1964087449304342818,@CBP,Trump II,agency_t2,False
+F0444,tw:683438216167436292,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0445,tw:720372829347143681,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0446,tw:2066157656956387799,@RapidResponse47,Trump II,wh_trump2,True
+F0447,tw:653387672891822080,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0448,tw:1885485623735124467,"Trump · X (President, 2025–)",Trump II,trump_ts_pres,False
+F0449,ts:109116765002212354,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0450,wh:https://www.whitehouse.gov/presidential-actions/2025/01/designating-cartels-and-other-organizations-as-foreign-terrorist-organizations-and-specially-designated-global-terrorists/,WhiteHouse.gov,Trump II,wh_trump2,True
+F0451,tw:1981441697046548683,@OFOEAC,Trump II,officials,False
+F0452,tw:1095014832892461057,@ICEgov,Trump I,agency_pre,False
+F0453,tw:1017070142382116864,@StateDept,Trump I,agency_pre,False
+F0454,tw:528557303310860288,Staff (before office),Obama,officials,False
+F0455,tw:1554871385314451459,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0456,ts:110515788506904388,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0457,tw:1762504555932082215,@ICEgov,Biden,agency_pre,False
+F0458,wh:https://www.whitehouse.gov/briefings-statements/2025/03/womens-history-month-2025/,WhiteHouse.gov,Trump II,wh_trump2,False
+F0459,ts:113280725922311988,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0460,tw:1846297381370761602,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0461,tw:1851325090471841939,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0462,tw:1960360515743424562,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0463,tw:830769247185952772,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0464,ts:116715629293844038,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0465,tw:1103311362070138880,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0466,tw:1116793108946214913,@ICEgov,Trump I,agency_pre,True
+F0467,tw:803927774784344064,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0468,tw:1289228380835995648,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0469,tw:1057059603605831680,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0470,tw:551939129500770304,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0471,tw:1181933850991235073,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0472,tw:2049681542788845794,@GregoryKBovino,Trump II,officials,True
+F0473,tw:1110984586908061696,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0474,tw:2049147440746430639,@RapidResponse47,Trump II,wh_trump2,False
+F0475,tw:2061943065661628779,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0476,tw:1297565264683438080,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0477,tw:968168286193115136,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0478,tw:1316911418042667008,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0479,tw:1790064462051029027,"ICE field offices (ERO, pooled)",Biden,agency_pre,True
+F0480,tw:901791391130554370,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0481,ts:113125645719667124,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0482,tw:872456061944561665,@DHSgov,Trump I,agency_pre,False
+F0483,ts:110815809689829290,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0484,ts:115483347669595966,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0485,tw:1085151045922234368,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0486,tw:1682029218362974208,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0487,tw:1806741860691464500,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0488,tw:1172129122979581952,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0489,tw:347395880711749632,@StateDept,Obama,agency_pre,False
+F0490,tw:2056827231524073562,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0491,tw:1000465814192099330,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0492,tw:620911996456734720,@StateDept,Obama,agency_pre,False
+F0493,ts:115686072737425841,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0494,tw:1918304697351352517,@CBPJobs,Trump II,agency_t2,False
+F0495,ts:116206732840510472,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0496,ts:113189402349255852,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0497,ts:116715630555341816,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0498,ts:116850596821921968,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0499,tw:704352417266139136,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0500,tw:807721884183830528,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0501,tw:1221844357290037248,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0502,tw:798536648065617921,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0503,tw:480907734586372096,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0504,tw:1110125517754241024,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0505,ts:112453675996725813,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0506,tw:1128800322917457922,@CBP,Trump I,agency_pre,True
+F0507,tw:1699618623239619014,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0508,ts:111427749096314103,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0509,ts:110085056247774261,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0510,ts:111943310253470500,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0511,tw:1318003668768026624,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0512,tw:1255484391364665351,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0513,tw:1033362615723024384,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0514,ts:112027393784491634,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0515,tw:1889119616200302676,@DeptofWar,Trump II,agency_t2,False
+F0516,tw:1965505086085615922,@PressSec,Trump II,wh_trump2,False
+F0517,tw:722576418752892928,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0518,tw:448180563799977984,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0519,tw:1109126357852786690,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0520,tw:1140770356153790464,@CBP,Trump I,agency_pre,True
+F0521,tw:2033635240141549881,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0522,ts:115483490583943218,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0523,tw:706192664652189697,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0524,tw:760175250856218624,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0525,tw:1194635422141255688,@ICEgov,Trump I,agency_pre,True
+F0526,tw:1164914963766546435,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0527,ts:112741442974877807,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0528,ts:112412436050133264,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0529,tw:913840109631438848,@ICEgov,Trump I,agency_pre,True
+F0530,tw:2047412399804658167,@StateDept,Trump II,agency_t2,False
+F0531,tw:1192467215360102401,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0532,tw:1182654371714211840,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0533,ts:116089625350524787,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0534,tw:1879921559646716106,@USBPChief,Biden,officials,False
+F0535,ts:111327885241279670,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0536,tw:1296597150181330944,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0537,tw:1909675396402233544,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0538,wh:https://www.whitehouse.gov/releases/2026/10/president-trump-put-money-back-in-your-pockets-radical-democrats-want-it-back-and-more/,WhiteHouse.gov,Trump II,wh_trump2,True
+F0539,tw:2033561237447970968,@CBP,Trump II,agency_t2,False
+F0540,ts:112057884635621342,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0541,tw:1949973037123514794,@USCG,Trump II,agency_t2,False
+F0542,ts:111579967769908029,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0543,tw:2084660180050903502,@RapidResponse47,Trump II,wh_trump2,False
+F0544,tw:2035779850762367311,@ICEgov,Trump II,agency_t2,True
+F0545,ts:112477085047687234,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0546,tw:1633923523864571905,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0547,tw:1392878858903379974,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0548,tw:780254499382452225,Staff (before office),Obama,officials,True
+F0549,tw:1949869964598370706,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0550,tw:1642527305565126659,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0551,tw:724942956306771968,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0552,tw:1246209634907627521,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0553,tw:754027100655394816,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0554,wh:https://www.whitehouse.gov/releases/2025/10/airlines-pilots-demand-action-as-democrat-shutdown-pushes-air-travel-to-the-edge/,WhiteHouse.gov,Trump II,wh_trump2,True
+F0555,ts:112946832281962886,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0556,tw:1669525466896629760,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0557,tw:1228440816559017984,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0558,tw:1233179291258503168,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0559,tw:1887340184062074997,@POTUS,Trump II,wh_trump2,True
+F0560,tw:687105580884873216,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0561,tw:1324855496722026498,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0562,tw:298211770735132673,Staff (before office),Obama,officials,True
+F0563,tw:1172585739504312322,@ICEgov,Trump I,agency_pre,False
+F0564,tw:622465431018864640,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0565,ts:108994402424207052,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0566,tw:2054592192216170652,@GregoryKBovino,Trump II,officials,True
+F0567,ts:114789577865630441,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0568,tw:2004263346267476093,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0569,tw:1983534944895824215,@CBPJobs,Trump II,agency_t2,True
+F0570,tw:707971359289139200,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0571,tw:2043883188313792685,@WhiteHouse (all administrations),Trump II,wh_trump2,False
+F0572,tw:1986866265655550354,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0573,tw:583297817642434560,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0574,tw:1940483307407540379,@StephenM,Trump II,officials,False
+F0575,tw:756588504822362113,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0576,tw:211415783874637825,Staff (before office),Obama,officials,True
+F0577,tw:1381794282613444609,@CBP,Biden,agency_pre,True
+F0578,tw:520799549263458304,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0579,tw:2001008927639806174,@RapidResponse47,Trump II,wh_trump2,True
+F0580,tw:169112620039811073,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0581,tw:1024649463435067398,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0582,tw:358765002884648961,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0583,tw:535061507806363648,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0584,tw:2027821388367597572,@PressSec,Trump II,wh_trump2,False
+F0585,ts:113189020876880841,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0586,tw:1700850403494019580,@CBP,Biden,agency_pre,True
+F0587,tw:2053233801866662032,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0588,tw:1154512493953179649,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0589,tw:1878897324442718411,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0590,ts:110484041385529204,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0591,tw:784553476944789504,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0592,tw:1191780607283601414,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0593,tw:1554634660663201792,@CBP,Biden,agency_pre,True
+F0594,tw:375997306950017025,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0595,tw:1694847052839084168,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0596,tw:256056387203911681,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0597,tw:1779896302093893726,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0598,ts:115548539359870302,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0599,tw:2045215510992691451,@PressSec,Trump II,wh_trump2,False
+F0600,tw:1518201840319442944,@StateDept,Biden,agency_pre,False
+F0601,tw:2016177072855478492,@ICEgov,Trump II,agency_t2,False
+F0602,tw:1748555658293571889,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0603,wh:https://www.whitehouse.gov/presidential-actions/2025/02/president-donald-j-trump-approves-kentucky-emergency-declaration/,WhiteHouse.gov,Trump II,wh_trump2,False
+F0604,ts:108515323515240869,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0605,tw:1128246369674829832,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0606,tw:1899538961107722624,@RapidResponse47,Trump II,wh_trump2,False
+F0607,ts:112977765074674275,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0608,ts:111160616476091594,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0609,tw:1687267105140527105,@StateDept,Biden,agency_pre,False
+F0610,tw:594654501254012928,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0611,ts:112471093183028714,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0612,tw:668281377054457856,Staff (before office),Obama,officials,True
+F0613,ts:113181668600678553,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0614,tw:1716167537719652482,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0615,tw:1002156016060989445,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0616,tw:957267714577494017,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0617,tw:568614497658798080,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0618,ts:117049463846113769,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0619,tw:758848710113505280,Staff (before office),Obama,officials,True
+F0620,ts:116103041948622478,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0621,tw:794228568704348162,@ICEgov,Obama,agency_pre,True
+F0622,tw:561019694115983361,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0623,ts:115673706520574050,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0624,tw:231092414985687040,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0625,tw:2031899272317157701,@ICEgov,Trump II,agency_t2,True
+F0626,ts:116550345428812734,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0627,tw:960633831651934213,@ICEgov,Trump I,agency_pre,False
+F0628,ts:114970981123138842,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0629,tw:1899898613364560199,@CBPAMO,Trump II,agency_t2,False
+F0630,tw:2057855822219083815,@DHSgov,Trump II,agency_t2,True
+F0631,ts:113897618055963806,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0632,tw:781353265195876352,Staff (before office),Obama,officials,False
+F0633,tw:2052753714872463476,@SecRubio,Trump II,officials,False
+F0634,tw:227883382787436544,@StateDept,Obama,agency_pre,False
+F0635,tw:1586855471763554304,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0636,tw:2054734384364933394,@StateDept,Trump II,agency_t2,False
+F0637,tw:1506987013001646084,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0638,tw:696763926927826944,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0639,tw:174208942010925056,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0640,tw:614525841008013312,@StateDept,Obama,agency_pre,False
+F0641,tw:25330385195,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0642,tw:2022006820102189352,@ICEgov,Trump II,agency_t2,True
+F0643,tw:2038680337018990872,@DeptofWar,Trump II,agency_t2,False
+F0644,tw:2072691252118655045,@DHSgov,Trump II,agency_t2,True
+F0645,tw:800124008419229696,Staff (before office),Obama,officials,True
+F0646,tw:2026322215688360401,@PressSec,Trump II,wh_trump2,True
+F0647,tw:827867311054974976,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0648,tw:1237841878889840642,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0649,tw:637327680313102336,Staff (before office),Obama,officials,True
+F0650,tw:1650319947623530496,@CBP,Biden,agency_pre,True
+F0651,tw:285130149089927169,Staff (before office),Obama,officials,False
+F0652,tw:1125128484270026753,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0653,tw:42736468908707840,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0654,tw:395687477039865856,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0655,tw:1286317734159056898,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0656,tw:1426209876229902337,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0657,tw:1213905626218323979,@StateDept,Trump I,agency_pre,True
+F0658,tw:2064447910906089667,@RapidResponse47,Trump II,wh_trump2,True
+F0659,tw:894647838713364481,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0660,tw:732672110603214848,@StateDept,Obama,agency_pre,False
+F0661,tw:1634026315694178305,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0662,tw:493737163746312192,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0663,ts:112058087970558736,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0664,ts:111421274036941745,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0665,ts:111605179237089770,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0666,wh:https://www.whitehouse.gov/releases/2025/07/president-trumps-one-big-beautiful-bill-is-now-the-law/,WhiteHouse.gov,Trump II,wh_trump2,True
+F0667,ts:114085325641437111,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0668,tw:1218673508911403008,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0669,tw:1927412024775938365,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0670,tw:562462440546250752,Staff (before office),Obama,officials,True
+F0671,tw:1958167137014403281,@USCIS,Trump II,agency_t2,True
+F0672,tw:2049945978640245164,@RapidResponse47,Trump II,wh_trump2,True
+F0673,tw:816321441406812161,Staff (before office),Obama,officials,False
+F0674,wh:https://www.whitehouse.gov/fact-sheets/2025/05/fact-sheet-president-donald-j-trump-secures-historic-1-2-trillion-economic-commitment-in-qatar/,WhiteHouse.gov,Trump II,wh_trump2,False
+F0675,ts:113330855229503908,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0676,ts:113228257305399126,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0677,tw:889217183930351621,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0678,tw:551942668419596288,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0679,tw:1544862768146354178,@CBP,Biden,agency_pre,True
+F0680,tw:733243307204194309,Staff (before office),Obama,officials,False
+F0681,ts:108829532828499892,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0682,ts:115554138689247811,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0683,tw:1824535944986284329,@DHSgov,Biden,agency_pre,True
+F0684,tw:539160084501504000,@StateDept,Obama,agency_pre,True
+F0685,ts:115482994183924113,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0686,tw:1160382091592384513,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0687,ts:112776755857070068,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0688,tw:2056794578624164233,@RapidResponse47,Trump II,wh_trump2,False
+F0689,ts:114357043475202498,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0690,tw:2052113910963003713,@RapidResponse47,Trump II,wh_trump2,True
+F0691,tw:2034614891709907176,@DOWResponse,Trump II,agency_t2,True
+F0692,tw:927906400247910401,@StateDept,Trump I,agency_pre,False
+F0693,tw:1514405832229900299,@CBP,Biden,agency_pre,False
+F0694,tw:1636910292750815233,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0695,tw:1964358308095037679,@CBPAMO,Trump II,agency_t2,False
+F0696,tw:819018747084029952,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0697,tw:1209304295365107713,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0698,tw:752939037170728960,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0699,tw:1295768022158802946,@StateDept,Trump I,agency_pre,False
+F0700,tw:2038964593972650082,@ICEgov,Trump II,agency_t2,True
+F0701,tw:1888951062947917916,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0702,ts:114462392807560620,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0703,ts:111609676713571861,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0704,tw:1423992427019481091,@CBP,Biden,agency_pre,False
+F0705,tw:1041751173034848260,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0706,tw:744942934785560580,@DHSgov,Obama,agency_pre,False
+F0707,tw:1024680095343108097,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0708,tw:761659914120929280,Staff (before office),Obama,officials,False
+F0709,tw:620950955073388544,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0710,tw:1540373636225327112,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0711,tw:2052439506578493825,@USCG,Trump II,agency_t2,False
+F0712,ts:116714035637911912,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0713,tw:1271766684517437442,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0714,ts:111138874287927722,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0715,tw:697998702477242369,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0716,tw:1079096156708319232,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0717,tw:1258503172127145986,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0718,tw:1139164973286985730,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0719,tw:752944701871841280,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0720,tw:703984276304326656,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0721,tw:1529852078113312769,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0722,ts:114594463510818001,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0723,tw:342377485452845056,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0724,tw:1280946260703354881,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0725,ts:108945753521845976,Trump · Truth Social (out of office),Biden,trump_ts_out,True
+F0726,tw:1249004689322053633,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0727,ts:114670486632619754,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0728,tw:780373583428218880,Staff (before office),Obama,officials,True
+F0729,tw:481076823262887936,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0730,tw:2049938725333762231,@RapidResponse47,Trump II,wh_trump2,True
+F0731,tw:665524569961287680,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0732,tw:323606700726816769,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0733,ts:114263022222641123,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0734,tw:1706760585155629417,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0735,tw:1186856554055852035,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0736,ts:116045171347553218,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0737,tw:1949921158515630166,@DHSgov,Trump II,agency_t2,True
+F0738,tw:886950594220568576,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0739,ts:115877313568182404,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0740,tw:915200532586823680,@StateDept,Trump I,agency_pre,True
+F0741,tw:1483513105166618626,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0742,tw:2057875748329836947,"ICE field offices (ERO, pooled)",Trump II,agency_t2,False
+F0743,tw:1301710818267074560,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0744,tw:367702452184702977,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0745,tw:2064761561105715501,@DHSgov,Trump II,agency_t2,True
+F0746,ts:108858518234900212,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0747,tw:2043824617869992418,@DHSgov,Trump II,agency_t2,True
+F0748,tw:2014793022442274915,@ICEgov,Trump II,agency_t2,True
+F0749,tw:1027641518243414016,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0750,tw:2018413634385326386,@fema,Trump II,agency_t2,False
+F0751,ts:110577688926740790,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0752,ts:116386735130758581,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0753,tw:1674190943644155904,@WhiteHouse (all administrations),Biden,wh_biden,False
+F0754,tw:1961564609292255402,@ICEgov,Trump II,agency_t2,True
+F0755,ts:115120067667186412,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0756,tw:1203768342068256771,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0757,ts:116330487356155648,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0758,tw:1215618152320638978,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0759,ts:109246296853705965,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0760,tw:255348583618985984,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0761,tw:1839711606097207553,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0762,tw:1002892787803676673,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0763,tw:711273621801467904,@WhiteHouse (all administrations),Obama,wh_obama,True
+F0764,tw:1038103589904777218,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0765,tw:596305482756788225,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,True
+F0766,tw:1308149104351076360,@ICEgov,Trump I,agency_pre,True
+F0767,tw:1012295859072126977,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0768,tw:1282155171909435393,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0769,tw:1906822058232971443,"ICE field offices (ERO, pooled)",Trump II,agency_t2,True
+F0770,ts:109105631559878459,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0771,tw:761999790892806144,@WhiteHouse (all administrations),Obama,wh_obama,False
+F0772,tw:2037189248042815753,@DOWResponse,Trump II,agency_t2,True
+F0773,ts:115701239677984151,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0774,tw:2017235489841913911,@PressSec,Trump II,wh_trump2,False
+F0775,tw:1469723413371572224,@DHSgov,Biden,agency_pre,False
+F0776,tw:2050588054461489494,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0777,tw:1258520740447412225,@WhiteHouse (all administrations),Trump I,wh_trump1,True
+F0778,tw:678305204152967168,Staff (before office),Obama,officials,False
+F0779,tw:1119034770221088768,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0780,tw:1806768279857373657,@WhiteHouse (all administrations),Biden,wh_biden,True
+F0781,ts:113742374534233751,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0782,tw:2042726447769325603,@WhiteHouse (all administrations),Trump II,wh_trump2,True
+F0783,tw:208564478957199361,Trump · Twitter (private citizen/candidate),Obama,trump_tw_pre,False
+F0784,tw:1144406713165963264,Trump · Twitter (President),Trump I,trump_tw_pres,False
+F0785,tw:1916501114322559379,@PressSec,Trump II,wh_trump2,False
+F0786,tw:875436915033464832,@StateDept,Trump I,agency_pre,False
+F0787,ts:111829003406979731,Trump · Truth Social (out of office),Biden,trump_ts_out,False
+F0788,tw:1197973721602035713,@WhiteHouse (all administrations),Trump I,wh_trump1,False
+F0789,tw:691095891726327808,Staff (before office),Obama,officials,True
+F0790,tw:2047148473745571911,@ICEgov,Trump II,agency_t2,True
+F0791,tw:1415457588448272394,@CBP,Biden,agency_pre,True
+F0792,tw:921452335003561984,@DHSgov,Trump I,agency_pre,True
+F0793,tw:1697021558584234452,@CBP,Biden,agency_pre,True
+F0794,tw:2028636762155762058,@DHSgov,Trump II,agency_t2,True
+F0795,ts:116025411185339692,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0796,ts:115426826573945929,Trump · Truth Social (President),Trump II,trump_ts_pres,True
+F0797,ts:116596878160158798,Trump · Truth Social (President),Trump II,trump_ts_pres,False
+F0798,tw:921829947093733376,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0799,tw:1121048120312389634,Trump · Twitter (President),Trump I,trump_tw_pres,True
+F0800,tw:2026795643872702479,@ICEgov,Trump II,agency_t2,True

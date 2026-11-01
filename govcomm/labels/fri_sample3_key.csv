@@ -1,0 +1,101 @@
+lid,post_id,voice,administration,stratum,selected_on_signal
+H0001,tw:776459459694559232,@WhiteHouse (all administrations),Obama,gov_pre_top3,True
+H0002,tw:2008663304672104827,@TheJusticeDept,Trump II,gov_t2_top3,True
+H0003,tw:1885500415015260652,@USBPChiefELC,Trump II,gov_t2_top3,True
+H0004,tw:1423073506875555846,@StateDept,Biden,gov_pre_top3,True
+H0005,tw:563052332,@StateDept,Bush (43),gov_pre_top3,True
+H0006,tw:873554355332448256,@WhiteHouse (all administrations),Trump I,gov_pre_top3,True
+H0007,tw:687658452,@StateDept,Bush (43),gov_pre_top3,True
+H0008,tw:246297289902133248,@StateDept,Obama,gov_pre_top3,True
+H0009,tw:1915879871869301029,@StephenM,Trump II,gov_t2_top3,True
+H0010,tw:1945110823858217465,@DHSgov,Trump II,gov_t2_top3,True
+H0011,tw:445341940330934272,@StateDept,Obama,gov_pre_top3,True
+H0012,ts:110776642287719882,Trump · Truth Social (out of office),Biden,trump_top3,True
+H0013,tw:1423073505474752514,@StateDept,Biden,gov_pre_top3,True
+H0014,tw:1002968869043097600,Trump · Twitter (President),Trump I,trump_top3,True
+H0015,tw:845120122,@StateDept,Bush (43),gov_pre_top3,True
+H0016,tw:659013978824286208,@StateDept,Obama,gov_pre_top3,True
+H0017,tw:1932607241573601787,@RapidResponse47,Trump II,gov_t2_top3,True
+H0018,tw:227761974245720065,@StateDept,Obama,gov_pre_top3,True
+H0019,tw:2034382121553236161,@PeteHegseth,Trump II,gov_t2_top3,True
+H0020,tw:1911493736166789202,@StephenM,Trump II,gov_t2_top3,True
+H0021,tw:1207104052301090817,@WhiteHouse (all administrations),Trump I,gov_pre_top3,True
+H0022,tw:1308810157883887616,@WhiteHouse (all administrations),Trump I,gov_pre_top3,True
+H0023,ts:114370361342759621,Trump · Truth Social (President),Trump II,trump_top3,True
+H0024,wh:https://www.whitehouse.gov/releases/2025/02/sick-politicians-want-killers-rapists-roaming-our-streets/,WhiteHouse.gov,Trump II,gov_t2_top3,True
+H0025,tw:836761614594555904,@POTUS,Trump I,gov_pre_top3,True
+H0026,tw:1991532782003044710,@DHSgov,Trump II,gov_t2_top3,True
+H0027,tw:1026087766071947265,Trump · Twitter (President),Trump I,trump_top3,True
+H0028,tw:679409900620021761,Trump · Twitter (private citizen/candidate),Obama,trump_top3,True
+H0029,ts:114264549657133828,Trump · Truth Social (President),Trump II,trump_top3,True
+H0030,tw:732615232,@StateDept,Bush (43),gov_pre_top3,True
+H0031,tw:900674802,@StateDept,Bush (43),gov_pre_top3,True
+H0032,tw:1573334353400168450,@WhiteHouse (all administrations),Biden,gov_pre_top3,True
+H0033,tw:847116811,@StateDept,Bush (43),gov_pre_top3,True
+H0034,tw:1423073508222017541,@StateDept,Biden,gov_pre_top3,True
+H0035,tw:1088488035686072320,@StateDept,Trump I,gov_pre_top3,True
+H0036,ts:114175908922736427,Trump · Truth Social (President),Trump II,trump_top3,True
+H0037,tw:1880309992890462605,@USBPChiefELC,Biden,gov_pre_top3,True
+H0038,tw:1888029175358861515,@USBPChiefELC,Trump II,gov_t2_top3,True
+H0039,tw:608349225726955521,@StateDept,Obama,gov_pre_top3,True
+H0040,tw:247783467381833729,Trump · Twitter (private citizen/candidate),Obama,trump_top3,True
+H0041,tw:1947023230100713749,@USBPChiefELC,Trump II,gov_t2_top3,True
+H0042,tw:898556009127583745,@StateDept,Trump I,gov_pre_top3,True
+H0043,tw:1906478897178509535,@StephenM,Trump II,gov_t2_top3,True
+H0044,tw:1898387063218536505,@DOWResponse,Trump II,gov_t2_top3,True
+H0045,tw:230003156652793856,@StateDept,Obama,gov_pre_top3,True
+H0046,tw:646763950248472578,@StateDept,Obama,gov_pre_top3,True
+H0047,tw:1947006244918632874,@StephenM,Trump II,gov_t2_top3,True
+H0048,tw:2004351717131903272,@DeptofWar,Trump II,gov_t2_top3,True
+H0049,tw:1887314165012046005,@StephenM,Trump II,gov_t2_top3,True
+H0050,tw:1399503457707560966,@WhiteHouse (all administrations),Biden,gov_pre_top3,True
+H0051,tw:1883195857237062111,"Trump · X (President, 2025–)",Trump II,trump_top3,True
+H0052,tw:2003570679111909590,@USBPChiefELC,Trump II,gov_t2_top3,True
+H0053,tw:776514136704376836,@CBP,Obama,gov_pre_top3,True
+H0054,tw:1932527766445957365,@StephenM,Trump II,gov_t2_top3,True
+H0055,tw:1483182343225585667,@StateDept,Biden,gov_pre_top3,True
+H0056,tw:1940061034040942605,@DHSgov,Trump II,gov_t2_top3,True
+H0057,tw:1007681553676283904,Trump · Twitter (President),Trump I,trump_top3,True
+H0058,tw:1123311544446726145,@WhiteHouse (all administrations),Trump I,gov_pre_top3,True
+H0059,tw:1976766072054595976,@USBPChiefELC,Trump II,gov_t2_top3,True
+H0060,tw:2000952531493818657,@USDOL,Trump II,gov_t2_top3,True
+H0061,tw:1715533366269714642,@StateDept,Biden,gov_pre_top3,True
+H0062,tw:704389092,@StateDept,Bush (43),gov_pre_top3,True
+H0063,tw:1888705230713274661,@StephenM,Trump II,gov_t2_top3,True
+H0064,tw:2026468204357280079,@DHSgov,Trump II,gov_t2_top3,True
+H0065,wh:https://www.whitehouse.gov/releases/2025/06/every-day-the-trump-administration-is-getting-violent-criminal-illegals-off-our-streets/,WhiteHouse.gov,Trump II,gov_t2_top3,True
+H0066,tw:898650790,@StateDept,Bush (43),gov_pre_top3,True
+H0067,tw:2054197484398793038,@RapidResponse47,Trump II,gov_t2_top3,True
+H0068,tw:1015316209934438403,@WhiteHouse (all administrations),Trump I,gov_pre_top3,True
+H0069,ts:110051757111121013,Trump · Truth Social (out of office),Biden,trump_top3,True
+H0070,tw:514789633838690304,@StateDept,Obama,gov_pre_top3,True
+H0071,tw:948312196756443137,@WhiteHouse (all administrations),Trump I,gov_pre_top3,True
+H0072,tw:246299459405893632,Trump · Twitter (private citizen/candidate),Obama,trump_top3,True
+H0073,tw:732050012,@StateDept,Bush (43),gov_pre_top3,True
+H0074,tw:1885786497581801532,@USBPChiefELC,Trump II,gov_t2_top3,True
+H0075,tw:1565493522886807558,@WhiteHouse (all administrations),Biden,gov_pre_top3,True
+H0076,tw:1834293998548123977,@WhiteHouse (all administrations),Biden,gov_pre_top3,True
+H0077,tw:777271088615071744,@WhiteHouse (all administrations),Obama,gov_pre_top3,True
+H0078,tw:1310601302003585024,@ICEgov,Trump I,gov_pre_top3,True
+H0079,ts:110511303632102309,Trump · Truth Social (out of office),Biden,trump_top3,True
+H0080,tw:1423073504069566469,@StateDept,Biden,gov_pre_top3,True
+H0081,tw:1906700533240680783,"Trump · X (President, 2025–)",Trump II,trump_top3,True
+H0082,tw:874638370542157825,@ICEgov,Trump I,gov_pre_top3,True
+H0083,tw:831006946811662338,Staff accounts,Trump I,gov_pre_top3,True
+H0084,tw:263280983984443392,@StateDept,Obama,gov_pre_top3,True
+H0085,tw:836773012884049921,@POTUS,Trump I,gov_pre_top3,True
+H0086,tw:2056861276509282806,@RapidResponse47,Trump II,gov_t2_top3,True
+H0087,tw:1907168721795170385,@PressSec,Trump II,gov_t2_top3,True
+H0088,tw:1897660572570624336,@PressSec,Trump II,gov_t2_top3,True
+H0089,tw:1919395973802897676,"Trump · X (President, 2025–)",Trump II,trump_top3,True
+H0090,tw:1932882908047413711,@PressSec,Trump II,gov_t2_top3,True
+H0091,tw:2037841331746115761,"ICE field offices (ERO, pooled)",Trump II,gov_t2_top3,True
+H0092,tw:716344032,@StateDept,Bush (43),gov_pre_top3,True
+H0093,tw:1889487411735855327,@StephenM,Trump II,gov_t2_top3,True
+H0094,tw:776573805565280256,@WhiteHouse (all administrations),Obama,gov_pre_top3,True
+H0095,tw:1962591689266102512,@DHSgov,Trump II,gov_t2_top3,True
+H0096,tw:1880093479302545608,@USBPChiefELC,Biden,gov_pre_top3,True
+H0097,tw:1798674959369113842,@WhiteHouse (all administrations),Biden,gov_pre_top3,True
+H0098,wh:https://www.whitehouse.gov/releases/2025/03/president-trump-delivers-justice-for-terrorists-security-for-americans/,WhiteHouse.gov,Trump II,gov_t2_top3,True
+H0099,tw:842788727,@StateDept,Bush (43),gov_pre_top3,True
+H0100,tw:2004267562742518201,@USBPChiefELC,Trump II,gov_t2_top3,True

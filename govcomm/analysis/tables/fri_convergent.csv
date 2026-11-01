@@ -1,0 +1,19 @@
+sample,score,r_fri,r_syndrome,n,key
+All posts,ideology,0.49851827075093935,0.28643572216242386,183109,All posts | ideology
+All posts,partisanship,-0.5394734572720729,-0.3138840310036304,183109,All posts | partisanship
+All posts,threat_hope,-0.3102101851927829,-0.2431310490508131,183109,All posts | threat_hope
+All posts,personalization,-0.34699256185755556,-0.19819596885287843,183109,All posts | personalization
+All posts,professionalism,-0.5293474617070111,-0.3331237847382969,183109,All posts | professionalism
+All posts,party_slant,0.09483604662224591,0.02694141698222463,183109,All posts | party_slant
+Government accounts,ideology,0.4475971672512178,0.18095944718565474,124288,Government accounts | ideology
+Government accounts,partisanship,-0.43742262487596045,-0.161351733086968,124288,Government accounts | partisanship
+Government accounts,threat_hope,-0.2611552503517532,-0.11251287070722979,124288,Government accounts | threat_hope
+Government accounts,personalization,-0.2944668453503121,-0.11242445105332587,124288,Government accounts | personalization
+Government accounts,professionalism,-0.3918973192045137,-0.13379559545330047,124288,Government accounts | professionalism
+Government accounts,party_slant,0.13557652658184025,0.03818117662240509,124288,Government accounts | party_slant
+"Trump, personal accounts",ideology,0.5632612965339194,0.3570863899738418,58821,"Trump, personal accounts | ideology"
+"Trump, personal accounts",partisanship,-0.5446924263723254,-0.3501453952175595,58821,"Trump, personal accounts | partisanship"
+"Trump, personal accounts",threat_hope,-0.4484438300427,-0.3902553631645235,58821,"Trump, personal accounts | threat_hope"
+"Trump, personal accounts",personalization,-0.16156714896559002,-0.12570245537053654,58821,"Trump, personal accounts | personalization"
+"Trump, personal accounts",professionalism,-0.5593033762515219,-0.41897197046973145,58821,"Trump, personal accounts | professionalism"
+"Trump, personal accounts",party_slant,0.08425330573639386,0.0163259737295012,58821,"Trump, personal accounts | party_slant"
