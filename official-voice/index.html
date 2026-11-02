@@ -1,0 +1,1794 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Official Voice Tracker · Dallin Overstreet</title>
+<meta name="description" content="How the President and the federal government speak to the public: 254,082 posts from 2009 to 2026 scored on six rhetorical dimensions and a Fascist Rhetoric Index.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2316293f'/%3E%3Ctext x='16' y='22' font-family='Helvetica,Arial,sans-serif' font-size='16' font-weight='bold' fill='white' text-anchor='middle'%3EDO%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap">
+<style>
+  :root {
+    color-scheme: light;
+    --font-anthropic-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-anthropic-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --cds-font-size-title: clamp(1.75rem, 1.4rem + 1.5vw, 2.4rem);
+    --cds-font-size-heading: 1.0625rem;
+    --cds-font-size-caption: 0.8125rem;
+    --cds-font-weight-medium: 600;
+    --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 16px; --cds-gap-lg: 24px; --cds-gap-xl: 40px;
+    --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-lg: 20px;
+    --cds-radius: 8px; --cds-dur-slow: .3s;
+    --color-bg: #f6f7f9; --color-panel: #ffffff; --color-fg: #16293f; --color-fg-muted: #5f6b7a;
+    --color-border-line: #e3e7ed; --color-bad: #c0392b;
+    --cds-border: #d6dbe2; --cds-surface-popover: #ffffff; --cds-shadow-popover: 0 6px 20px rgba(22, 41, 63, .14);
+    --cds-text-secondary: #5f6b7a;
+    --cds-chart-axis: #9aa3ae; --cds-chart-grid: #eceff3; --cds-chart-muted: #b9c0c9; --cds-chart-reference: #8a939e;
+    --c0: #1f5f9e; --c1: #d4801a; --c2: #12896a; --c3: #b8336f; --c4: #6b4fbf; --c5: #857611; --c6: #1d97b0; --c7: #9c4f28;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --color-bg: #0f1722; --color-panel: #16212f; --color-fg: #e6ebf1; --color-fg-muted: #9aa6b4;
+      --color-border-line: #263345; --color-bad: #e5675a;
+      --cds-border: #2f3e52; --cds-surface-popover: #1b2838; --cds-shadow-popover: 0 6px 20px rgba(0, 0, 0, .45);
+      --cds-text-secondary: #9aa6b4;
+      --cds-chart-axis: #5c6b7d; --cds-chart-grid: #1f2b3a; --cds-chart-muted: #4a5a6d; --cds-chart-reference: #6f7d8e;
+      --c0: #6ea8e6; --c1: #f0a54a; --c2: #4cc49e; --c3: #e47aa8; --c4: #a58cf0; --c5: #c9b84a; --c6: #5cc6dc; --c7: #d48a62;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; overflow-x: clip; }
+  body { margin: 0; background: var(--color-bg); color: var(--color-fg); font-family: var(--font-anthropic-sans); font-size: 15px; line-height: 1.5; }
+  .site { padding: 20px 16px 56px; }
+  .site-top { max-width: 78rem; margin: 0 auto 12px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .site-top a { color: inherit; text-decoration: none; }
+  .site-top a:hover { color: var(--color-fg); text-decoration: underline; }
+  .site-foot { max-width: 78rem; margin: 48px auto 0; padding-top: 16px; border-top: 1px solid var(--color-border-line); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .site-foot a { color: inherit; }
+  .dash-skeleton { background: linear-gradient(90deg, var(--color-panel) 0%, var(--color-bg) 50%, var(--color-panel) 100%); background-size: 200% 100%; animation: ovt-pulse 1.4s ease-in-out infinite; border-radius: var(--cds-radius); }
+  @keyframes ovt-pulse { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+  @media (prefers-reduced-motion: reduce) { .dash-skeleton { animation: none; } }
+
+  .ovt { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); max-width: 78rem; margin-inline: auto; }
+  .ovt-head { display: grid; gap: var(--cds-gap-sm); }
+  .ovt-head h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; text-wrap: balance; }
+  .ovt-take { margin: 0; max-width: 62rem; color: var(--color-fg); line-height: 1.5; }
+  .ovt .ovt-num { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ovt-tabs { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); border-bottom: 1px solid var(--color-border-line); padding-top: var(--cds-pad-sm); }
+  .ovt-tabs button { font: inherit; background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-xs) var(--cds-pad-sm); color: var(--color-fg-muted); cursor: pointer; }
+  .ovt-tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+  .ovt-tabs button:focus-visible, .ovt select:focus-visible, .ovt input:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .ovt-page { display: grid; gap: var(--cds-gap-xl); }
+  .ovt-section { display: grid; gap: var(--cds-gap-md); }
+  .ovt-section > h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0; }
+  .ovt-grid { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); }
+  .ovt-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: var(--cds-gap-sm); align-content: start; min-width: 0; }
+  .ovt-card h3 { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); text-wrap: balance; }
+  .ovt-card p { margin: 0; line-height: 1.5; max-width: 68ch; }
+  .ovt-note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .ovt-chart { position: relative; min-height: 240px; min-width: 0; }
+  .ovt-chart.tall { min-height: 300px; }
+  .ovt-chart svg { display: block; overflow: visible; }
+  .ovt-chart text { fill: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); }
+  .ovt-chart text.ovt-strong { fill: var(--color-fg); }
+  .ovt-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); max-width: 18rem; z-index: 2; }
+  .ovt-tip .ovt-tip-h { color: var(--cds-text-secondary); margin-bottom: 2px; }
+  .ovt-tip .ovt-tip-r { display: flex; gap: 6px; align-items: center; font-variant-numeric: tabular-nums; }
+  .ovt-sw { width: 10px; height: 10px; border-radius: 2px; flex: none; display: inline-block; }
+  .ovt-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-top: var(--cds-pad-xs); }
+  .ovt-legend span { display: inline-flex; gap: 6px; align-items: center; }
+  .ovt-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-lg); align-items: end; }
+  .ovt-controls label { display: grid; gap: 4px; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .ovt-controls label.ovt-inline { display: inline-flex; gap: 6px; align-items: center; color: var(--color-fg); padding-bottom: 6px; }
+  .ovt-controls select { font: inherit; color: var(--color-fg); background: var(--color-bg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 4px 8px; max-width: 100%; }
+  .ovt-checks { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); border: 0; padding: 0; margin: 0; }
+  .ovt-checks legend { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding: 0; margin-bottom: 4px; }
+  .ovt-checks label { display: inline-flex; gap: 6px; align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg); }
+  .ovt-tablebox { overflow: auto; max-height: 34rem; }
+  .ovt-table { border-collapse: collapse; width: 100%; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .ovt-table th, .ovt-table td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-border-line); vertical-align: top; }
+  .ovt-table th { position: sticky; top: 0; background: var(--color-panel); font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); }
+  .ovt-table td.n { text-align: right; white-space: nowrap; }
+  .ovt-table th.n { text-align: right; }
+  .ovt-table td.q { min-width: 16rem; line-height: 1.45; }
+  .ovt-table a { color: inherit; }
+  .ovt-prose { display: grid; gap: var(--cds-gap-sm); max-width: 70ch; line-height: 1.55; }
+  .ovt-prose p, .ovt-prose ul { margin: 0; }
+  .ovt-prose ul { padding-left: 1.2rem; display: grid; gap: 4px; }
+  .ovt-defs { display: grid; gap: var(--cds-gap-sm); grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); }
+  .ovt-defs div { display: grid; gap: 2px; }
+  .ovt-defs b { font-weight: var(--cds-font-weight-medium); }
+  .ovt-defs span { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.45; }
+  .ovt-fail { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: inherit; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .ovt-fail i { width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); display: inline-block; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+  [data-dash-source-state=empty] { color: transparent; }
+  .ovt-eyebrow { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); letter-spacing: .02em; }
+  .ovt-tabs { position: sticky; top: 0; z-index: 3; background: var(--color-bg); }
+  .ovt-lede { display: grid; gap: var(--cds-gap-sm); }
+  .ovt-lede h2 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: calc(var(--cds-font-size-heading) * 1.45); line-height: 1.25; margin: 0; max-width: 56rem; text-wrap: balance; }
+  .ovt-section > h2 { padding-top: var(--cds-pad-sm); border-top: 1px solid var(--color-border-line); }
+  .ovt-page > .ovt-section:first-child > h2 { border-top: 0; padding-top: 0; }
+  .ovt-tiles { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); }
+  .ovt-tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); display: grid; gap: 6px; align-content: start; min-width: 0; }
+  .ovt-tile-v { font-size: 2rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .ovt-tile-v .ovt-num { font-weight: inherit; }
+  .ovt-tile-l { line-height: 1.4; }
+  .ovt-tile-c { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.4; }
+  .ovt-go { justify-self: start; font: inherit; font-size: var(--cds-font-size-caption); background: none; color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 4px 10px; cursor: pointer; }
+  .ovt-go:hover { border-color: var(--color-fg-muted); }
+  .ovt-go:focus-visible { outline: 2px solid var(--color-fg); outline-offset: 2px; }
+  .ovt-scales { display: grid; gap: var(--cds-gap-md); grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+  .ovt-scales div { display: grid; gap: 2px; }
+  .ovt-scales b { font-weight: var(--cds-font-weight-medium); }
+  .ovt-scales span { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); line-height: 1.45; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+// Minimal stand-in for the dashboard runtime this page was written for: datasets load from
+// data/<id>.json when a visible drawing first asks for them; drawings re-run when data arrive,
+// controls change, tabs change or the window resizes. Control settings persist per viewer.
+window.dash = (() => {
+  const DEFAULTS = {"exAvg": true, "exDim": "norms_index", "exInterval": "monthly", "exVoices": ["Trump, all personal accounts", "@StateDept", "WhiteHouse.gov"], "qDim": "professionalism", "qSide": "low", "qVoice": "@StateDept", "sdDim": "function", "t2Dim": "norms_index", "t2Kind": "topic", "friMeasure": "fri", "friEx": "Trump, personal accounts | Truth Social, President (2025-)"};
+  const KEY = 'official-voice-params-v1';
+  let params = Object.assign({}, DEFAULTS);
+  try { Object.assign(params, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* storage unavailable */ }
+  const draws = {}, calcs = {}, store = {}, onData = [];
+  let queued = false;
+  const visible = (el) => !el.closest('[hidden]');
+  function run() {
+    queued = false;
+    onData.forEach((f) => { try { f(); } catch (e) { console.error(e); } });
+    document.querySelectorAll('[data-draw]').forEach((el) => {
+      const f = draws[el.dataset.draw];
+      if (!f || !visible(el)) return;
+      try { f(el); } catch (e) { console.error(el.dataset.draw, e); }
+    });
+  }
+  function schedule() { if (!queued) { queued = true; requestAnimationFrame(run); } }
+  function data(id) {
+    const c = calcs[id];
+    if (c) {
+      const ins = c.inputs.map(data);
+      if (ins.some((x) => x.status === 'error')) return {status: 'error'};
+      if (!ins.every((x) => x.status === 'ok')) return {status: 'loading'};
+      if (!c.cache) c.cache = {status: 'ok', data: c.fn(...ins.map((x) => x.data))};
+      return c.cache;
+    }
+    if (!store[id]) {
+      store[id] = {status: 'loading'};
+      fetch('data/' + id + '.json')
+        .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((d) => { store[id] = {status: 'ok', data: d}; schedule(); })
+        .catch(() => { store[id] = {status: 'error'}; schedule(); });
+    }
+    return store[id];
+  }
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(schedule, 150); });
+  return {
+    colors: ['var(--c0)', 'var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)', 'var(--c6)', 'var(--c7)'],
+    draw(name, fn) { draws[name] = fn; schedule(); },
+    calc(id, spec) { calcs[id] = spec; },
+    data,
+    params: () => params,
+    setParams(p) {
+      params = Object.assign({}, params, p);
+      try { localStorage.setItem(KEY, JSON.stringify(params)); } catch (e) { /* storage unavailable */ }
+      schedule();
+    },
+    setLink(id) { try { history.replaceState(null, '', '#' + id); } catch (e) { /* ignore */ } schedule(); },
+    onData(fn) { onData.push(fn); schedule(); }
+  };
+})();
+</script>
+</head>
+<body>
+<div class="site">
+  <div class="site-top"><a href="../">← Dallin Overstreet</a></div>
+<div class="ovt">
+  <header class="ovt-head" id="top">
+    <p class="ovt-eyebrow">U.S. government messaging on Twitter, X and Truth Social · 2009–2026</p>
+    <h1>Official Voice Tracker</h1>
+    <p class="ovt-take">How the President and the federal government speak to the public: 254,082 posts from Trump's own accounts, the White House, the State Department and 70 agency and official accounts, each scored on six rhetorical dimensions and a Fascist Rhetoric Index.</p>
+    <nav class="ovt-tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" id="tab-overview" data-tab="overview" aria-selected="true" aria-controls="overview">Overview</button>
+      <button type="button" role="tab" id="tab-president" data-tab="president" aria-selected="false" aria-controls="president">The President</button>
+      <button type="button" role="tab" id="tab-institutions" data-tab="institutions" aria-selected="false" aria-controls="institutions">Institutions</button>
+      <button type="button" role="tab" id="tab-trump2" data-tab="trump2" aria-selected="false" aria-controls="trump2">Second Trump term</button>
+      <button type="button" role="tab" id="tab-fascism" data-tab="fascism" aria-selected="false" aria-controls="fascism">Fascist rhetoric</button>
+      <button type="button" role="tab" id="tab-explorer" data-tab="explorer" aria-selected="false" aria-controls="explorer">Explore</button>
+      <button type="button" role="tab" id="tab-method" data-tab="method" aria-selected="false" aria-controls="method">Method and data</button>
+    </nav>
+  </header>
+
+  <section class="ovt-page" id="overview" role="tabpanel" aria-labelledby="tab-overview">
+    <div class="ovt-section ovt-lede">
+      <h2>The President's own voice broke institutional norms first. In his second term, the institutions followed.</h2>
+      <p class="ovt-take">Trump's own posts have sat well below every government account on the norms index since 2009, and holding office did not change that. Government accounts held their register through his first term. In the second, the same accounts became less professional, more partisan and more leader-centered, and began to use rhetoric with fascist markers that had been almost entirely his.</p>
+    </div>
+    <div class="ovt-tiles" id="key-numbers">
+      <div class="ovt-tile"><span class="ovt-tile-v"><b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="voice_summary" data-field="norms_index" data-where="voice=Trump on Twitter, as President">—</b></span><span class="ovt-tile-l">Trump's institutional norms index as President on Twitter (−1 to +1)</span><span class="ovt-tile-c">@StateDept: <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="voice_summary" data-field="norms_index" data-where="voice=@StateDept">—</b> · WhiteHouse.gov: <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="voice_summary" data-field="norms_index" data-where="voice=WhiteHouse.gov">—</b></span></div>
+      <div class="ovt-tile"><span class="ovt-tile-v"><b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="t2_panel" data-field="coef_vs_biden" data-where="key=norms_index | Trump II">—</b></span><span class="ovt-tile-l">Change in the norms index of White House and agency accounts under Trump II, against the same accounts under Biden</span><span class="ovt-tile-c">Under Trump I: <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="t2_panel" data-field="coef_vs_biden" data-where="key=norms_index | Trump I">—</b></span></div>
+      <div class="ovt-tile"><span class="ovt-tile-v"><b class="ovt-num" data-draw="kpi" data-fmt="1" data-source="fri_groups" data-field="fri_syn" data-where="key=Trump, personal accounts | Truth Social, out of office (2021-25)">—</b>%</span><span class="ovt-tile-l">of Trump's Truth Social posts out of office were fascist-rhetoric syndrome posts</span><span class="ovt-tile-c">As President on Twitter: <b class="ovt-num" data-draw="kpi" data-fmt="1" data-source="fri_groups" data-field="fri_syn" data-where="key=Trump, personal accounts | Twitter, President (2017-21)">—</b>% · on Truth Social since 2025: <b class="ovt-num" data-draw="kpi" data-fmt="1" data-source="fri_groups" data-field="fri_syn" data-where="key=Trump, personal accounts | Truth Social, President (2025-)">—</b>%</span></div>
+      <div class="ovt-tile"><span class="ovt-tile-v"><b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="fri_panel" data-field="coef" data-where="key=fri | account FE | Trump II vs Biden">—</b></span><span class="ovt-tile-l">Points added to government accounts' Fascist Rhetoric Index under Trump II</span><span class="ovt-tile-c">From a Biden-era mean of <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="fri_panel" data-field="biden_mean" data-where="key=fri | account FE | Trump II vs Biden">—</b>; under Trump I <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="fri_panel" data-field="coef" data-where="key=fri | account FE | Trump I vs Biden">—</b></span></div>
+    </div>
+<div class="ovt-card" id="norms-over-time">
+        <h3>Institutional norms index by quarter, 2009–2026</h3>
+        <p class="ovt-note">The index averages professionalism, partisanship, personalization and function. Shaded spans are Trump's terms. Trump's line pools his Twitter (2009–Jan 2021) and Truth Social (2022–) posts. The @WhiteHouse account line joins the Obama, Trump I, Biden and current @WhiteHouse accounts. Reposts are excluded.</p>
+        <div class="ovt-chart tall dash-skeleton" id="norms-chart" data-draw="normsChart" data-source="quarterly events"></div>
+      </div>
+    <div class="ovt-card" id="scales">
+      <h3>Reading the scores</h3>
+      <div class="ovt-scales">
+        <div><b>Institutional norms index (−1 to +1)</b><span>The mean of professionalism, partisanship, personalization and function. Low is insulting, partisan, leader-centered persuasion; high is formal, civic, institution-centered information.</span></div>
+        <div><b>Ideology and party-language slant (−1 to +1)</b><span>Liberal to conservative content as coded, checked against an independent classifier trained on Democratic and Republican members of Congress.</span></div>
+        <div><b>Threat or hope (−1 to +1)</b><span>Danger, enemies and blame against achievement and gratitude: the Narrative Policy Framework's devil–angel shift.</span></div>
+        <div><b>Fascist Rhetoric Index (0–100) and syndrome posts</b><span>Seven scholarly markers of fascist rhetoric. Syndrome posts combine three or more. It measures rhetoric, not whether anyone is a fascist.</span></div>
+      </div>
+    </div>
+    <div class="ovt-section">
+      <h2>Where to look next</h2>
+    <div class="ovt-grid" id="sections">
+      <div class="ovt-card"><h3>Trump's own voice</h3><p>Office did not moderate it. Same speaker, same platform, in and out of office; who he casts as the villain; and what his audience rewards.</p><button type="button" class="ovt-go" data-goto="president">Open The President →</button></div>
+      <div class="ovt-card"><h3>State Department and White House</h3><p>@StateDept turned toward advocacy under Pompeo and did not turn back. WhiteHouse.gov runs two registers at once.</p><button type="button" class="ovt-go" data-goto="institutions">Open Institutions →</button></div>
+      <div class="ovt-card"><h3>How the second term changed government accounts</h3><p>Account by account, against each account's own past, holding topic fixed: a drop in professionalism and a turn to immigration and villains.</p><button type="button" class="ovt-go" data-goto="trump2">Open Second Trump term →</button></div>
+      <div class="ovt-card"><h3>Fascist rhetoric</h3><p>Seven markers from the scholarship on fascism, scored on every post. Concentrated in Trump's own feed, then spreading to agencies in 2025–26.</p><button type="button" class="ovt-go" data-goto="fascism">Open Fascist rhetoric →</button></div>
+      <div class="ovt-card"><h3>Explore every account</h3><p>Any account, any dimension, weekly to yearly, and the actual posts at the extremes of each score.</p><button type="button" class="ovt-go" data-goto="explorer">Open Explore →</button></div>
+      <div class="ovt-card"><h3>How it was measured</h3><p>Teacher–student scoring, validation against the coder and against Congress, what the archive covers and what is missing.</p><button type="button" class="ovt-go" data-goto="method">Open Method and data →</button></div>
+    </div>
+    </div>
+  </section>
+
+  <section class="ovt-page" id="president" role="tabpanel" aria-labelledby="tab-president" hidden>
+<div class="ovt-section" id="office-effect">
+      <h2>Holding office did not make Trump's posts more conventional</h2>
+      <div class="ovt-card">
+        <h3>Same speaker, same platform: out of office versus in office</h3>
+        <p>On Twitter, with topic held fixed, becoming President moved professionalism by <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="trump_office" data-field="diff" data-where="key=Twitter | professionalism">—</b> and partisanship by <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="trump_office" data-field="diff" data-where="key=Twitter | partisanship">—</b>, both toward the norm-breaking pole. On Truth Social, his posts as President since January 2025 differ from his 2022–24 posts by <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="trump_office" data-field="diff" data-where="key=Truth Social | professionalism">—</b> in professionalism, and remain below zero.</p>
+        <p class="ovt-note">Hollow dots: out of office (Twitter, June 2015 to January 2017; Truth Social, 2022 to January 2025). Filled dots: in office (Twitter 2017–2021; Truth Social January 2025 to August 2026). Hover for the topic-adjusted difference and its standard error, clustered by month.</p>
+        <div class="ovt-chart tall dash-skeleton" id="office-chart" data-draw="officeChart" data-source="trump_office"></div>
+      </div>
+    </div>
+
+<div class="ovt-section" id="villains">
+      <h2>Who gets cast as the villain</h2>
+      <div class="ovt-card">
+        <h3>Share of posts naming each kind of antagonist</h3>
+        <p>Domestic political opponents are the main villain in Trump's own posts: <b class="ovt-num" data-draw="kpi" data-fmt="pct" data-source="villains" data-field="share" data-where="key=Trump on Truth Social, out of office | pol">—</b> of his out-of-office Truth Social posts, and <b class="ovt-num" data-draw="kpi" data-fmt="pct" data-source="villains" data-field="share" data-where="key=Trump on Truth Social, as President | pol">—</b> once back in office. @StateDept's villains are almost all foreign (<b class="ovt-num" data-draw="kpi" data-fmt="pct" data-source="villains" data-field="share" data-where="key=@StateDept | foreign">—</b> of posts).</p>
+        <p class="ovt-note">Character coding follows the Narrative Policy Framework. Bars show only posts with a villain; the rest of each row's posts name none. These categories are predicted less reliably than the six scores (see Method and data).</p>
+        <div class="ovt-chart tall dash-skeleton" id="villain-chart" data-draw="villainChart" data-source="villains"></div>
+      </div>
+    </div>
+
+    <div class="ovt-section" id="audience">
+      <h2>What his audience rewards</h2>
+<div class="ovt-card" id="engagement">
+        <h3>Truth Social rewards the least professional posts</h3>
+        <p>The least professional fifth of Trump's Truth Social posts drew a median of <b class="ovt-num" data-draw="kpi" data-fmt="int" data-source="engagement_quintiles" data-field="median_likes" data-where="quintile=Q1 (least professional)">—</b> likes, against <b class="ovt-num" data-draw="kpi" data-fmt="int" data-source="engagement_quintiles" data-field="median_likes" data-where="quintile=Q5 (most professional)">—</b> for the most professional fifth. Within the same month and at the same length, each half-point toward professional predicts <b class="ovt-num" data-draw="kpi" data-fmt="pctval" data-source="engagement_model" data-field="pct_change_per_half_point" data-where="dimension=professionalism">—</b> likes.</p>
+        <p class="ovt-note">Median likes by professionalism quintile, for posts whose archive recorded likes (2022 to October 2025, plus a few from 2026). This is a correlation, not a causal estimate.</p>
+        <div class="ovt-chart dash-skeleton" id="engagement-chart" data-draw="engChart" data-source="engagement_quintiles"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ovt-page" id="institutions" role="tabpanel" aria-labelledby="tab-institutions" hidden>
+<div class="ovt-section" id="state-department">
+      <h2>State Department: advocacy rose under Pompeo and stayed</h2>
+      <p class="ovt-take">@StateDept's information-and-service score went from <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="state_secretary" data-field="function" data-where="secretary=Kerry">—</b> under Kerry to <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="state_secretary" data-field="function" data-where="secretary=Pompeo">—</b> under Pompeo and <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="state_secretary" data-field="function" data-where="secretary=Blinken">—</b> under Blinken. The norms index was <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="state_secretary" data-field="norms_index" data-where="secretary=Pompeo">—</b> under Pompeo and <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="state_secretary" data-field="norms_index" data-where="secretary=Blinken">—</b> under Blinken, while the party-language slant swung from <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="state_secretary" data-field="party_slant" data-where="secretary=Pompeo">—</b> to <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="state_secretary" data-field="party_slant" data-where="secretary=Blinken">—</b>. The department changed whose language it used, and kept its more persuasive register. Under Rubio (posts from 2026) the information score fell again, to <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="state_secretary" data-field="function" data-where="secretary=Rubio">—</b>, and the norms index to <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="state_secretary" data-field="norms_index" data-where="secretary=Rubio">—</b>.</p>
+      <div class="ovt-controls">
+        <label for="sd-dim">Dimension
+          <select id="sd-dim" aria-label="State Department dimension">
+            <option value="function">Function (persuasion − / information +)</option>
+            <option value="norms_index">Institutional norms index</option>
+            <option value="partisanship">Partisanship (partisan − / civic +)</option>
+            <option value="personalization">Personalization (leader − / institution +)</option>
+            <option value="professionalism">Professionalism</option>
+            <option value="threat_hope">Threat (−) or hope (+)</option>
+            <option value="ideology">Ideology (liberal − / conservative +)</option>
+            <option value="party_slant">Party-language slant (Democratic − / Republican +)</option>
+          </select>
+        </label>
+      </div>
+      <div class="ovt-grid">
+        <div class="ovt-card" id="state-secretaries">
+          <h3>Mean by Secretary of State</h3>
+          <p class="ovt-note">Dots are means with 95% intervals. Clinton covers May 2012 to January 2013 only, because the archive is thin before May 2012. Rubio covers posts captured from 2026.</p>
+          <div class="ovt-chart dash-skeleton" id="secretary-chart" data-draw="secChart" data-source="state_secretary"></div>
+        </div>
+        <div class="ovt-card" id="state-monthly">
+          <h3>Monthly mean, with a six-month running average</h3>
+          <p class="ovt-note">Each dot is one month with at least 15 posts. Dashed lines mark the 2017 and 2021 inaugurations.</p>
+          <div class="ovt-chart dash-skeleton" id="state-monthly-chart" data-draw="stateMonthly" data-source="state_monthly state_rolling events"></div>
+        </div>
+      </div>
+      <div class="ovt-card" id="state-its">
+        <h3>Interrupted time series at each transition</h3>
+        <p class="ovt-note">Monthly means regressed on a linear trend plus a level and slope change at each inauguration, with Newey–West standard errors (6 lags). Slopes are per year and measure the change from the slope before.</p>
+        <div class="ovt-tablebox">
+          <table class="ovt-table" data-source="state_its" data-row-key="key">
+            <thead><tr><th data-field="term">Term</th><th class="n" data-field="coef">Estimate</th><th class="n" data-field="se">Std. error</th><th class="n" data-field="p">p</th></tr></thead>
+            <tbody data-draw="itsTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="ovt-section" id="white-house">
+      <h2>The White House: two outlets in one</h2>
+<div class="ovt-card" id="wh-categories">
+        <h3>WhiteHouse.gov norms index by category, 2025–26</h3>
+        <p>In 2025–26, Releases scored <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="wh_categories" data-field="norms_index" data-where="category=Releases">—</b> on the norms index and Executive Orders <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="wh_categories" data-field="norms_index" data-where="category=Executive Orders">—</b>. The legal instruments keep institutional form; the press releases read like campaign material.</p>
+        <p class="ovt-note">Each item is scored on its title and first 90 words. Bars show the norms index; labels give the number of items.</p>
+        <div class="ovt-chart tall dash-skeleton" id="wh-chart" data-draw="whChart" data-source="wh_categories"></div>
+      </div>
+      <p class="ovt-note">How the @WhiteHouse account itself changed from Obama to Trump II is on the Second Trump term tab. <button type="button" class="ovt-go" data-goto="trump2">Second Trump term →</button></p>
+    </div>
+  </section>
+
+  <section class="ovt-page" id="trump2" role="tabpanel" aria-labelledby="tab-trump2" hidden>
+
+    <div class="ovt-section" id="t2-summary">
+      <h2>The second Trump administration changed how agencies talk, not just what they say</h2>
+      <p class="ovt-take">Comparing each government account with its own earlier posts on the same topics, the institutional norms index under Trump II was <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="t2_panel" data-field="coef_vs_biden" data-where="key=norms_index | Trump II">—</b> relative to Biden. Under Trump I it was <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="t2_panel" data-field="coef_vs_biden" data-where="key=norms_index | Trump I">—</b>. Party-language slant, by contrast, moved by a similar amount in both Trump terms (<b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="t2_panel" data-field="coef_vs_biden" data-where="key=party_slant | Trump I">—</b> under Trump I, <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="t2_panel" data-field="coef_vs_biden" data-where="key=party_slant | Trump II">—</b> under Trump II). The first term changed whose policy language agencies used; the second also changed their register.</p>
+      <p class="ovt-note">Government accounts only; Trump's own posts are on The President tab. Accounts need 100 or more scored posts on each side of January 20, 2025. Agency X posts come from a public archive of browser captures (vidproject/x) whose capture depth varies by year, so every comparison holds topic fixed and stays within account. Its scope is DHS, immigration and law-enforcement accounts, plus State, Justice, War, Labor and the White House.</p>
+      <div class="ovt-controls">
+        <label for="t2-dim">Dimension
+          <select id="t2-dim" aria-label="Dimension for the second-term comparison">
+            <option value="norms_index">Institutional norms index</option>
+            <option value="professionalism">Professionalism</option>
+            <option value="partisanship">Partisanship (partisan − / civic +)</option>
+            <option value="personalization">Personalization (leader − / institution +)</option>
+            <option value="function">Function (persuasion − / information +)</option>
+            <option value="threat_hope">Threat (−) or hope (+)</option>
+            <option value="ideology">Ideology (liberal − / conservative +)</option>
+            <option value="party_slant">Party-language slant (Democratic − / Republican +)</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="ovt-card" id="t2-accounts">
+      <h3>Change under Trump II, account by account</h3>
+      <p><b class="ovt-num">@DHSgov</b> fell from <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="t2_admin" data-field="norms_index" data-where="key=@DHSgov | Biden">—</b> under Biden to <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="t2_admin" data-field="norms_index" data-where="key=@DHSgov | Trump II">—</b> on the norms index, and its threat-or-hope score from <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="t2_admin" data-field="threat_hope" data-where="key=@DHSgov | Biden">—</b> to <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="t2_admin" data-field="threat_hope" data-where="key=@DHSgov | Trump II">—</b>. Service accounts such as the Coast Guard, FEMA and CBP recruiting changed little.</p>
+      <p class="ovt-note">Dots are the change in each account's mean after January 20, 2025, holding topic fixed, with 95% intervals clustered by month. Left of zero is the norm-breaking direction for every dimension except ideology and slant. Hover for before and after means.</p>
+      <div class="ovt-chart tall dash-skeleton" id="t2-account-chart" data-draw="t2AcctChart" data-source="t2_accounts"></div>
+    </div>
+    <div class="ovt-card" id="t2-admins">
+      <h3>The same accounts, administration by administration</h3>
+      <p class="ovt-note">Means with 95% intervals for accounts with at least 50 scored posts in three or more administrations. The @WhiteHouse line joins @ObamaWhiteHouse, @WhiteHouse45, @WhiteHouse46 and today's @WhiteHouse. @StateDept's Trump II posts come from 2026.</p>
+      <div class="ovt-chart tall dash-skeleton" id="t2-admin-chart" data-draw="t2AdmChart" data-source="t2_admin"></div>
+    </div>
+    <div class="ovt-grid">
+      <div class="ovt-card" id="t2-panel">
+        <h3>Pooled estimate across institutional accounts</h3>
+        <p class="ovt-note">One regression over White House and agency accounts with account and topic fixed effects; Biden is the reference. Standard errors clustered by account-month.</p>
+        <div class="ovt-tablebox">
+          <table class="ovt-table" data-source="t2_panel" data-row-key="key">
+            <thead><tr><th data-field="administration">Comparison</th><th class="n" data-field="coef_vs_biden">Estimate</th><th class="n" data-field="se">Std. error</th><th class="n" data-field="p">p</th></tr></thead>
+            <tbody data-draw="t2PanelTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ovt-card" id="t2-agenda">
+        <h3>The agenda moved toward immigration and toward villains</h3>
+        <p>Averaged within each account, immigration went from <b class="ovt-num" data-draw="kpi" data-fmt="pct" data-source="t2_agenda" data-field="share" data-where="key=topic | immig | Before Jan 2025">—</b> to <b class="ovt-num" data-draw="kpi" data-fmt="pct" data-source="t2_agenda" data-field="share" data-where="key=topic | immig | Trump II">—</b> of posts, and posts naming no villain fell from <b class="ovt-num" data-draw="kpi" data-fmt="pct" data-source="t2_agenda" data-field="share" data-where="key=villain | none | Before Jan 2025">—</b> to <b class="ovt-num" data-draw="kpi" data-fmt="pct" data-source="t2_agenda" data-field="share" data-where="key=villain | none | Trump II">—</b>.</p>
+        <div class="ovt-controls">
+          <label for="t2-kind">Show
+            <select id="t2-kind" aria-label="Topics or villains">
+              <option value="topic">Topics</option>
+              <option value="villain">Villains</option>
+            </select>
+          </label>
+        </div>
+        <div class="ovt-chart tall dash-skeleton" id="t2-agenda-chart" data-draw="t2AgendaChart" data-source="t2_agenda"></div>
+      </div>
+    </div>
+    <p class="ovt-note">Coverage by account and year is in Method and data. <button type="button" class="ovt-go" data-goto="method">Coverage →</button></p>
+  </section>
+
+  <section class="ovt-page" id="fascism" role="tabpanel" aria-labelledby="tab-fascism" hidden>
+
+    <div class="ovt-section" id="fri-summary">
+      <h2>Rhetoric with fascist markers spread from Trump's own feed to government accounts in his second term</h2>
+      <p class="ovt-take">Trump's own posts carry the most. Syndrome posts, which combine three or more markers, were <b class="ovt-num" data-draw="kpi" data-fmt="1" data-source="fri_groups" data-field="fri_syn" data-where="key=Trump, personal accounts | Truth Social, out of office (2021-25)">—</b>% of his Truth Social posts out of office (2021–25) and <b class="ovt-num" data-draw="kpi" data-fmt="1" data-source="fri_groups" data-field="fri_syn" data-where="key=Trump, personal accounts | Truth Social, President (2025-)">—</b>% as President since 2025, against <b class="ovt-num" data-draw="kpi" data-fmt="1" data-source="fri_groups" data-field="fri_syn" data-where="key=Trump, personal accounts | Twitter, President (2017-21)">—</b>% of his presidential tweets in 2017–21. Government accounts stayed near the model's floor under Obama, Trump I and Biden. Under Trump II, the same White House and agency accounts rose <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="fri_panel" data-field="coef" data-where="key=fri | account FE | Trump II vs Biden">—</b> points on the index from a Biden-era mean of <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="fri_panel" data-field="biden_mean" data-where="key=fri | account FE | Trump II vs Biden">—</b>, and their share of syndrome posts rose by <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="fri_panel" data-field="coef" data-where="key=fri_syn | account FE | Trump II vs Biden">—</b> percentage points from <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="fri_panel" data-field="biden_mean" data-where="key=fri_syn | account FE | Trump II vs Biden">—</b>%. Under Trump I they moved <b class="ovt-num" data-draw="kpi" data-fmt="s" data-source="fri_panel" data-field="coef" data-where="key=fri | account FE | Trump I vs Biden">—</b>. @DHSgov changed most, from <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="fri_t2" data-field="mean_before" data-where="key=@DHSgov | fri">—</b> to <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="fri_t2" data-field="mean_trump2" data-where="key=@DHSgov | fri">—</b>.</p>
+      <p class="ovt-note">The Fascist Rhetoric Index (FRI) scores each post on seven rhetorical markers drawn from scholarly definitions of fascism (Paxton, Griffin, Eco, Stanley, and Levitsky and Ziblatt). It measures rhetoric. It does not say whether any person, party or government is fascist, and every marker also appears in ordinary politics. Scholars stress that fascism is a syndrome, so the headline measure is the share of syndrome posts: posts with three or more markers, at least one of them a threat-to-democracy marker (enemy or plot, dehumanization, anti-democratic delegitimization or violence). The model is never fully certain a marker is absent, so posts with none still score about 0.1–0.5; read differences against that floor.</p>
+      <div class="ovt-controls">
+        <label for="fri-measure">Measure
+          <select id="fri-measure" aria-label="Fascist rhetoric measure">
+            <option value="fri">Fascist Rhetoric Index (0–100)</option>
+            <option value="fri_syn">Syndrome posts (% of posts)</option>
+          </select>
+        </label>
+      </div>
+    </div>
+    <div class="ovt-card" id="fri-time">
+      <h3>Month by month, by kind of account</h3>
+      <p class="ovt-note">Thin lines are monthly means (months with 20 or more scored posts); thick lines are centered three-month averages. Shaded spans are Trump's terms. Trump's own accounts cover Twitter from 2009 to January 2021 and Truth Social from 2022. Agency coverage is thin before 2016 and in some later years; see the coverage table on the Second Trump term tab.</p>
+      <div class="ovt-chart tall dash-skeleton" id="fri-month-chart" data-draw="friMonthChart" data-source="fri_monthly events"></div>
+    </div>
+    <div class="ovt-card" id="fri-groups">
+      <h3>Every kind of account, before and after Trump</h3>
+      <p class="ovt-note">Means with 95% intervals over scored posts. Trump's own accounts are split by platform and office; government accounts by administration (the 41 Bush-era agency posts are pooled with Obama). Officials and staff exclude posts written before the person took office. Hover for the index, the syndrome share and the share of posts in the top 1% of the index.</p>
+      <div class="ovt-chart tall dash-skeleton" id="fri-group-chart" data-draw="friGroupChart" data-source="fri_groups"></div>
+    </div>
+    <div class="ovt-grid">
+      <div class="ovt-card" id="fri-markers">
+        <h3>Which markers make up the score</h3>
+        <p class="ovt-note">Each bar splits the mean index into its seven markers, in points out of 100.</p>
+        <div class="ovt-chart tall dash-skeleton" id="fri-marker-chart" data-draw="friMarkerChart" data-source="fri_markers"></div>
+      </div>
+      <div class="ovt-card" id="fri-panel">
+        <h3>Pooled estimate across institutional accounts</h3>
+        <p class="ovt-note">One regression over the White House and agency accounts with 100 or more posts on each side of January 20, 2025, with account fixed effects and, in the second specification, topic fixed effects. Biden is the reference; the last column is the Biden-era mean. Standard errors are clustered by account-month. Holding topic fixed removes the part of the change that comes from talking more about immigration and crime, so read the two rows together.</p>
+        <div class="ovt-tablebox">
+          <table class="ovt-table" data-source="fri_panel" data-row-key="key">
+            <thead><tr><th data-field="spec">Fixed effects</th><th data-field="contrast">Comparison</th><th class="n" data-field="coef">Estimate</th><th class="n" data-field="se">Std. error</th><th class="n" data-field="p">p</th><th class="n" data-field="biden_mean">Biden mean</th></tr></thead>
+            <tbody data-draw="friPanelTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="ovt-card" id="fri-accounts">
+      <h3>Change under Trump II, account by account</h3>
+      <p class="ovt-note">Government accounts with 100 or more scored posts on each side of January 20, 2025. Filled dots are the change in each account's mean, with 95% intervals clustered by month; rings hold topic fixed. Hover for before and after means.</p>
+      <div class="ovt-chart tall dash-skeleton" id="fri-account-chart" data-draw="friT2Chart" data-source="fri_t2"></div>
+    </div>
+    <div class="ovt-card" id="fri-defs">
+      <h3>The seven markers</h3>
+      <p class="ovt-note">Each marker is scored 0 (absent), 1 (present) or 2 (strong). The index is 100 × the sum of the seven scores ÷ 14. The full codebook, with coding rules and examples, is <code>govcomm/CODEBOOK_FASCISM.md</code> on the data branch.</p>
+      <div class="ovt-defs">
+        <div><b>Decline and rebirth</b><span>The nation has decayed or been betrayed and must be restored; "make … great again"; a golden age reborn. Griffin's palingenetic myth; Stanley's mythic past.</span></div>
+        <div><b>Existential enemy or plot</b><span>Domestic opponents or institutions cast as a threat to the nation, as traitors or "enemy of the people", or as a rigged, deep-state conspiracy. Paxton; Eco's obsession with a plot.</span></div>
+        <div><b>Dehumanization or purity</b><span>An outgroup cast as collectively criminal, an "invasion", or in terms of vermin, animals, poison or contamination. Paxton's purer community; Stanley.</span></div>
+        <div><b>Leader cult</b><span>The leader as uniquely capable savior, embodiment of the nation, or object of loyalty and devotion. Paxton; Eco's selective populism.</span></div>
+        <div><b>Anti-democratic delegitimization</b><span>Courts, elections or the press called illegitimate or "fake"; election results rejected; calls to jail opponents or revoke licenses. Levitsky and Ziblatt's four indicators.</span></div>
+        <div><b>Violence as virtue</b><span>Force celebrated for its own sake, relish in threats or brutality, or endorsed violence against domestic groups. Paxton's beauty of violence; Eco's permanent war.</span></div>
+        <div><b>Victimhood and retribution</b><span>The in-group or leader as persecuted victim, especially when victimhood justifies revenge. Paxton; Stanley.</span></div>
+      </div>
+      <div class="ovt-prose">
+        <p><b>How the scores are made.</b> Claude coded 1,100 posts on the seven markers blind to account and date, shuffled across every account and administration: an 800-post stratified sample, half random and half chosen on earlier text scores, then 200 and 100 posts chosen on model scores, to add rare positives and to check the highest-scoring government posts from every administration for false alarms. For each marker, a student model estimates the probability the marker is present (logistic regression on word and character n-grams, averaged with gradient boosting on embeddings) times its typical strength; the summed index is calibrated to the coder's scale. It scored all posts. Choosing which posts to code on their text does not bias what the model learns about text.</p>
+        <p><b>Validation and examples.</b> Agreement with the coder, marker by marker and group by group, is in Method and data; the highest-scoring posts in each group are in Explore.</p>
+        <p><button type="button" class="ovt-go" data-goto="method">Validation →</button> <button type="button" class="ovt-go" data-goto="explorer">Highest-scoring posts →</button></p>
+        <p><b>What to keep in mind.</b> The coding rules apply to everyone. Calling opponents an existential threat to democracy, or a court illegitimate, counts whoever says it. Routine enforcement posts about one person are not coded as dehumanization unless they generalize to a group. Factual reports of military strikes are not coded as violence unless they relish it. The rare markers (violence, leader cult) have few positive examples, so their scores are noisier than the index. These are machine scores validated against an LLM coder, not against human coders yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="ovt-page" id="explorer" role="tabpanel" aria-labelledby="tab-explorer" hidden>
+    <div class="ovt-section ovt-lede">
+      <h2>Every account, every score, and the posts behind them</h2>
+      <p class="ovt-note">Pick accounts, a dimension and an interval. The tables below show each account's averages and the actual posts at the ends of each scale, which is the quickest way to check what a score means.</p>
+    </div>
+
+    <div class="ovt-card" id="explorer-card">
+      <h3>Scores over time by account</h3>
+      <p class="ovt-note ovt-int-note" data-interval="weekly" hidden>Weeks run Monday to Sunday. Weeks with fewer than 10 scored posts are left out. The running average pools every post in a centered eight-week window.</p>
+      <p class="ovt-note ovt-int-note" data-interval="monthly">Months with fewer than 20 scored posts are left out. The running average pools every post in a centered six-month window.</p>
+      <p class="ovt-note ovt-int-note" data-interval="quarterly" hidden>Quarters with fewer than 25 scored posts are left out. The running average pools every post in a centered four-quarter window.</p>
+      <p class="ovt-note ovt-int-note" data-interval="yearly" hidden>Calendar years with fewer than 50 scored posts are left out. Years have no running average.</p>
+      <p class="ovt-note">Hover for each period's mean, running average and number of posts. Shaded spans are Trump's terms.</p>
+      <div class="ovt-controls">
+        <label for="ex-int">Interval
+          <select id="ex-int" aria-label="Time interval">
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </label>
+        <label class="ovt-inline" for="ex-avg"><input type="checkbox" id="ex-avg"> Show running average</label>
+        <label for="ex-dim">Dimension
+          <select id="ex-dim" aria-label="Dimension to plot">
+            <option value="norms_index">Institutional norms index</option>
+            <option value="ideology">Ideology (liberal − / conservative +)</option>
+            <option value="professionalism">Professionalism</option>
+            <option value="partisanship">Partisanship (partisan − / civic +)</option>
+            <option value="threat_hope">Threat (−) or hope (+)</option>
+            <option value="personalization">Personalization (leader − / institution +)</option>
+            <option value="function">Function (persuasion − / information +)</option>
+            <option value="party_slant">Party-language slant (Democratic − / Republican +)</option>
+            <option value="fri">Fascist Rhetoric Index (0–100)</option>
+            <option value="fri_syn">Fascist rhetoric syndrome posts (% of posts)</option>
+          </select>
+        </label>
+        <fieldset class="ovt-checks" id="ex-voices">
+          <legend>Accounts</legend>
+          <label><input type="checkbox" id="ex-v1" value="Trump, all personal accounts"> Trump, all personal accounts</label>
+          <label><input type="checkbox" id="ex-v2" value="Trump on Twitter, before office"> Trump on Twitter, before office</label>
+          <label><input type="checkbox" id="ex-v3" value="Trump on Twitter, as President"> Trump on Twitter, as President</label>
+          <label><input type="checkbox" id="ex-v4" value="Trump on Truth Social, out of office"> Trump on Truth Social, out of office</label>
+          <label><input type="checkbox" id="ex-v5" value="Trump on Truth Social, as President"> Trump on Truth Social, as President</label>
+          <label><input type="checkbox" id="ex-v6" value="@StateDept"> @StateDept</label>
+          <label><input type="checkbox" id="ex-v7" value="WhiteHouse.gov"> WhiteHouse.gov</label>
+          <label><input type="checkbox" id="ex-v8" value="@WhiteHouse (Obama, Trump I, Biden, Trump II)"> @WhiteHouse (Obama, Trump I, Biden, Trump II)</label>
+          <label><input type="checkbox" id="ex-v9" value="@DHSgov"> @DHSgov</label>
+          <label><input type="checkbox" id="ex-v10" value="@ICEgov"> @ICEgov</label>
+          <label><input type="checkbox" id="ex-v11" value="@CBP"> @CBP</label>
+          <label><input type="checkbox" id="ex-v12" value="ICE field offices (pooled)"> ICE field offices (pooled)</label>
+          <label><input type="checkbox" id="ex-v13" value="@RapidResponse47"> @RapidResponse47</label>
+          <label><input type="checkbox" id="ex-v14" value="@PressSec"> @PressSec</label>
+          </fieldset>
+      </div>
+      <div class="ovt-chart tall dash-skeleton ovt-int-chart" id="explorer-chart-weekly" data-interval="weekly" data-draw="explorerChart" data-source="series_weekly events" hidden></div>
+      <div class="ovt-chart tall dash-skeleton ovt-int-chart" id="explorer-chart-monthly" data-interval="monthly" data-draw="explorerChart" data-source="series_monthly events"></div>
+      <div class="ovt-chart tall dash-skeleton ovt-int-chart" id="explorer-chart-quarterly" data-interval="quarterly" data-draw="explorerChart" data-source="series_quarterly events" hidden></div>
+      <div class="ovt-chart tall dash-skeleton ovt-int-chart" id="explorer-chart-yearly" data-interval="yearly" data-draw="explorerChart" data-source="series_yearly events" hidden></div>
+    </div>
+    <div class="ovt-card" id="voice-table">
+      <h3>Every account, all dimensions</h3>
+      <p class="ovt-note">Means over each account's scored posts (reposts and posts under four words excluded).</p>
+      <div class="ovt-tablebox">
+        <table class="ovt-table" data-source="voice_summary" data-row-key="voice">
+          <thead><tr><th data-field="voice">Account</th><th class="n" data-field="n">Posts</th><th data-field="first">From</th><th data-field="last">To</th><th class="n" data-field="norms_index">Norms index</th><th class="n" data-field="ideology">Ideology</th><th class="n" data-field="professionalism">Profess.</th><th class="n" data-field="partisanship">Partisan.</th><th class="n" data-field="threat_hope">Threat/hope</th><th class="n" data-field="personalization">Personal.</th><th class="n" data-field="function">Function</th><th class="n" data-field="party_slant">Party slant</th></tr></thead>
+          <tbody data-draw="voiceTable"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ovt-section" id="posts">
+      <h2>Read the posts</h2>
+<div class="ovt-card" id="extremes">
+      <h3>Posts at the extremes of each dimension</h3>
+      <p class="ovt-note">The highest- and lowest-scoring posts of eight words or more for each account and dimension, as scored by the model. Extremes include some model errors; that is part of what this view is for.</p>
+      <div class="ovt-controls">
+        <label for="q-voice">Account
+          <select id="q-voice" aria-label="Account">
+            <option value="@StateDept">@StateDept</option>
+            <option value="WhiteHouse.gov">WhiteHouse.gov</option>
+            <option value="Trump on Twitter, before office">Trump on Twitter, before office</option>
+            <option value="Trump on Twitter, as President">Trump on Twitter, as President</option>
+            <option value="Trump on Truth Social, out of office">Trump on Truth Social, out of office</option>
+            <option value="Trump on Truth Social, as President">Trump on Truth Social, as President</option>
+            <option value="@WhiteHouse (Obama, Trump I, Biden, Trump II)">@WhiteHouse (Obama, Trump I, Biden, Trump II)</option>
+            <option value="@DHSgov">@DHSgov</option>
+            <option value="@ICEgov">@ICEgov</option>
+            <option value="@CBP">@CBP</option>
+            <option value="ICE field offices (pooled)">ICE field offices (pooled)</option>
+            <option value="@RapidResponse47">@RapidResponse47</option>
+            <option value="@PressSec">@PressSec</option>
+            <option value="@POTUS">@POTUS</option>
+            <option value="White House staff accounts (early 2017)">White House staff accounts (early 2017)</option>
+          </select>
+        </label>
+        <label for="q-dim">Dimension
+          <select id="q-dim" aria-label="Dimension">
+            <option value="professionalism">Professionalism</option>
+            <option value="ideology">Ideology</option>
+            <option value="partisanship">Partisanship</option>
+            <option value="threat_hope">Threat or hope</option>
+            <option value="personalization">Personalization</option>
+            <option value="function">Function</option>
+            <option value="party_slant">Party-language slant</option>
+          </select>
+        </label>
+        <label for="q-side">End of the scale
+          <select id="q-side" aria-label="End of the scale">
+            <option value="low">Lowest scores</option>
+            <option value="high">Highest scores</option>
+          </select>
+        </label>
+      </div>
+      <div class="ovt-tablebox">
+        <table class="ovt-table" data-source="exemplars" data-row-key="id">
+          <thead><tr><th data-field="date">Date</th><th class="n" data-field="score">Score</th><th data-field="text">Post</th></tr></thead>
+          <tbody data-draw="quoteTable"></tbody>
+        </table>
+      </div>
+    </div>
+<div class="ovt-card" id="fri-posts">
+      <h3>Highest-scoring posts on the Fascist Rhetoric Index</h3>
+      <p class="ovt-note">The six highest-scoring posts in each group and period, with the markers the model weighted most. Reading them is the best check on what the index picks up. Links open the archived post where one exists.</p>
+      <div class="ovt-controls">
+        <label for="fri-ex">Group and period
+          <select id="fri-ex" aria-label="Group and period for top posts">
+            <option value="Trump, personal accounts | Twitter, before office">Trump · Twitter, before office</option>
+            <option value="Trump, personal accounts | Twitter, President (2017-21)">Trump · Twitter, President (2017-21)</option>
+            <option value="Trump, personal accounts | Truth Social, out of office (2021-25)">Trump · Truth Social, out of office (2021-25)</option>
+            <option value="Trump, personal accounts | Truth Social, President (2025-)">Trump · Truth Social, President (2025-)</option>
+            <option value="Trump, personal accounts | X, President (2025-)">Trump · X, President (2025-)</option>
+            <option value="White House, institutional | Obama">White House · Obama</option>
+            <option value="White House, institutional | Trump I">White House · Trump I</option>
+            <option value="White House, institutional | Biden">White House · Biden</option>
+            <option value="White House, institutional | Trump II">White House · Trump II</option>
+            <option value="Agencies (HQ and field) | Obama">Agencies · Obama</option>
+            <option value="Agencies (HQ and field) | Trump I">Agencies · Trump I</option>
+            <option value="Agencies (HQ and field) | Biden">Agencies · Biden</option>
+            <option value="Agencies (HQ and field) | Trump II">Agencies · Trump II</option>
+            <option value="Officials and staff | Trump I">Officials and staff · Trump I</option>
+            <option value="Officials and staff | Biden">Officials and staff · Biden</option>
+            <option value="Officials and staff | Trump II">Officials and staff · Trump II</option>
+          </select>
+        </label>
+      </div>
+      <div class="ovt-tablebox">
+        <table class="ovt-table" data-source="fri_exemplars" data-row-key="key">
+          <thead><tr><th data-field="date">Date</th><th data-field="voice">Account</th><th class="n" data-field="fri">Index</th><th data-field="top_markers">Main markers</th><th data-field="text">Post</th></tr></thead>
+          <tbody data-draw="friExTable"></tbody>
+        </table>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <section class="ovt-page" id="method" role="tabpanel" aria-labelledby="tab-method" hidden>
+    <div class="ovt-section" id="measurement">
+      <h2>Measurement</h2>
+<div class="ovt-card" id="how">
+      <h3>How the scores were made</h3>
+      <div class="ovt-prose">
+        <p>The design follows <i>Preserving Policy Through Narrative Transformation</i>: a capable teacher model scores a sample against written anchors, and a fast student model trained on those scores rates the full corpus.</p>
+        <ul>
+          <li><b>Teacher labels.</b> Claude coded 1,400 posts in a first round and 300 more from the agency and White House accounts added later, stratified by account type and by before and after January 2025, on six −1 to +1 dimensions plus a villain and a topic. Text was shown blind to account, date and engagement, shuffled across sources, using the codebook's anchors at −1, 0 and +1.</li>
+          <li><b>Student models.</b> One ridge regression and one gradient-boosted model per dimension, averaged, using word and character TF-IDF, GloVe-Twitter embeddings, VADER sentiment and style features (capital letters, exclamation marks, insults, superlatives, legal boilerplate). The table below gives five-fold cross-validated agreement with the teacher labels.</li>
+          <li><b>Independent ideology check.</b> A separate classifier trained only on about 124,000 tweets by members of Congress (2017–2023), labeled by party, gives each post a party-language slant. It shares no labels with the teacher, and names and places are masked so it cannot score by who is mentioned.</li>
+          <li><b>Two of the dimensions map onto legal standards.</b> Partisanship tracks the Hatch Act and GAO's "purely partisan" test. Personalization tracks GAO's "self-aggrandizement" test under the appropriations ban on publicity or propaganda.</li>
+        </ul>
+      </div>
+      <div class="ovt-defs">
+        <div><b>Ideology</b><span>Liberal (−1) to conservative (+1) policy content and values. Apolitical service content is 0.</span></div>
+        <div><b>Professionalism</b><span>Insults, shouting, mockery and grievance (−1) to formal, precise, institutional register (+1).</span></div>
+        <div><b>Partisanship</b><span>Attacks or credits a party, or makes an electoral appeal (−1), to civic and unifying (+1).</span></div>
+        <div><b>Threat or hope</b><span>Danger, enemies and blame (−1) to achievement, benefit and gratitude (+1): the Narrative Policy Framework's devil–angel shift.</span></div>
+        <div><b>Personalization</b><span>Centers the leader's persona, praise, crowds or grievances (−1), to centers the institution, policy and public (+1).</span></div>
+        <div><b>Function</b><span>Persuasion, spin and campaign messaging (−1) to alerts, deadlines and factual announcements (+1).</span></div>
+      </div>
+    </div>
+<div class="ovt-card" id="dimension-corr">
+      <h3>Four of the six dimensions move together</h3>
+      <p>In the 1,400 teacher labels, professionalism and function correlate at <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="teacher_corr" data-field="r" data-where="key=professionalism | function">—</b>, while threat versus hope and personalization correlate at only <b class="ovt-num" data-draw="kpi" data-fmt="2" data-source="teacher_corr" data-field="r" data-where="key=threat_hope | personalization">—</b>. One factor carries most of the shared variance, which is why the findings lead with the combined norms index and keep threat versus hope and ideology separate.</p>
+      <p class="ovt-note">Pearson correlations between dimensions in the teacher labels, which are independent judgments rather than model predictions.</p>
+      <div class="ovt-chart dash-skeleton" id="corr-chart" data-draw="corrChart" data-source="teacher_corr"></div>
+    </div>
+    </div>
+    <div class="ovt-section" id="validation-section">
+      <h2>Validation</h2>
+<div class="ovt-grid">
+      <div class="ovt-card" id="validation">
+        <h3>Six dimensions: model agreement with the teacher labels</h3>
+        <p class="ovt-note">Pearson r and Spearman ρ from five-fold cross-validation (N = 1,700). "Agencies r" is agreement on the 300 posts from agency and White House accounts added in the second round; ideology is the weakest there because those posts vary little on it. The tithing study's DistilBERT-to-LLM agreement was 0.76 to 0.81. Retest r re-scored 80 posts later in the same session; because earlier labels were still in context, it shows consistency, not independent reliability. Human coders are still needed.</p>
+        <div class="ovt-tablebox">
+          <table class="ovt-table" data-source="validation" data-row-key="dimension">
+            <thead><tr><th data-field="dimension">Dimension</th><th class="n" data-field="r_ens">r</th><th class="n" data-field="rho_ens">ρ</th><th class="n" data-field="mae_ens">Mean abs. error</th><th class="n" data-field="r_round2_agencies">Agencies r</th><th class="n" data-field="teacher_sd">Teacher SD</th><th class="n" data-field="retest_r">Retest r</th></tr></thead>
+            <tbody data-draw="valTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ovt-card" id="convergent">
+        <h3>Ideology against the Congress party-language benchmark</h3>
+        <p class="ovt-note">Correlation between the Claude-trained ideology score and the independent party-language slant. Single posts are short and noisy, so post-level agreement is modest; averages over account-quarters agree much more closely.</p>
+        <div class="ovt-tablebox">
+          <table class="ovt-table" data-source="convergent" data-row-key="voice">
+            <thead><tr><th data-field="voice">Comparison</th><th class="n" data-field="post_r">r</th><th class="n" data-field="N">N</th></tr></thead>
+            <tbody data-draw="convTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+<div class="ovt-grid">
+      <div class="ovt-card" id="fri-validation">
+        <h3>Fascist Rhetoric Index: model agreement with the coder</h3>
+        <p class="ovt-note">Five-fold cross-validated agreement with the 1,100 teacher codes. r is the correlation of predicted and coded scores; AUC is how well the prediction ranks posts that have the marker above posts that do not (0.5 is chance); average precision is the matching precision-recall summary, to compare with the base rate.</p>
+        <div class="ovt-tablebox">
+          <table class="ovt-table" data-source="fri_validation" data-row-key="marker">
+            <thead><tr><th data-field="name">Marker</th><th class="n" data-field="n_present">Coded present</th><th class="n" data-field="base_rate">Base rate</th><th class="n" data-field="r">r</th><th class="n" data-field="auc_presence">AUC</th><th class="n" data-field="avg_precision">Avg. precision</th></tr></thead>
+            <tbody data-draw="friValTable"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="ovt-card" id="fri-strata">
+        <h3>Fascist Rhetoric Index: group averages, coder against model</h3>
+        <p class="ovt-note">Teacher-coded and cross-validated student means for each sampling stratum. Group averages are what the charts report, so this is the agreement that matters most.</p>
+        <div class="ovt-tablebox">
+          <table class="ovt-table" data-source="fri_validation_strata" data-row-key="stratum">
+            <thead><tr><th data-field="stratum">Stratum</th><th class="n" data-field="n">Posts</th><th class="n" data-field="fri_teacher">Index, coder</th><th class="n" data-field="fri_student">Index, model</th><th class="n" data-field="syn_teacher">Syndrome, coder</th><th class="n" data-field="syn_student">Syndrome, model</th></tr></thead>
+            <tbody data-draw="friStrataTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+<div class="ovt-card" id="fri-conv">
+      <h3>Fascist Rhetoric Index against the six dimensions</h3>
+      <p class="ovt-note">Post-level correlations. The index should rise with partisanship, threat and leader-centered language (negative scores on those dimensions), but it is not the same thing: most partisan posts carry no fascist marker.</p>
+      <div class="ovt-tablebox">
+        <table class="ovt-table" data-source="fri_convergent" data-row-key="key">
+          <thead><tr><th data-field="sample">Sample</th><th data-field="score">Score</th><th class="n" data-field="r_fri">r with index</th><th class="n" data-field="r_syndrome">r with syndrome</th></tr></thead>
+          <tbody data-draw="friConvTable"></tbody>
+        </table>
+      </div>
+    </div>
+    </div>
+    <div class="ovt-section" id="data">
+      <h2>Coverage</h2>
+<div class="ovt-card" id="coverage">
+      <h3>What is in the corpus</h3>
+      <p class="ovt-note">All sources are public archives on GitHub. Agency X posts are browser captures (vidproject/x) whose depth varies by year; @StateDept is sparse before May 2012 and between January 2025 and January 2026.</p>
+      <div class="ovt-tablebox">
+        <table class="ovt-table" data-source="coverage" data-row-key="account,source">
+          <thead><tr><th data-field="account">Account</th><th data-field="source">Archive</th><th class="n" data-field="posts">Posts</th><th class="n" data-field="scored">Scored</th><th data-field="first">From</th><th data-field="last">To</th></tr></thead>
+          <tbody data-draw="coverageTable"></tbody>
+        </table>
+      </div>
+    </div>
+<div class="ovt-card" id="t2-coverage">
+      <h3>How much data each account has, by year</h3>
+      <p class="ovt-note">Scored posts (no reposts, four or more words). Accounts are sorted by Trump II posts. Thin years mean less archive capture, not necessarily less posting.</p>
+      <div class="ovt-tablebox">
+        <table class="ovt-table" data-source="t2_coverage" data-row-key="voice">
+          <thead><tr><th data-field="voice">Account</th><th class="n" data-field="trump2">Trump II</th><th class="n" data-field="total">2016–26</th><th class="n" data-field="2016">2016</th><th class="n" data-field="2017">2017</th><th class="n" data-field="2018">2018</th><th class="n" data-field="2019">2019</th><th class="n" data-field="2020">2020</th><th class="n" data-field="2021">2021</th><th class="n" data-field="2022">2022</th><th class="n" data-field="2023">2023</th><th class="n" data-field="2024">2024</th><th class="n" data-field="2025">2025</th><th class="n" data-field="2026">2026</th></tr></thead>
+          <tbody data-draw="t2CoverageTable"></tbody>
+        </table>
+      </div>
+    </div>
+<div class="ovt-card" id="gaps">
+      <h3>What is missing, and how to add it</h3>
+      <div class="ovt-prose">
+        <p>This build used only sources the session's network allowed: public GitHub repositories. The pipeline re-runs end to end when more data is added, and the trained scoring carries over.</p>
+        <ul>
+          <li><b>Presidential documents, 2000 to now.</b> The Compilation of Presidential Documents on govinfo.gov covers every statement, proclamation and set of remarks from Bush through Trump's second term. It would extend the presidential series back to 2000 on a comparable official channel.</li>
+          <li><b>Obama, Biden and second-term Trump institutional accounts.</b> NARA's presidential library social media archives hold @POTUS44, @WhiteHouse44, the Biden accounts and the Trump-era @WhiteHouse45 exports.</li>
+          <li><b>Agencies outside the archive's scope.</b> DHS, ICE, CBP, USCIS, Justice, FBI, War, Labor, FEMA, the Coast Guard and the White House are now covered. HHS, Treasury, Education, Energy, Interior, Agriculture and EPA still need an X data source (the paid X API, a third-party archive such as twitterapi.io, or Internet Archive captures).</li>
+          <li><b>Human validation.</b> A coding packet of 120 posts with the codebook is in the data branch, for two human coders to score.</li>
+        </ul>
+      </div>
+    </div>
+    </div>
+  </section>
+</div>
+  <footer class="site-foot">Dallin Overstreet · Data, code and codebooks: <a href="https://github.com/dloverstreet/dloverstreet.github.io/tree/claude/gov-messaging-data">claude/gov-messaging-data branch</a>. Scores are model estimates trained on LLM-coded samples; see Method and data.</footer>
+</div>
+<script>
+(() => {
+  const LABEL = {
+    norms_index: 'Institutional norms index', ideology: 'Ideology', professionalism: 'Professionalism',
+    partisanship: 'Partisanship', threat_hope: 'Threat or hope', personalization: 'Personalization',
+    function: 'Function', party_slant: 'Party-language slant',
+    fri: 'Fascist Rhetoric Index', fri_syn: 'Syndrome posts (%)'
+  };
+  const VILLAIN = [
+    ['pol', 'Political opponents'], ['media', 'News media'], ['legal', 'Courts, prosecutors'], ['bureau', 'Bureaucracy, "deep state"'],
+    ['foreign', 'Foreign adversaries'], ['immig', 'Immigrants, cartels'], ['crime', 'Domestic criminals'], ['corp', 'Corporations, elites'], ['other', 'Other']
+  ];
+  const f2 = d3.format('.2f');
+  const fs = d3.format('+.2f');
+  const f3 = d3.format('.3f');
+  const fint = d3.format(',');
+  const fpct = d3.format('.0%');
+  const fcompact = new Intl.NumberFormat('en', {notation: 'compact', maximumFractionDigits: 1});
+  const FMT = {
+    '2': f2, s: fs, pct: fpct, int: (v) => fint(Math.round(v)),
+    pctval: (v) => d3.format('+.0f')(v) + '%',
+    '1': d3.format('.1f'), s1: d3.format('+.1f')
+  };
+  const parse = (s) => new Date(s + 'T00:00:00Z');
+  const tfmt = d3.utcFormat('%b %Y');
+  const qfmt = (d) => d.getUTCFullYear() + ' Q' + (Math.floor(d.getUTCMonth() / 3) + 1);
+
+  const rowsOf = (id) => { const g = dash.data(id); return g.status === 'ok' ? g.data : null; };
+  const statusOf = (ids) => ids.map((id) => dash.data(id).status);
+
+  function pending(el, ids, isChart) {
+    const st = statusOf(ids);
+    if (st.every((s) => s === 'ok')) return false;
+    el.replaceChildren();
+    if (st.includes('error')) {
+      el.classList.remove('dash-skeleton');
+      const box = document.createElement('div');
+      box.className = 'ovt-fail';
+      const dot = document.createElement('i');
+      box.append(dot, document.createTextNode('Failed to load'));
+      el.append(box);
+    } else if (isChart) {
+      el.classList.add('dash-skeleton');
+    } else {
+      el.textContent = '—';
+    }
+    return true;
+  }
+
+  function tipFor(el) {
+    const tip = document.createElement('div');
+    tip.className = 'ovt-tip';
+    tip.hidden = true;
+    el.append(tip);
+    return tip;
+  }
+  function showTip(el, tip, x, y, head, lines) {
+    tip.replaceChildren();
+    const h = document.createElement('div');
+    h.className = 'ovt-tip-h';
+    h.textContent = head;
+    tip.append(h);
+    lines.forEach(([color, name, value]) => {
+      const r = document.createElement('div');
+      r.className = 'ovt-tip-r';
+      if (color) { const sw = document.createElement('span'); sw.className = 'ovt-sw'; sw.style.background = color; r.append(sw); }
+      const t = document.createElement('span');
+      t.textContent = name ? name + ': ' + value : value;
+      r.append(t);
+      tip.append(r);
+    });
+    tip.hidden = false;
+    const W = el.clientWidth;
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    let left = x + 14;
+    if (left + tw > W) left = Math.max(0, x - tw - 14);
+    let top = y - th / 2;
+    top = Math.max(0, Math.min(top, el.clientHeight - th));
+    tip.style.left = left + 'px';
+    tip.style.top = top + 'px';
+  }
+
+  function measure(svg, strings, cls) {
+    const t = svg.append('text').attr('class', cls || null);
+    let w = 0;
+    strings.forEach((s) => { t.text(s); w = Math.max(w, t.node().getComputedTextLength()); });
+    t.remove();
+    return w;
+  }
+
+  function cleanAxis(g) {
+    g.attr('font-size', null).attr('font-family', null);
+    g.select('.domain').attr('stroke', 'var(--cds-chart-axis)');
+    g.selectAll('.tick line').attr('stroke', 'var(--cds-chart-axis)');
+  }
+
+  // A line chart over dated series, with optional shaded spans, event rules and end labels.
+  function lineChart(el, cfg) {
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const W = Math.max(280, el.clientWidth || 640);
+    const narrow = W < 600;
+    const H = narrow ? 260 : 320;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', cfg.aria);
+    const pts = cfg.series.flatMap((s) => s.points);
+    if (!pts.length) return;
+    const useAvg = !!cfg.avg;
+    const endY = (p) => (useAvg && p.a !== undefined && p.a !== null ? p.a : p.y);
+    const xDom = d3.extent(pts, (d) => d.x);
+    const yVals = pts.flatMap((d) => (useAvg && d.a !== undefined && d.a !== null ? [d.y, d.a] : [d.y]));
+    let lo = d3.min(yVals);
+    let hi = d3.max(yVals);
+    lo = Math.min(lo, 0); hi = Math.max(hi, 0);
+    const pad = (hi - lo) * 0.08 || 0.1;
+    const y = d3.scaleLinear([lo - pad, hi + pad], [0, 1]).nice();
+    const yt = y.ticks(5);
+    const lm = measure(svg, yt.map(f2)) + 10;
+    let showEnd = !narrow;
+    let rm = 12;
+    const endText = (s) => s.label + ' ' + f2(endY(s.points[s.points.length - 1]));
+    if (showEnd) {
+      rm = measure(svg, cfg.series.filter((s) => s.points.length).map(endText), 'ovt-strong') + 16;
+      if (rm > W * 0.36) { showEnd = false; rm = 12; }
+    }
+    const m = {top: cfg.events && cfg.events.length ? 30 : 10, right: rm, bottom: 24, left: lm};
+    const x = d3.scaleUtc(xDom, [m.left, W - m.right]);
+    y.range([H - m.bottom, m.top]);
+
+    (cfg.shade || []).forEach(([a, b]) => {
+      const x0 = Math.max(m.left, x(a));
+      const x1 = Math.min(W - m.right, x(b));
+      if (x1 > x0) svg.append('rect').attr('x', x0).attr('y', m.top).attr('width', x1 - x0).attr('height', H - m.bottom - m.top).attr('fill', 'var(--cds-chart-grid)').attr('opacity', 0.55);
+    });
+    svg.append('g').selectAll('line').data(yt).join('line')
+      .attr('x1', m.left).attr('x2', W - m.right).attr('y1', (d) => y(d)).attr('y2', (d) => y(d))
+      .attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)').attr('stroke-width', 1);
+    const gy = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yt).tickFormat(f2).tickSize(0).tickPadding(6));
+    cleanAxis(gy); gy.select('.domain').remove();
+    const xt = x.ticks(narrow ? 4 : 8);
+    const gx = svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).tickValues(xt).tickFormat(d3.utcFormat('%Y')).tickSizeOuter(0));
+    cleanAxis(gx);
+
+    (cfg.events || []).forEach((e, i) => {
+      if (e.x < xDom[0] || e.x > xDom[1]) return;
+      const xx = x(e.x);
+      svg.append('line').attr('x1', xx).attr('x2', xx).attr('y1', m.top - 4).attr('y2', H - m.bottom).attr('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '3 3');
+      if (!narrow) {
+        const t = svg.append('text').attr('x', xx).attr('y', i % 2 ? m.top - 6 : m.top - 18).attr('text-anchor', 'middle').text(e.label);
+        const w = t.node().getComputedTextLength();
+        if (xx - w / 2 < 0) t.attr('text-anchor', 'start').attr('x', xx);
+        if (xx + w / 2 > W) t.attr('text-anchor', 'end').attr('x', xx);
+      }
+    });
+
+    const line = d3.line().defined((d) => d !== null).x((d) => x(d.x)).y((d) => y(d.y));
+    const gapDays = cfg.gapDays || 120;
+    cfg.series.forEach((s) => {
+      const seq = [];
+      s.points.forEach((p, i) => {
+        if (i && (p.x - s.points[i - 1].x) / 864e5 > gapDays) seq.push(null);
+        seq.push(p);
+      });
+      if (s.dots) {
+        svg.append('g').selectAll('circle').data(s.points).join('circle').attr('cx', (d) => x(d.x)).attr('cy', (d) => y(d.y)).attr('r', 2.2).attr('fill', s.color).attr('opacity', 0.45);
+      } else {
+        svg.append('path').datum(seq).attr('fill', 'none').attr('stroke', s.color).attr('stroke-width', useAvg ? 1 : (s.width || 2))
+          .attr('opacity', useAvg ? 0.35 : 1).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('d', line);
+        if (useAvg) {
+          const avgLine = d3.line().defined((d) => d !== null && d.a !== null && d.a !== undefined).x((d) => x(d.x)).y((d) => y(d.a));
+          svg.append('path').datum(seq).attr('fill', 'none').attr('stroke', s.color).attr('stroke-width', 2.5).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('d', avgLine);
+        }
+      }
+    });
+
+    if (showEnd) {
+      const labs = cfg.series.filter((s) => s.points.length && !s.noLabel).map((s) => ({s, y: y(endY(s.points[s.points.length - 1]))}));
+      labs.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 14) labs[i].y = labs[i - 1].y + 14;
+      const over = labs.length ? labs[labs.length - 1].y - (H - m.bottom) : 0;
+      if (over > 0) labs.forEach((l) => { l.y -= over; });
+      labs.forEach((l) => svg.append('text').attr('class', 'ovt-strong').attr('x', W - m.right + 6).attr('y', l.y).attr('dy', '0.32em').text(endText(l.s)));
+    } else {
+      const lg = document.createElement('div');
+      lg.className = 'ovt-legend';
+      cfg.series.filter((s) => !s.noLabel).forEach((s) => {
+        const it = document.createElement('span');
+        const sw = document.createElement('i'); sw.className = 'ovt-sw'; sw.style.background = s.color;
+        it.append(sw, document.createTextNode(s.label));
+        lg.append(it);
+      });
+      el.append(lg);
+    }
+
+    const tip = tipFor(el);
+    const dates = Array.from(new Set(pts.map((p) => +p.x))).sort((a, b) => a - b);
+    const maps = cfg.series.map((s) => new Map(s.points.map((p) => [+p.x, p])));
+    const rule = svg.append('line').attr('y1', m.top).attr('y2', H - m.bottom).attr('stroke', 'var(--cds-chart-axis)').attr('opacity', 0);
+    const dots = svg.append('g');
+    svg.append('rect').attr('x', m.left).attr('y', m.top).attr('width', W - m.left - m.right).attr('height', H - m.top - m.bottom).attr('fill', 'transparent')
+      .on('pointermove', (ev) => {
+        const [px] = d3.pointer(ev);
+        const t = +x.invert(px);
+        const i = d3.bisectCenter(dates, t);
+        const d = dates[i];
+        const lines = [];
+        const hit = [];
+        cfg.series.forEach((s, k) => {
+          const p = maps[k].get(d);
+          if (!p) return;
+          const avgTxt = useAvg && p.a !== null && p.a !== undefined ? ', average ' + f2(p.a) : '';
+          lines.push([s.color, s.label, f2(p.y) + avgTxt + (p.n ? ' (' + fint(p.n) + ' posts)' : '')]);
+          hit.push([s, p]);
+        });
+        if (!lines.length) return;
+        rule.attr('x1', x(new Date(d))).attr('x2', x(new Date(d))).attr('opacity', 1);
+        dots.selectAll('circle').data(hit).join('circle').attr('cx', ([, p]) => x(p.x)).attr('cy', ([, p]) => y(endY(p))).attr('r', 4).attr('fill', ([s]) => s.color);
+        const scale = el.clientWidth / W;
+        showTip(el, tip, x(new Date(d)) * scale, y(endY(hit[0][1])) * scale, (cfg.headFmt || qfmt)(new Date(d)), lines);
+      })
+      .on('pointerleave', () => { tip.hidden = true; rule.attr('opacity', 0); dots.selectAll('circle').remove(); });
+  }
+
+  const eventsList = (filter) => {
+    const ev = rowsOf('events') || [];
+    return ev.filter((e) => !filter || filter(e)).map((e) => ({x: parse(e.date), label: e.label}));
+  };
+  const trumpSpans = (end) => {
+    const ev = eventsList();
+    const get = (lab) => (ev.find((e) => e.label === lab) || {}).x;
+    const spans = [];
+    if (get('Trump inaugurated') && get('Biden inaugurated')) spans.push([get('Trump inaugurated'), get('Biden inaugurated')]);
+    if (get('Trump inaugurated again')) spans.push([get('Trump inaugurated again'), end]);
+    return spans;
+  };
+
+  // Headline numbers: each reads its own data-source, data-field and data-where.
+  dash.draw('kpi', (el) => {
+    const id = el.dataset.source;
+    const rows = rowsOf(id);
+    if (!rows) { el.textContent = '—'; return; }
+    const [k, v] = (el.dataset.where || '').split('=');
+    const want = decodeURIComponent(v || '');
+    const row = rows.find((r) => String(r[decodeURIComponent(k)]) === want);
+    const val = row ? row[el.dataset.field] : null;
+    el.textContent = val === null || val === undefined ? '—' : (FMT[el.dataset.fmt] || f2)(val);
+  });
+
+  dash.draw('normsChart', (el) => {
+    if (pending(el, ['quarterly', 'events'], true)) return;
+    const q = rowsOf('quarterly');
+    const voices = [['Trump, all personal accounts', 0], ['@StateDept', 1], ['WhiteHouse.gov', 2], ['@WhiteHouse (Obama, Trump I, Biden, Trump II)', 3]];
+    const series = voices.map(([v, i]) => ({
+      label: v === 'Trump, all personal accounts' ? 'Trump (own accounts)' : (v.startsWith('@WhiteHouse (') ? '@WhiteHouse account' : v),
+      color: dash.colors[i],
+      points: q.filter((r) => r.voice === v).map((r) => ({x: parse(r.quarter), y: r.norms_index, n: r.n})).sort((a, b) => a.x - b.x)
+    }));
+    const end = d3.max(series.flatMap((s) => s.points), (p) => p.x);
+    lineChart(el, {series, aria: 'Institutional norms index by quarter for Trump, the State Department and WhiteHouse.gov',
+      events: eventsList((e) => /inaugurated/.test(e.label)), shade: trumpSpans(end)});
+  });
+
+  dash.calc('state_rolling', {
+    title: 'State Department six-month running average',
+    description: 'Centered six-month running mean of each monthly @StateDept score, over months with at least 15 posts.',
+    inputs: ['state_monthly'],
+    fn: (state_monthly) => {
+      const keys = ['norms_index', 'ideology', 'professionalism', 'partisanship', 'threat_hope', 'personalization', 'function', 'party_slant'];
+      const rows = state_monthly.slice().sort((a, b) => (a.month < b.month ? -1 : 1));
+      return rows.map((r, i) => {
+        const win = rows.slice(Math.max(0, i - 3), Math.min(rows.length, i + 3));
+        const out = {month: r.month};
+        keys.forEach((k) => { out[k] = win.reduce((s, w) => s + w[k], 0) / win.length; });
+        return out;
+      });
+    }
+  });
+
+  dash.draw('stateMonthly', (el) => {
+    if (pending(el, ['state_monthly', 'state_rolling', 'events'], true)) return;
+    const dim = dash.params().sdDim || 'function';
+    const mo = rowsOf('state_monthly');
+    const ro = rowsOf('state_rolling');
+    lineChart(el, {
+      aria: 'Monthly State Department ' + LABEL[dim],
+      series: [
+        {label: 'Month', color: dash.colors[1], dots: true, noLabel: true, points: mo.map((r) => ({x: parse(r.month), y: r[dim], n: r.n})).sort((a, b) => a.x - b.x)},
+        {label: 'Six-month average', color: dash.colors[1], points: ro.map((r) => ({x: parse(r.month), y: r[dim]})).sort((a, b) => a.x - b.x)}
+      ],
+      gapDays: 75, headFmt: tfmt,
+      events: eventsList((e) => /^(Trump inaugurated|Biden inaugurated)$/.test(e.label))
+    });
+  });
+
+  dash.draw('secChart', (el) => {
+    if (pending(el, ['state_secretary'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const dim = dash.params().sdDim || 'function';
+    const rows = rowsOf('state_secretary');
+    const W = Math.max(280, el.clientWidth || 480);
+    const H = 240;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Mean ' + LABEL[dim] + ' by Secretary of State');
+    let lo = d3.min(rows, (r) => r[dim + '_lo']);
+    let hi = d3.max(rows, (r) => r[dim + '_hi']);
+    const pad = (hi - lo) * 0.25 || 0.05;
+    const y = d3.scaleLinear([lo - pad, hi + pad], [0, 1]).nice();
+    const yt = y.ticks(4);
+    const m = {top: 16, right: 8, bottom: 26, left: measure(svg, yt.map(f2)) + 10};
+    y.range([H - m.bottom, m.top]);
+    const x = d3.scaleBand(rows.map((r) => r.secretary), [m.left, W - m.right]).padding(0.3);
+    svg.append('g').selectAll('line').data(yt).join('line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', (d) => y(d)).attr('y2', (d) => y(d)).attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)');
+    const gy = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yt).tickFormat(f2).tickSize(0).tickPadding(6));
+    cleanAxis(gy); gy.select('.domain').remove();
+    const gx = svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).tickSizeOuter(0));
+    cleanAxis(gx);
+    const cx = (r) => x(r.secretary) + x.bandwidth() / 2;
+    svg.append('path').datum(rows).attr('fill', 'none').attr('stroke', 'var(--cds-chart-muted)').attr('stroke-width', 1.5).attr('d', d3.line().x(cx).y((r) => y(r[dim])));
+    const g = svg.append('g').selectAll('g').data(rows).join('g');
+    g.append('line').attr('x1', cx).attr('x2', cx).attr('y1', (r) => y(r[dim + '_lo'])).attr('y2', (r) => y(r[dim + '_hi'])).attr('stroke', dash.colors[1]).attr('stroke-width', 2);
+    g.append('circle').attr('cx', cx).attr('cy', (r) => y(r[dim])).attr('r', 5).attr('fill', dash.colors[1]);
+    g.append('text').attr('class', 'ovt-strong').attr('x', cx).attr('y', (r) => y(r[dim + '_hi']) - 6).attr('text-anchor', 'middle').text((r) => f2(r[dim]));
+    const tip = tipFor(el);
+    g.on('pointerenter', (ev, r) => {
+      const scale = el.clientWidth / W;
+      showTip(el, tip, cx(r) * scale, y(r[dim]) * scale, r.secretary + ', ' + r.start + ' to ' + r.end,
+        [[dash.colors[1], LABEL[dim], f2(r[dim])], [null, '95% interval', f2(r[dim + '_lo']) + ' to ' + f2(r[dim + '_hi'])], [null, 'Posts', fint(r.n)]]);
+    }).on('pointerleave', () => { tip.hidden = true; });
+  });
+
+  function fillTable(tbody, rows, cols, keyOf) {
+    tbody.replaceChildren();
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      if (keyOf) tr.dataset.key = keyOf(r);
+      cols.forEach(([field, fmt, cls]) => {
+        const td = document.createElement('td');
+        if (cls) td.className = cls;
+        const v = r[field];
+        td.textContent = v === null || v === undefined ? '' : (fmt ? fmt(v) : String(v));
+        tr.append(td);
+      });
+      tbody.append(tr);
+    });
+  }
+  const tablePending = (tb, id) => { if (dash.data(id).status === 'ok') return false; tb.replaceChildren(); return true; };
+  const fp = (v) => (v < 0.001 ? '<0.001' : f3(v));
+
+  dash.draw('itsTable', (tb) => {
+    if (tablePending(tb, 'state_its')) return;
+    const dim = dash.params().sdDim || 'function';
+    const rows = rowsOf('state_its').filter((r) => r.dimension === dim);
+    fillTable(tb, rows, [['term'], ['coef', d3.format('+.3f'), 'n'], ['se', f3, 'n'], ['p', fp, 'n']], (r) => r.key);
+  });
+
+  dash.draw('officeChart', (el) => {
+    if (pending(el, ['trump_office'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const rows = rowsOf('trump_office');
+    const dims = ['professionalism', 'partisanship', 'personalization', 'function', 'threat_hope', 'ideology', 'party_slant'];
+    const plats = ['Twitter', 'Truth Social'];
+    const W = Math.max(280, el.clientWidth || 640);
+    const narrow = W < 640;
+    const panelW = narrow ? W : W / 2;
+    const rowH = 30;
+    const H0 = 34 + dims.length * rowH;
+    const H = narrow ? H0 * 2 : H0;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Trump out of office versus in office, by platform and dimension');
+    const lm = measure(svg, dims.map((d) => LABEL[d])) + 12;
+    const vals = rows.flatMap((r) => [r.mean_out, r.mean_in]);
+    const xDom = [Math.min(-0.7, d3.min(vals) - 0.05), Math.max(0.5, d3.max(vals) + 0.05)];
+    const tip = tipFor(el);
+    plats.forEach((p, pi) => {
+      const ox = narrow ? 0 : pi * panelW;
+      const oy = narrow ? pi * H0 : 0;
+      const x = d3.scaleLinear(xDom, [ox + lm, ox + panelW - 16]);
+      const g = svg.append('g');
+      g.append('text').attr('class', 'ovt-strong').attr('x', ox + lm).attr('y', oy + 14).text(p === 'Twitter' ? 'Twitter: candidate vs President' : 'Truth Social: out of office vs President');
+      const xt = x.ticks(4);
+      g.selectAll('line.grid').data(xt).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', oy + 26).attr('y2', oy + H0 - 14)
+        .attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)');
+      g.selectAll('text.tick').data(xt).join('text').attr('x', (d) => x(d)).attr('y', oy + H0 - 2).attr('text-anchor', 'middle').text(f2);
+      dims.forEach((d, i) => {
+        const r = rows.find((z) => z.platform === p && z.dimension === d);
+        if (!r) return;
+        const yy = oy + 34 + i * rowH + rowH / 2 - 6;
+        g.append('text').attr('x', ox + lm - 8).attr('y', yy).attr('dy', '0.32em').attr('text-anchor', 'end').text(LABEL[d]);
+        g.append('line').attr('x1', x(r.mean_out)).attr('x2', x(r.mean_in)).attr('y1', yy).attr('y2', yy).attr('stroke', 'var(--cds-chart-muted)').attr('stroke-width', 2);
+        g.append('circle').attr('cx', x(r.mean_out)).attr('cy', yy).attr('r', 5).attr('fill', 'var(--color-panel)').attr('stroke', dash.colors[0]).attr('stroke-width', 2);
+        const c = g.append('circle').attr('cx', x(r.mean_in)).attr('cy', yy).attr('r', 5).attr('fill', dash.colors[0]);
+        const hot = g.append('rect').attr('x', ox).attr('y', yy - rowH / 2).attr('width', panelW).attr('height', rowH).attr('fill', 'transparent');
+        hot.on('pointerenter', () => {
+          const scale = el.clientWidth / W;
+          c.attr('r', 7);
+          showTip(el, tip, x(r.mean_in) * scale, yy * scale, p + ' · ' + LABEL[d],
+            [[null, 'Out of office', f2(r.mean_out)], [dash.colors[0], 'In office', f2(r.mean_in)], [null, 'Topic-adjusted change', fs(r.diff) + ' (SE ' + f3(r.se) + ')']]);
+        }).on('pointerleave', () => { c.attr('r', 5); tip.hidden = true; });
+      });
+    });
+  });
+
+  dash.draw('villainChart', (el) => {
+    if (pending(el, ['villains'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const rows = rowsOf('villains');
+    const order = ['Trump on Twitter, before office', 'Trump on Twitter, as President', 'Trump on Truth Social, out of office', 'Trump on Truth Social, as President',
+      'White House staff accounts (early 2017)', '@POTUS, @WhiteHouse, @VP (early 2017)', 'WhiteHouse.gov', '@StateDept'];
+    const voices = order.filter((v) => rows.some((r) => r.voice === v));
+    const color = (k, i) => (k === 'other' ? 'var(--cds-chart-muted)' : dash.colors[i % 8]);
+    const W = Math.max(280, el.clientWidth || 640);
+    const rowH = 36;
+    const H = voices.length * rowH + 8;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Share of posts naming each villain type, by account');
+    const maxTot = d3.max(voices, (v) => d3.sum(rows.filter((r) => r.voice === v && r.villain !== 'none'), (r) => r.share));
+    const x = d3.scaleLinear([0, Math.max(0.1, maxTot)], [0, W - 48]);
+    const tip = tipFor(el);
+    voices.forEach((v, i) => {
+      const y0 = i * rowH;
+      const tot = d3.sum(rows.filter((r) => r.voice === v && r.villain !== 'none'), (r) => r.share);
+      svg.append('text').attr('class', 'ovt-strong').attr('x', 0).attr('y', y0 + 11).text(v);
+      let acc = 0;
+      VILLAIN.forEach(([k, name], ci) => {
+        const r = rows.find((z) => z.voice === v && z.villain === k);
+        if (!r || r.share <= 0) return;
+        const rect = svg.append('rect').attr('x', x(acc)).attr('y', y0 + 16).attr('width', Math.max(0.5, x(acc + r.share) - x(acc))).attr('height', 14).attr('fill', color(k, ci));
+        rect.on('pointerenter', () => {
+          const scale = el.clientWidth / W;
+          showTip(el, tip, (x(acc) + 10) * scale, (y0 + 23) * scale, v, [[color(k, ci), name, fpct(r.share)]]);
+        }).on('pointerleave', () => { tip.hidden = true; });
+        acc += r.share;
+      });
+      svg.append('text').attr('x', x(tot) + 6).attr('y', y0 + 23).attr('dy', '0.32em').text(fpct(tot));
+    });
+    const lg = document.createElement('div');
+    lg.className = 'ovt-legend';
+    VILLAIN.forEach(([k, name], ci) => {
+      const it = document.createElement('span');
+      const sw = document.createElement('i'); sw.className = 'ovt-sw'; sw.style.background = color(k, ci);
+      it.append(sw, document.createTextNode(name));
+      lg.append(it);
+    });
+    el.append(lg);
+  });
+
+  dash.draw('engChart', (el) => {
+    if (pending(el, ['engagement_quintiles'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const rows = rowsOf('engagement_quintiles');
+    const W = Math.max(280, el.clientWidth || 420);
+    const H = 240;
+    const short = (q) => q.replace(' (least professional)', ' least').replace(' (most professional)', ' most');
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Median likes by professionalism quintile');
+    const y = d3.scaleLinear([0, d3.max(rows, (r) => r.median_likes) * 1.12], [0, 1]).nice();
+    const yt = y.ticks(4);
+    const m = {top: 18, right: 8, bottom: 26, left: measure(svg, yt.map((t) => fcompact.format(t))) + 10};
+    y.range([H - m.bottom, m.top]);
+    const x = d3.scaleBand(rows.map((r) => r.quintile), [m.left, W - m.right]).padding(0.3);
+    svg.append('g').selectAll('line').data(yt).join('line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', (d) => y(d)).attr('y2', (d) => y(d)).attr('stroke', 'var(--cds-chart-grid)');
+    const gy = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yt).tickFormat((t) => fcompact.format(t)).tickSize(0).tickPadding(6));
+    cleanAxis(gy); gy.select('.domain').remove();
+    const gx = svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).tickFormat(short).tickSizeOuter(0));
+    cleanAxis(gx);
+    const bw = Math.min(32, x.bandwidth());
+    svg.append('g').selectAll('rect').data(rows).join('rect').attr('x', (r) => x(r.quintile) + (x.bandwidth() - bw) / 2).attr('width', bw)
+      .attr('y', (r) => y(r.median_likes)).attr('height', (r) => y(0) - y(r.median_likes)).attr('rx', 3).attr('fill', (r, i) => (i === 0 ? dash.colors[0] : 'var(--cds-chart-muted)'));
+    svg.append('g').selectAll('text').data(rows).join('text').attr('class', 'ovt-strong').attr('x', (r) => x(r.quintile) + x.bandwidth() / 2).attr('y', (r) => y(r.median_likes) - 5).attr('text-anchor', 'middle').text((r) => fcompact.format(r.median_likes));
+  });
+
+  dash.draw('whChart', (el) => {
+    if (pending(el, ['wh_categories'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const rows = rowsOf('wh_categories').slice().sort((a, b) => b.norms_index - a.norms_index);
+    const W = Math.max(280, el.clientWidth || 420);
+    const rowH = 32;
+    const H = rows.length * rowH + 22;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Norms index by WhiteHouse.gov category');
+    const lo = Math.min(-0.2, d3.min(rows, (r) => r.norms_index));
+    const hi = Math.max(0.8, d3.max(rows, (r) => r.norms_index));
+    const x = d3.scaleLinear([lo, hi], [0, W - 40]).nice();
+    const xt = x.ticks(4);
+    svg.append('g').selectAll('line').data(xt).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 20).attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(xt).join('text').attr('x', (d) => x(d)).attr('y', H - 4).attr('text-anchor', 'middle').text(f2);
+    rows.forEach((r, i) => {
+      const y0 = i * rowH;
+      svg.append('text').attr('class', 'ovt-strong').attr('x', x(0) + (r.norms_index < 0 ? 4 : 0)).attr('y', y0 + 10).text(r.category + ' · ' + fint(r.n));
+      const a = x(Math.min(0, r.norms_index));
+      const b = x(Math.max(0, r.norms_index));
+      svg.append('rect').attr('x', a).attr('y', y0 + 14).attr('width', Math.max(1, b - a)).attr('height', 12).attr('rx', 3)
+        .attr('fill', r.category === 'Releases' ? dash.colors[0] : 'var(--cds-chart-muted)');
+      svg.append('text').attr('x', b + 5).attr('y', y0 + 20).attr('dy', '0.32em').text(f2(r.norms_index));
+    });
+  });
+
+  dash.draw('corrChart', (el) => {
+    if (pending(el, ['teacher_corr'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const rows = rowsOf('teacher_corr');
+    const dims = ['ideology', 'professionalism', 'partisanship', 'threat_hope', 'personalization', 'function'];
+    const W = Math.max(280, el.clientWidth || 520);
+    const svg0 = d3.select(el).append('svg').attr('width', '100%').attr('role', 'img').attr('aria-label', 'Correlations between dimensions in the teacher labels');
+    const lm = measure(svg0, dims.map((d) => LABEL[d])) + 10;
+    const cell = Math.max(30, Math.min(64, (W - lm) / dims.length));
+    const top = 18;
+    const H = top + cell * dims.length + 4;
+    svg0.attr('viewBox', `0 0 ${W} ${H}`);
+    const short = {ideology: 'Ideo.', professionalism: 'Prof.', partisanship: 'Part.', threat_hope: 'Threat', personalization: 'Pers.', function: 'Func.'};
+    dims.forEach((b, j) => svg0.append('text').attr('x', lm + j * cell + cell / 2).attr('y', 12).attr('text-anchor', 'middle').text(short[b]));
+    dims.forEach((a, i) => {
+      svg0.append('text').attr('x', lm - 8).attr('y', top + i * cell + cell / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(LABEL[a]);
+      dims.forEach((b, j) => {
+        const r = rows.find((z) => z.a === a && z.b === b);
+        if (!r) return;
+        svg0.append('rect').attr('x', lm + j * cell + 1).attr('y', top + i * cell + 1).attr('width', cell - 2).attr('height', cell - 2).attr('rx', 3)
+          .attr('fill', r.r >= 0 ? dash.colors[1] : dash.colors[0]).attr('opacity', i === j ? 0.08 : 0.12 + 0.75 * Math.abs(r.r));
+        svg0.append('text').attr('class', 'ovt-strong').attr('x', lm + j * cell + cell / 2).attr('y', top + i * cell + cell / 2).attr('dy', '0.32em').attr('text-anchor', 'middle').text(i === j ? '' : f2(r.r));
+      });
+    });
+  });
+
+  // One chart box per interval; only the selected one is shown, so only its file loads.
+  const INTERVAL = {
+    weekly: {gap: 21, head: (d) => 'Week of ' + d3.utcFormat('%b %-d, %Y')(d), word: 'week'},
+    monthly: {gap: 75, head: tfmt, word: 'month'},
+    quarterly: {gap: 120, head: qfmt, word: 'quarter'},
+    yearly: {gap: 400, head: d3.utcFormat('%Y'), word: 'year'}
+  };
+  dash.draw('explorerChart', (el) => {
+    const iv = el.dataset.interval;
+    const id = 'series_' + iv;
+    if (pending(el, [id, 'events'], true)) return;
+    const p = dash.params();
+    const dim = p.exDim || 'norms_index';
+    const avg = p.exAvg !== false && iv !== 'yearly';
+    const chosen = Array.isArray(p.exVoices) ? p.exVoices : ['Trump, all personal accounts', '@StateDept', 'WhiteHouse.gov'];
+    const all = ['Trump, all personal accounts', 'Trump on Twitter, before office', 'Trump on Twitter, as President', 'Trump on Truth Social, out of office', 'Trump on Truth Social, as President', '@StateDept', 'WhiteHouse.gov',
+      '@WhiteHouse (Obama, Trump I, Biden, Trump II)', '@DHSgov', '@ICEgov', '@CBP', 'ICE field offices (pooled)', '@RapidResponse47', '@PressSec'];
+    const rows = rowsOf(id);
+    const series = all.map((v, i) => ({v, i})).filter(({v}) => chosen.includes(v)).map(({v, i}) => ({
+      label: v, color: dash.colors[i % 8],
+      points: rows.filter((r) => r.voice === v).map((r) => ({x: parse(r.period), y: r[dim], a: r[dim + '_avg'], n: r.n})).sort((a, b) => a.x - b.x)
+    })).filter((s) => s.points.length);
+    if (!series.length) { el.replaceChildren(); el.classList.remove('dash-skeleton'); return; }
+    const end = d3.max(series.flatMap((s) => s.points), (pt) => pt.x);
+    lineChart(el, {series, avg, gapDays: INTERVAL[iv].gap, headFmt: INTERVAL[iv].head,
+      aria: LABEL[dim] + ' by ' + INTERVAL[iv].word, events: eventsList((e) => /inaugurated/.test(e.label)), shade: trumpSpans(end)});
+  });
+
+  dash.draw('voiceTable', (tb) => {
+    if (tablePending(tb, 'voice_summary')) return;
+    const rows = rowsOf('voice_summary').slice().sort((a, b) => b.n - a.n);
+    fillTable(tb, rows, [['voice'], ['n', fint, 'n'], ['first'], ['last'], ['norms_index', f2, 'n'], ['ideology', f2, 'n'], ['professionalism', f2, 'n'],
+      ['partisanship', f2, 'n'], ['threat_hope', f2, 'n'], ['personalization', f2, 'n'], ['function', f2, 'n'], ['party_slant', f2, 'n']]);
+  });
+
+  dash.draw('quoteTable', (tb) => {
+    if (tablePending(tb, 'exemplars')) return;
+    const p = dash.params();
+    const voice = p.qVoice || '@StateDept';
+    const dim = p.qDim || 'professionalism';
+    const side = p.qSide || 'low';
+    const rows = rowsOf('exemplars').filter((r) => r.voice === voice && r.dim === dim && r.side === side)
+      .sort((a, b) => (side === 'low' ? a.score - b.score : b.score - a.score));
+    tb.replaceChildren();
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = String(r.id);
+      const d = document.createElement('td'); d.textContent = r.date;
+      const s = document.createElement('td'); s.className = 'n'; s.textContent = f2(r.score);
+      const t = document.createElement('td'); t.className = 'q';
+      if (typeof r.url === 'string' && /^https:\/\//.test(r.url)) {
+        const a = document.createElement('a'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = r.text;
+        t.append(a);
+      } else {
+        t.textContent = r.text;
+      }
+      tr.append(d, s, t);
+      tb.append(tr);
+    });
+  });
+
+  dash.draw('valTable', (tb) => {
+    if (tablePending(tb, 'validation')) return;
+    fillTable(tb, rowsOf('validation'), [['dimension'], ['r_ens', f2, 'n'], ['rho_ens', f2, 'n'], ['mae_ens', f2, 'n'], ['r_round2_agencies', f2, 'n'], ['teacher_sd', f2, 'n'], ['retest_r', f3, 'n']]);
+  });
+  dash.draw('convTable', (tb) => {
+    if (tablePending(tb, 'convergent')) return;
+    fillTable(tb, rowsOf('convergent'), [['voice'], ['post_r', f2, 'n'], ['N', fint, 'n']]);
+  });
+  dash.draw('coverageTable', (tb) => {
+    if (tablePending(tb, 'coverage')) return;
+    fillTable(tb, rowsOf('coverage'), [['account'], ['source'], ['posts', fint, 'n'], ['scored', fint, 'n'], ['first'], ['last']],
+      (r) => encodeURIComponent(r.account) + ',' + encodeURIComponent(r.source));
+  });
+
+  // Second Trump term: account-by-account change, by administration, pooled panel, agenda, coverage.
+  const TYPE_COLOR = {'White House (institutional)': 0, 'Agency headquarters': 1, 'Agency field office': 2, "Official's account": 3};
+  const ADM = ['Obama', 'Trump I', 'Biden', 'Trump II'];
+
+  dash.draw('t2AcctChart', (el) => {
+    if (pending(el, ['t2_accounts'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const dim = dash.params().t2Dim || 'norms_index';
+    const rows = rowsOf('t2_accounts').filter((r) => r.dimension === dim).sort((a, b) => a.diff - b.diff);
+    if (!rows.length) return;
+    const W = Math.max(280, el.clientWidth || 640);
+    const rowH = 26;
+    const H = rows.length * rowH + 30;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Change under Trump II by account, ' + LABEL[dim]);
+    const lm = Math.min(W * 0.45, measure(svg, rows.map((r) => r.voice)) + 12);
+    const lo = Math.min(0, d3.min(rows, (r) => r.diff - 1.96 * r.se));
+    const hi = Math.max(0, d3.max(rows, (r) => r.diff + 1.96 * r.se));
+    const pad = (hi - lo) * 0.06 || 0.05;
+    const x = d3.scaleLinear([lo - pad, hi + pad], [lm, W - 46]).nice();
+    const xt = x.ticks(5);
+    svg.append('g').selectAll('line').data(xt).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 22)
+      .attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(xt).join('text').attr('x', (d) => x(d)).attr('y', H - 6).attr('text-anchor', 'middle').text(fs);
+    const tip = tipFor(el);
+    rows.forEach((r, i) => {
+      const yy = i * rowH + rowH / 2;
+      const c = dash.colors[TYPE_COLOR[r.account_type] ?? 4];
+      svg.append('text').attr('x', lm - 8).attr('y', yy).attr('dy', '0.32em').attr('text-anchor', 'end').text(r.voice);
+      svg.append('line').attr('x1', x(r.diff - 1.96 * r.se)).attr('x2', x(r.diff + 1.96 * r.se)).attr('y1', yy).attr('y2', yy).attr('stroke', c).attr('stroke-width', 2);
+      const dot = svg.append('circle').attr('cx', x(r.diff)).attr('cy', yy).attr('r', 5).attr('fill', c);
+      svg.append('text').attr('x', x(r.diff + 1.96 * r.se) + 6).attr('y', yy).attr('dy', '0.32em').text(fs(r.diff));
+      svg.append('rect').attr('x', 0).attr('y', yy - rowH / 2).attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+        .on('pointerenter', () => {
+          const scale = el.clientWidth / W;
+          dot.attr('r', 7);
+          showTip(el, tip, x(r.diff) * scale, yy * scale, r.voice + ' · ' + r.account_type,
+            [[null, 'Before Jan 20, 2025', f2(r.mean_before) + ' (' + fint(r.n_before) + ' posts, from ' + r.first + ')'],
+             [c, 'Trump II', f2(r.mean_trump2) + ' (' + fint(r.n_trump2) + ' posts)'],
+             [null, 'Topic-adjusted change', fs(r.diff) + ' (95% CI ' + fs(r.diff - 1.96 * r.se) + ' to ' + fs(r.diff + 1.96 * r.se) + ')']]);
+        }).on('pointerleave', () => { dot.attr('r', 5); tip.hidden = true; });
+    });
+    const lg = document.createElement('div');
+    lg.className = 'ovt-legend';
+    Object.entries(TYPE_COLOR).forEach(([name, i]) => {
+      if (!rows.some((r) => r.account_type === name)) return;
+      const it = document.createElement('span');
+      const sw = document.createElement('i'); sw.className = 'ovt-sw'; sw.style.background = dash.colors[i];
+      it.append(sw, document.createTextNode(name));
+      lg.append(it);
+    });
+    el.append(lg);
+  });
+
+  dash.draw('t2AdmChart', (el) => {
+    if (pending(el, ['t2_admin'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const dim = dash.params().t2Dim || 'norms_index';
+    const rows = rowsOf('t2_admin');
+    const voices = Array.from(new Set(rows.map((r) => r.voice)));
+    const W = Math.max(280, el.clientWidth || 640);
+    const narrow = W < 600;
+    const H = narrow ? 280 : 320;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', LABEL[dim] + ' by administration');
+    let lo = d3.min(rows, (r) => r[dim + '_lo']);
+    let hi = d3.max(rows, (r) => r[dim + '_hi']);
+    lo = Math.min(lo, 0); hi = Math.max(hi, 0);
+    const y = d3.scaleLinear([lo - 0.05, hi + 0.05], [0, 1]).nice();
+    const yt = y.ticks(5);
+    const endLab = (v) => v + ' ' + f2((rows.find((r) => r.voice === v && r.administration === 'Trump II') || {})[dim] ?? 0);
+    let rm = narrow ? 12 : measure(svg, voices.map(endLab), 'ovt-strong') + 16;
+    const showEnd = !narrow && rm < W * 0.4;
+    if (!showEnd) rm = 12;
+    const m = {top: 12, right: rm, bottom: 26, left: measure(svg, yt.map(f2)) + 10};
+    y.range([H - m.bottom, m.top]);
+    const x = d3.scalePoint(ADM, [m.left + 20, W - m.right - 10]);
+    svg.append('g').selectAll('line').data(yt).join('line').attr('x1', m.left).attr('x2', W - m.right).attr('y1', (d) => y(d)).attr('y2', (d) => y(d))
+      .attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)');
+    const gy = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yt).tickFormat(f2).tickSize(0).tickPadding(6));
+    cleanAxis(gy); gy.select('.domain').remove();
+    const gx = svg.append('g').attr('transform', `translate(0,${H - m.bottom})`).call(d3.axisBottom(x).tickSizeOuter(0));
+    cleanAxis(gx);
+    const tip = tipFor(el);
+    const labs = [];
+    voices.forEach((v, i) => {
+      const pts = ADM.map((a) => rows.find((r) => r.voice === v && r.administration === a)).filter(Boolean);
+      const c = dash.colors[i % 8];
+      svg.append('path').datum(pts).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 2).attr('d', d3.line().x((r) => x(r.administration)).y((r) => y(r[dim])));
+      pts.forEach((r) => {
+        svg.append('line').attr('x1', x(r.administration)).attr('x2', x(r.administration)).attr('y1', y(r[dim + '_lo'])).attr('y2', y(r[dim + '_hi'])).attr('stroke', c).attr('opacity', 0.6);
+        svg.append('circle').attr('cx', x(r.administration)).attr('cy', y(r[dim])).attr('r', 4).attr('fill', c)
+          .on('pointerenter', () => {
+            const scale = el.clientWidth / W;
+            showTip(el, tip, x(r.administration) * scale, y(r[dim]) * scale, v + ' · ' + r.administration,
+              [[c, LABEL[dim], f2(r[dim]) + ' (' + fint(r.n) + ' posts)'], [null, '95% interval', f2(r[dim + '_lo']) + ' to ' + f2(r[dim + '_hi'])]]);
+          }).on('pointerleave', () => { tip.hidden = true; });
+      });
+      const last = pts[pts.length - 1];
+      if (last && last.administration === 'Trump II') labs.push({v, c, y: y(last[dim])});
+    });
+    if (showEnd) {
+      labs.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < labs.length; i++) if (labs[i].y - labs[i - 1].y < 14) labs[i].y = labs[i - 1].y + 14;
+      labs.forEach((l) => svg.append('text').attr('class', 'ovt-strong').attr('x', W - m.right + 6).attr('y', l.y).attr('dy', '0.32em').text(endLab(l.v)));
+    } else {
+      const lg = document.createElement('div');
+      lg.className = 'ovt-legend';
+      voices.forEach((v, i) => {
+        const it = document.createElement('span');
+        const sw = document.createElement('i'); sw.className = 'ovt-sw'; sw.style.background = dash.colors[i % 8];
+        it.append(sw, document.createTextNode(v));
+        lg.append(it);
+      });
+      el.append(lg);
+    }
+  });
+
+  dash.draw('t2PanelTable', (tb) => {
+    if (tablePending(tb, 't2_panel')) return;
+    const dim = dash.params().t2Dim || 'norms_index';
+    fillTable(tb, rowsOf('t2_panel').filter((r) => r.dimension === dim), [['administration'], ['coef_vs_biden', d3.format('+.3f'), 'n'], ['se', f3, 'n'], ['p', fp, 'n']], (r) => r.key);
+  });
+
+  dash.draw('t2AgendaChart', (el) => {
+    if (pending(el, ['t2_agenda'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const kind = dash.params().t2Kind || 'topic';
+    const rows = rowsOf('t2_agenda').filter((r) => r.kind === kind && r.category !== 'none');
+    const cats = Array.from(new Set(rows.map((r) => r.category)));
+    const val = (c, p) => (rows.find((r) => r.category === c && r.period === p) || {share: 0}).share;
+    cats.sort((a, b) => val(b, 'Trump II') - val(a, 'Trump II'));
+    const W = Math.max(280, el.clientWidth || 480);
+    const rowH = 30;
+    const H = cats.length * rowH + 22;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Share of posts by ' + kind + ', before and during Trump II');
+    const NAMES = Object.fromEntries(VILLAIN);
+    const TOPIC = {econ: 'Economy and trade', immig: 'Immigration and border', foreign: 'Foreign policy and defense', health: 'Health', justice: 'Crime and justice',
+      culture: 'Culture and religion', elections: 'Elections', energy: 'Energy and environment', gov: 'Government operations', ceremony: 'Ceremony and holidays', media: 'Media', other: 'Other'};
+    const nm = (c) => (kind === 'topic' ? TOPIC[c] : NAMES[c]) || c;
+    const lm = measure(svg, cats.map(nm)) + 10;
+    const x = d3.scaleLinear([0, d3.max(rows, (r) => r.share) * 1.15 || 0.1], [lm, W - 44]);
+    const tip = tipFor(el);
+    cats.forEach((c, i) => {
+      const y0 = i * rowH;
+      svg.append('text').attr('x', lm - 8).attr('y', y0 + 13).attr('dy', '0.32em').attr('text-anchor', 'end').text(nm(c));
+      [['Before Jan 2025', 'var(--cds-chart-muted)', 4], ['Trump II', dash.colors[0], 14]].forEach(([p, col, off]) => {
+        const v = val(c, p);
+        svg.append('rect').attr('x', lm).attr('y', y0 + off).attr('width', Math.max(1, x(v) - lm)).attr('height', 9).attr('rx', 2).attr('fill', col)
+          .on('pointerenter', () => { const s = el.clientWidth / W; showTip(el, tip, x(v) * s, (y0 + off) * s, nm(c), [[col, p, fpct(v)]]); })
+          .on('pointerleave', () => { tip.hidden = true; });
+        if (p === 'Trump II') svg.append('text').attr('x', x(v) + 4).attr('y', y0 + off + 4.5).attr('dy', '0.32em').text(fpct(v));
+      });
+    });
+    const gx = svg.append('g').attr('transform', `translate(0,${H - 20})`).call(d3.axisBottom(x).ticks(4).tickFormat(fpct).tickSizeOuter(0));
+    cleanAxis(gx);
+    const lg = document.createElement('div');
+    lg.className = 'ovt-legend';
+    [['Before Jan 20, 2025', 'var(--cds-chart-muted)'], ['Trump II', dash.colors[0]]].forEach(([n, col]) => {
+      const it = document.createElement('span');
+      const sw = document.createElement('i'); sw.className = 'ovt-sw'; sw.style.background = col;
+      it.append(sw, document.createTextNode(n));
+      lg.append(it);
+    });
+    el.append(lg);
+  });
+
+  dash.draw('t2CoverageTable', (tb) => {
+    if (tablePending(tb, 't2_coverage')) return;
+    const yrs = ['2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025', '2026'];
+    fillTable(tb, rowsOf('t2_coverage'), [['voice'], ['trump2', fint, 'n'], ['total', fint, 'n'], ...yrs.map((y) => [y, fint, 'n'])]);
+  });
+
+  // Fascist rhetoric: monthly series, groups by period, marker composition, pooled panel, account changes, posts, validation.
+  const FRI_GROUPS = ['Trump, personal accounts', 'White House, institutional', 'Agencies (HQ and field)', 'Officials and staff'];
+  const FRI_PERIODS = ['Twitter, before office', 'Twitter, President (2017-21)', 'Truth Social, out of office (2021-25)', 'Truth Social, President (2025-)', 'X, President (2025-)',
+    'Obama', 'Trump I', 'Biden', 'Trump II'];
+  const FRI_MARKERS = [['RE', 'Decline and rebirth'], ['EN', 'Existential enemy or plot'], ['DH', 'Dehumanization or purity'], ['LC', 'Leader cult'],
+    ['AD', 'Anti-democratic delegitimization'], ['VI', 'Violence as virtue'], ['VG', 'Victimhood and retribution']];
+  const FRI_LABEL = {fri: 'Fascist Rhetoric Index (0–100)', fri_syn: 'Syndrome posts (% of posts)'};
+  const f1 = d3.format('.1f');
+  const friOrder = (r) => FRI_GROUPS.indexOf(r.group) * 100 + FRI_PERIODS.indexOf(r.period);
+  const legendOf = (el, items) => {
+    const lg = document.createElement('div');
+    lg.className = 'ovt-legend';
+    items.forEach(([name, col]) => {
+      const it = document.createElement('span');
+      const sw = document.createElement('i'); sw.className = 'ovt-sw'; sw.style.background = col;
+      it.append(sw, document.createTextNode(name));
+      lg.append(it);
+    });
+    el.append(lg);
+  };
+
+  dash.draw('friMonthChart', (el) => {
+    if (pending(el, ['fri_monthly', 'events'], true)) return;
+    const ms = dash.params().friMeasure || 'fri';
+    const rows = rowsOf('fri_monthly');
+    const series = FRI_GROUPS.map((g, i) => ({
+      label: g, color: dash.colors[i],
+      points: rows.filter((r) => r.group === g).map((r) => ({x: parse(r.month), y: r[ms], a: r[ms + '_avg'], n: r.n})).sort((a, b) => a.x - b.x)
+    })).filter((s) => s.points.length);
+    const end = d3.max(series.flatMap((s) => s.points), (p) => p.x);
+    lineChart(el, {series, avg: true, gapDays: 75, headFmt: tfmt, aria: FRI_LABEL[ms] + ' by month and kind of account',
+      events: eventsList((e) => /inaugurated/.test(e.label)), shade: trumpSpans(end)});
+  });
+
+  dash.draw('friGroupChart', (el) => {
+    if (pending(el, ['fri_groups'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const ms = dash.params().friMeasure || 'fri';
+    const lo = ms === 'fri' ? 'fri_lo' : 'syn_lo';
+    const hi = ms === 'fri' ? 'fri_hi' : 'syn_hi';
+    const rows = rowsOf('fri_groups').slice().sort((a, b) => friOrder(a) - friOrder(b));
+    const W = Math.max(280, el.clientWidth || 640);
+    const rowH = 24;
+    const items = [];
+    FRI_GROUPS.forEach((g) => {
+      const rs = rows.filter((r) => r.group === g);
+      if (!rs.length) return;
+      items.push({head: g});
+      rs.forEach((r) => items.push({r}));
+    });
+    const H = items.length * rowH + 28;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', FRI_LABEL[ms] + ' by kind of account and period');
+    const lm = Math.min(W * 0.5, measure(svg, rows.map((r) => r.period)) + 22);
+    const x = d3.scaleLinear([0, d3.max(rows, (r) => r[hi]) * 1.08 || 1], [lm, W - 52]).nice();
+    const xt = x.ticks(5);
+    svg.append('g').selectAll('line').data(xt).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 22)
+      .attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(xt).join('text').attr('x', (d) => x(d)).attr('y', H - 6).attr('text-anchor', 'middle').text(f1);
+    const tip = tipFor(el);
+    items.forEach((it, i) => {
+      const yy = i * rowH + rowH / 2;
+      if (it.head) {
+        svg.append('text').attr('class', 'ovt-strong').attr('x', 0).attr('y', yy + 4).attr('dy', '0.32em').text(it.head);
+        return;
+      }
+      const r = it.r;
+      const c = dash.colors[FRI_GROUPS.indexOf(r.group)];
+      svg.append('text').attr('x', lm - 8).attr('y', yy).attr('dy', '0.32em').attr('text-anchor', 'end').text(r.period);
+      svg.append('line').attr('x1', x(Math.max(0, r[lo]))).attr('x2', x(r[hi])).attr('y1', yy).attr('y2', yy).attr('stroke', c).attr('stroke-width', 2);
+      const dot = svg.append('circle').attr('cx', x(r[ms])).attr('cy', yy).attr('r', 5).attr('fill', c);
+      svg.append('text').attr('x', x(r[hi]) + 6).attr('y', yy).attr('dy', '0.32em').text(f1(r[ms]));
+      svg.append('rect').attr('x', 0).attr('y', yy - rowH / 2).attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+        .on('pointerenter', () => {
+          const s = el.clientWidth / W;
+          dot.attr('r', 7);
+          showTip(el, tip, x(r[ms]) * s, yy * s, r.group + ' · ' + r.period,
+            [[c, 'Index (0–100)', f1(r.fri) + ' (95% CI ' + f1(r.fri_lo) + '–' + f1(r.fri_hi) + ')'],
+             [null, 'Syndrome posts', f1(r.fri_syn) + '%'],
+             [null, 'Posts in the top 1% of the index', f1(r.top1_share) + '%'],
+             [null, 'Scored posts', fint(r.n)]]);
+        }).on('pointerleave', () => { dot.attr('r', 5); tip.hidden = true; });
+    });
+  });
+
+  dash.draw('friMarkerChart', (el) => {
+    if (pending(el, ['fri_markers'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const rows = rowsOf('fri_markers');
+    const cells = Array.from(new Set(rows.map((r) => r.group + ' | ' + r.period))).map((k) => {
+      const [group, period] = k.split(' | ');
+      return {group, period, parts: FRI_MARKERS.map(([m]) => (rows.find((r) => r.group === group && r.period === period && r.marker === m) || {fri_points: 0}).fri_points)};
+    }).sort((a, b) => friOrder(a) - friOrder(b));
+    const W = Math.max(280, el.clientWidth || 480);
+    const rowH = 22;
+    const H = cells.length * rowH + 22;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Fascist Rhetoric Index split into its seven markers');
+    const SHORT = {'Trump, personal accounts': 'Trump', 'White House, institutional': 'White House', 'Agencies (HQ and field)': 'Agencies', 'Officials and staff': 'Officials'};
+    const lab = (c) => (SHORT[c.group] || c.group) + ' · ' + c.period;
+    const lm = Math.min(W * 0.5, measure(svg, cells.map(lab)) + 10);
+    const x = d3.scaleLinear([0, d3.max(cells, (c) => d3.sum(c.parts)) * 1.12 || 1], [lm, W - 40]).nice();
+    const tip = tipFor(el);
+    cells.forEach((c, i) => {
+      const y0 = i * rowH;
+      svg.append('text').attr('x', lm - 8).attr('y', y0 + rowH / 2).attr('dy', '0.32em').attr('text-anchor', 'end').text(lab(c));
+      let acc = 0;
+      c.parts.forEach((v, j) => {
+        const x0 = x(acc);
+        acc += v;
+        svg.append('rect').attr('x', x0).attr('y', y0 + 4).attr('width', Math.max(0, x(acc) - x0)).attr('height', rowH - 8).attr('fill', dash.colors[j])
+          .on('pointerenter', () => {
+            const s = el.clientWidth / W;
+            showTip(el, tip, x(acc) * s, (y0 + rowH / 2) * s, lab(c), FRI_MARKERS.map(([, name], k) => [dash.colors[k], name, f1(c.parts[k]) + ' pts']));
+          }).on('pointerleave', () => { tip.hidden = true; });
+      });
+      svg.append('text').attr('x', x(acc) + 4).attr('y', y0 + rowH / 2).attr('dy', '0.32em').text(f1(acc));
+    });
+    const gx = svg.append('g').attr('transform', `translate(0,${H - 20})`).call(d3.axisBottom(x).ticks(4).tickSizeOuter(0));
+    cleanAxis(gx);
+    legendOf(el, FRI_MARKERS.map(([, name], j) => [name, dash.colors[j]]));
+  });
+
+  dash.draw('friPanelTable', (tb) => {
+    if (tablePending(tb, 'fri_panel')) return;
+    const ms = dash.params().friMeasure || 'fri';
+    fillTable(tb, rowsOf('fri_panel').filter((r) => r.measure === ms), [['spec'], ['contrast'], ['coef', d3.format('+.2f'), 'n'], ['se', f2, 'n'], ['p', fp, 'n'], ['biden_mean', f2, 'n']], (r) => r.key);
+  });
+
+  dash.draw('friT2Chart', (el) => {
+    if (pending(el, ['fri_t2'], true)) return;
+    el.replaceChildren();
+    el.classList.remove('dash-skeleton');
+    const ms = dash.params().friMeasure || 'fri';
+    const rows = rowsOf('fri_t2').filter((r) => r.measure === ms).sort((a, b) => a.diff - b.diff);
+    if (!rows.length) return;
+    const W = Math.max(280, el.clientWidth || 640);
+    const rowH = 26;
+    const H = rows.length * rowH + 30;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', 'Change under Trump II by account, ' + FRI_LABEL[ms]);
+    const lm = Math.min(W * 0.45, measure(svg, rows.map((r) => r.voice)) + 12);
+    const lo = Math.min(0, d3.min(rows, (r) => Math.min(r.diff - 1.96 * r.se, r.diff_topic_fe)));
+    const hi = Math.max(0, d3.max(rows, (r) => Math.max(r.diff + 1.96 * r.se, r.diff_topic_fe)));
+    const pad = (hi - lo) * 0.06 || 0.05;
+    const x = d3.scaleLinear([lo - pad, hi + pad], [lm, W - 46]).nice();
+    const xt = x.ticks(5);
+    svg.append('g').selectAll('line').data(xt).join('line').attr('x1', (d) => x(d)).attr('x2', (d) => x(d)).attr('y1', 0).attr('y2', H - 22)
+      .attr('stroke', (d) => d === 0 ? 'var(--cds-chart-reference)' : 'var(--cds-chart-grid)');
+    svg.append('g').selectAll('text').data(xt).join('text').attr('x', (d) => x(d)).attr('y', H - 6).attr('text-anchor', 'middle').text(d3.format('+.1f'));
+    const tip = tipFor(el);
+    rows.forEach((r, i) => {
+      const yy = i * rowH + rowH / 2;
+      const c = dash.colors[Math.max(0, FRI_GROUPS.indexOf(r.group))];
+      svg.append('text').attr('x', lm - 8).attr('y', yy).attr('dy', '0.32em').attr('text-anchor', 'end').text(r.voice);
+      svg.append('line').attr('x1', x(r.diff - 1.96 * r.se)).attr('x2', x(r.diff + 1.96 * r.se)).attr('y1', yy).attr('y2', yy).attr('stroke', c).attr('stroke-width', 2);
+      svg.append('circle').attr('cx', x(r.diff_topic_fe)).attr('cy', yy).attr('r', 4).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 1.5);
+      const dot = svg.append('circle').attr('cx', x(r.diff)).attr('cy', yy).attr('r', 5).attr('fill', c);
+      svg.append('text').attr('x', x(Math.max(r.diff + 1.96 * r.se, r.diff_topic_fe)) + 8).attr('y', yy).attr('dy', '0.32em').text(d3.format('+.1f')(r.diff));
+      svg.append('rect').attr('x', 0).attr('y', yy - rowH / 2).attr('width', W).attr('height', rowH).attr('fill', 'transparent')
+        .on('pointerenter', () => {
+          const s = el.clientWidth / W;
+          dot.attr('r', 7);
+          showTip(el, tip, x(r.diff) * s, yy * s, r.voice + ' · ' + r.group,
+            [[null, 'Before Jan 20, 2025', f2(r.mean_before) + ' (' + fint(r.n_before) + ' posts)'],
+             [c, 'Trump II', f2(r.mean_trump2) + ' (' + fint(r.n_trump2) + ' posts)'],
+             [null, 'Change', fs(r.diff) + ' (95% CI ' + fs(r.diff - 1.96 * r.se) + ' to ' + fs(r.diff + 1.96 * r.se) + ')'],
+             [null, 'Holding topic fixed', fs(r.diff_topic_fe)]]);
+        }).on('pointerleave', () => { dot.attr('r', 5); tip.hidden = true; });
+    });
+    legendOf(el, [['Filled: change in the account mean, 95% CI', 'var(--cds-chart-axis)'], ['Ring: change holding topic fixed', 'var(--cds-chart-muted)']]);
+  });
+
+  dash.draw('friExTable', (tb) => {
+    if (tablePending(tb, 'fri_exemplars')) return;
+    const pick = dash.params().friEx || 'Trump, personal accounts | Truth Social, President (2025-)';
+    const [g, per] = pick.split(' | ');
+    const rows = rowsOf('fri_exemplars').filter((r) => r.group === g && r.period === per).sort((a, b) => b.fri - a.fri);
+    tb.replaceChildren();
+    rows.forEach((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = String(r.key);
+      const d = document.createElement('td'); d.textContent = r.date;
+      const v = document.createElement('td'); v.textContent = r.voice;
+      const s = document.createElement('td'); s.className = 'n'; s.textContent = f1(r.fri);
+      const mk = document.createElement('td'); mk.textContent = r.top_markers;
+      const t = document.createElement('td'); t.className = 'q';
+      if (typeof r.url === 'string' && /^https:\/\//.test(r.url)) {
+        const a = document.createElement('a'); a.href = r.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = r.text;
+        t.append(a);
+      } else {
+        t.textContent = r.text;
+      }
+      tr.append(d, v, s, mk, t);
+      tb.append(tr);
+    });
+  });
+
+  dash.draw('friValTable', (tb) => {
+    if (tablePending(tb, 'fri_validation')) return;
+    fillTable(tb, rowsOf('fri_validation'), [['name'], ['n_present', fint, 'n'], ['base_rate', fpct, 'n'], ['r', f2, 'n'], ['auc_presence', f2, 'n'], ['avg_precision', f2, 'n']], (r) => r.marker);
+  });
+  dash.draw('friStrataTable', (tb) => {
+    if (tablePending(tb, 'fri_validation_strata')) return;
+    const pc = (v) => f1(100 * v) + '%';
+    fillTable(tb, rowsOf('fri_validation_strata'), [['stratum'], ['n', fint, 'n'], ['fri_teacher', f1, 'n'], ['fri_student', f1, 'n'], ['syn_teacher', pc, 'n'], ['syn_student', pc, 'n']], (r) => r.stratum);
+  });
+  dash.draw('friConvTable', (tb) => {
+    if (tablePending(tb, 'fri_convergent')) return;
+    fillTable(tb, rowsOf('fri_convergent'), [['sample'], ['score'], ['r_fri', f2, 'n'], ['r_syndrome', f2, 'n']], (r) => r.key);
+  });
+
+  // Tabs and controls: scripts outside drawings only listen and set state.
+  const tabs = document.querySelectorAll('.ovt-tabs [data-tab]');
+  const pages = document.querySelectorAll('.ovt-page');
+  const openTab = (id) => {
+    let found = false;
+    pages.forEach((pg) => { if (pg.id === id) found = true; });
+    if (!found) return;
+    pages.forEach((pg) => { pg.hidden = pg.id !== id; });
+    tabs.forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+    dash.setLink(id);
+  };
+  tabs.forEach((b) => b.addEventListener('click', () => openTab(b.dataset.tab)));
+  document.querySelectorAll('[data-goto]').forEach((b) => b.addEventListener('click', () => {
+    openTab(b.dataset.goto);
+    const top = document.getElementById('top');
+    if (top) top.scrollIntoView({block: 'start'});
+  }));
+  const ALIAS = {findings: 'overview', quotes: 'posts'};
+  const initial = ALIAS[location.hash.slice(1)] || location.hash.slice(1);
+  if (initial) {
+    const target = document.getElementById(initial);
+    if (target) {
+      const page = target.closest('.ovt-page');
+      if (page) openTab(page.id);
+      requestAnimationFrame(() => target.scrollIntoView());
+    }
+  }
+
+  const bindSelect = (sel, param) => sel.addEventListener('change', () => dash.setParams({[param]: sel.value}));
+  document.querySelectorAll('#sd-dim').forEach((s) => bindSelect(s, 'sdDim'));
+  document.querySelectorAll('#ex-dim').forEach((s) => bindSelect(s, 'exDim'));
+  document.querySelectorAll('#ex-int').forEach((s) => bindSelect(s, 'exInterval'));
+  document.querySelectorAll('#ex-avg').forEach((c) => c.addEventListener('change', () => dash.setParams({exAvg: c.checked})));
+  document.querySelectorAll('#q-voice').forEach((s) => bindSelect(s, 'qVoice'));
+  document.querySelectorAll('#q-dim').forEach((s) => bindSelect(s, 'qDim'));
+  document.querySelectorAll('#q-side').forEach((s) => bindSelect(s, 'qSide'));
+  document.querySelectorAll('#t2-dim').forEach((s) => bindSelect(s, 't2Dim'));
+  document.querySelectorAll('#t2-kind').forEach((s) => bindSelect(s, 't2Kind'));
+  document.querySelectorAll('#fri-measure').forEach((s) => bindSelect(s, 'friMeasure'));
+  document.querySelectorAll('#fri-ex').forEach((s) => bindSelect(s, 'friEx'));
+  const boxes = document.querySelectorAll('#ex-voices input[type=checkbox]');
+  boxes.forEach((cb) => cb.addEventListener('change', () => {
+    const chosen = [];
+    document.querySelectorAll('#ex-voices input[type=checkbox]').forEach((c) => { if (c.checked) chosen.push(c.value); });
+    dash.setParams({exVoices: chosen});
+  }));
+
+  dash.onData(() => {
+    const p = dash.params();
+    document.querySelectorAll('#sd-dim').forEach((s) => { s.value = p.sdDim || 'function'; });
+    document.querySelectorAll('#ex-dim').forEach((s) => { s.value = p.exDim || 'norms_index'; });
+    const iv = p.exInterval || 'monthly';
+    document.querySelectorAll('#ex-int').forEach((s) => { s.value = iv; });
+    document.querySelectorAll('#ex-avg').forEach((c) => { c.checked = p.exAvg !== false; c.disabled = iv === 'yearly'; });
+    document.querySelectorAll('.ovt-int-note, .ovt-int-chart').forEach((n) => { n.hidden = n.dataset.interval !== iv; });
+    document.querySelectorAll('#q-voice').forEach((s) => { s.value = p.qVoice || '@StateDept'; });
+    document.querySelectorAll('#q-dim').forEach((s) => { s.value = p.qDim || 'professionalism'; });
+    document.querySelectorAll('#q-side').forEach((s) => { s.value = p.qSide || 'low'; });
+    document.querySelectorAll('#t2-dim').forEach((s) => { s.value = p.t2Dim || 'norms_index'; });
+    document.querySelectorAll('#t2-kind').forEach((s) => { s.value = p.t2Kind || 'topic'; });
+    document.querySelectorAll('#fri-measure').forEach((s) => { s.value = p.friMeasure || 'fri'; });
+    document.querySelectorAll('#fri-ex').forEach((s) => { s.value = p.friEx || 'Trump, personal accounts | Truth Social, President (2025-)'; });
+    const chosen = Array.isArray(p.exVoices) ? p.exVoices : ['Trump, all personal accounts', '@StateDept', 'WhiteHouse.gov'];
+    document.querySelectorAll('#ex-voices input[type=checkbox]').forEach((c) => { c.checked = chosen.includes(c.value); });
+  });
+})();
+</script>
+</body>
+</html>
