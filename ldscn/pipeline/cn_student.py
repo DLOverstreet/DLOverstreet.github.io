@@ -11,9 +11,9 @@ SVD + dense features) times the target's mean coded value when present. Targets:
   Q2, Q3    item-level salience, the two items with enough coded passages
 
 Raw probabilities come from models trained on samples that over-represent positives, so each is
-calibrated by weighted logistic (Platt) regression on out-of-fold predictions for the round-1 probability sample,
-weighted by the inverse of each passage's inclusion probability. Round-2 passages (chosen on model
-scores) are used for training only. Features are cached so later label rounds retrain in minutes.
+calibrated by logistic regression on out-of-fold predictions: the slope from all labels, the intercept set so
+the round-1 probability sample, weighted by inverse inclusion probability, matches the teacher
+prevalence. Round-2 passages (chosen on model scores) enter training and the calibration slope only. Features are cached so later label rounds retrain in minutes.
 
 Usage: python3 -I cn_student.py <chunks.parquet> <labels_dir> <glove.gz> <out_dir> <cache_dir>
 """
@@ -135,11 +135,17 @@ def predict(m, rows=None):
 
 
 class Platt:
-    """Weighted logistic calibration on logit(raw): monotone and smooth, so it keeps the ordering that a
-    step-function isotonic fit would collapse when the probability sample holds few positives."""
+    """Logistic calibration on logit(raw). The slope is fit on all teacher labels (out-of-fold), where
+    positives are numerous; the intercept is then set so the design-weighted mean over the round-1
+    probability sample equals the design-weighted teacher prevalence (a prior-shift correction for the
+    oversampling of signal passages). This keeps the model's ranking instead of collapsing it."""
 
-    def fit(self, p, y, w):
-        self.m = LogisticRegression(C=100.0).fit(self._z(p), y, sample_weight=w)
+    def fit(self, p_all, y_all, p1, y1, w1):
+        from scipy.optimize import brentq
+        self.a = LogisticRegression(C=100.0).fit(self._z(p_all), y_all).coef_[0, 0]
+        target = np.average(y1, weights=w1)
+        f = lambda b: np.average(1 / (1 + np.exp(-(self.a * self._z(p1)[:, 0] + b))), weights=w1) - target
+        self.b = brentq(f, -30, 30)
         return self
 
     @staticmethod
@@ -148,23 +154,34 @@ class Platt:
         return np.log(p / (1 - p))[:, None]
 
     def predict(self, p):
-        return self.m.predict_proba(self._z(p))[:, 1]
+        return 1 / (1 + np.exp(-(self.a * self._z(p)[:, 0] + self.b)))
 
 
 strat = lab["any"] * 2 + lab[[c + "_any" for c in SUPP]].any(axis=1)
+# Direction among addressed passages: 1 if the passage's positive item scores outweigh its negative ones.
+lab["dir"] = np.where(lab.pos_sum > lab.neg_sum, 1.0, np.where(lab.neg_sum > lab.pos_sum, 0.0, np.nan))
+has_dir = lab["any"].eq(1).values & lab["dir"].notna().values
 oof = pd.DataFrame(index=lab.index, columns=TARGETS, dtype=float)
+oof_dir = np.zeros(len(lab))
 for tr, te in StratifiedKFold(5, shuffle=True, random_state=SEED).split(li, strat):
     for t in TARGETS:
         oof.loc[te, t] = predict(fit(li[tr], lab[t].values[tr]), li[te])
+    trd = tr[has_dir[tr]]
+    oof_dir[te] = predict(fit(li[trd], lab["dir"].values[trd].astype(int)), li[te])
 
 r1 = lab["round"].eq(1).values
 cal, rep = {}, []
 for t in TARGETS:
     y, p = lab[t].values, oof[t].values
-    cal[t] = Platt().fit(p[r1], y[r1], lab.w.values[r1])
+    cal[t] = Platt().fit(p, y, p[r1], y[r1], lab.w.values[r1])
     rep.append({"target": t, "positives": int(y.sum()), "auc": roc_auc_score(y, p), "avg_precision": average_precision_score(y, p),
-                "base_rate": y.mean(), "auc_round1": roc_auc_score(y[r1], p[r1]) if y[r1].sum() > 2 else np.nan,
+                "base_rate": y.mean(), "cal_slope": cal[t].a, "auc_round1": roc_auc_score(y[r1], p[r1]) if y[r1].sum() > 2 else np.nan,
                 "weighted_prevalence_round1": np.average(y[r1], weights=lab.w.values[r1])})
+yd = lab["dir"].values[has_dir].astype(int)
+rep.append({"target": "direction|addressed", "positives": int(yd.sum()), "auc": roc_auc_score(yd, oof_dir[has_dir]),
+            "avg_precision": average_precision_score(yd, oof_dir[has_dir]), "base_rate": yd.mean(),
+            "auc_round1": roc_auc_score(yd[r1[has_dir]], oof_dir[has_dir][r1[has_dir]]),
+            "weighted_prevalence_round1": np.average(yd[r1[has_dir]], weights=lab.w.values[has_dir & r1])})
 rep = pd.DataFrame(rep)
 print(rep.round(3).to_string(index=False))
 
@@ -174,6 +191,13 @@ for t in TARGETS:
     raw = predict(fit(li, lab[t].values))
     sc["raw_" + t] = raw.astype(np.float32)
     sc["p_" + t] = cal[t].predict(raw).astype(np.float32)
+# Stance = salience x direction: P(agree) = P(addressed) * P(agree | addressed). The direct agree/disagree
+# hurdles are kept for comparison; the decomposition is used because the direct agree model ranks poorly
+# within the probability sample (positives are rare and varied) while salience and direction are each well learned.
+sc["p_dir"] = predict(fit(li[has_dir], lab["dir"].values[has_dir].astype(int))).astype(np.float32)
+sc["p_agree_direct"], sc["p_disagree_direct"] = sc.p_agree, sc.p_disagree
+sc["p_agree"] = (sc.p_any * sc.p_dir).astype(np.float32)
+sc["p_disagree"] = (sc.p_any * (1 - sc.p_dir)).astype(np.float32)
 
 # Conditional means when present, from the teacher codes (pooled over rounds)
 cm = {"pos_sum": lab.loc[lab.agree == 1, "pos_sum"].mean(), "neg_sum": lab.loc[lab.disagree == 1, "neg_sum"].mean(),
@@ -194,12 +218,19 @@ sc.to_parquet(os.path.join(out, "cn_scores.parquet"), index=False)
 o = lab[["lid", "chunk_id", "round", "era", "w"] + ITEMS + SUPP + TARGETS].copy()
 for t in TARGETS:
     o["oof_" + t] = oof[t].values
+o["oof_dir"] = oof_dir
+for t in TARGETS:  # calibrated out-of-fold values, for model-assisted (difference) estimation downstream
+    o["s_" + t] = cal[t].predict(oof[t].values)
+o["s_agree"] = o.s_any * oof_dir
+o["s_disagree"] = o.s_any * (1 - oof_dir)
 o.to_csv(os.path.join(out, "cn_oof_predictions.csv"), index=False)
 rep.to_csv(os.path.join(out, "cn_validation.csv"), index=False)
 pd.Series(cm).to_csv(os.path.join(out, "cn_conditional_means.csv"), header=["value"])
 
 # Design-weighted teacher estimates vs calibrated student, by era (round-1 sample only)
 L1 = lab[r1].assign(**{"s_" + t: cal[t].predict(oof[t].values[r1]) for t in TARGETS})
+L1["s_agree"] = L1.s_any * oof_dir[r1]
+L1["s_disagree"] = L1.s_any * (1 - oof_dir[r1])
 rows = []
 for era, g in L1.groupby("era"):
     d = {"era": era, "n": len(g)}
@@ -210,4 +241,5 @@ for era, g in L1.groupby("era"):
 byera = pd.DataFrame(rows)
 byera.to_csv(os.path.join(out, "cn_validation_by_era.csv"), index=False)
 print(byera.round(3).to_string(index=False))
-print("population means:", sc[["p_" + t for t in TARGETS]].mean().round(4).to_dict())
+print("population means:", sc[["p_" + t for t in TARGETS] + ["p_agree_direct", "p_disagree_direct", "p_dir"]].mean().round(4).to_dict())
+print(sc.groupby("era")[["p_any", "p_agree", "p_disagree", "p_agree_direct", "p_disagree_direct"]].mean().round(4).to_string())

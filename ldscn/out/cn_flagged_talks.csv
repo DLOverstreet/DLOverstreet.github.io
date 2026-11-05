@@ -1,0 +1,303 @@
+talk_id,year,era,speaker,flagged,prri,category
+CR19701003-18-gordon_b_hinckley-a_sex_saturated_world,1970,CR 1880/1897/1970,Gordon B. Hinckley,1,3.1692924,Sympathizer
+CR19701003-21-sterling_w_sill-the_citadel_of_liberty,1970,CR 1880/1897/1970,Sterling W. Sill,3,3.2071598,Sympathizer
+CR19701003-22-franklin_d_richards-success_of_the_inner_man,1970,CR 1880/1897/1970,Franklin D. Richards,1,3.219916,Sympathizer
+CRgc-1880-apr-15,1880,CR 1880/1897/1970,Eldee Erastus Snow.,4,1.7666236,Skeptic
+CRgc-1880-apr-29,1880,CR 1880/1897/1970,Albert Carrington.,1,3.1778235,Sympathizer
+CRgc-1897-oct-12,1897,CR 1880/1897/1970,Prest. George Q. Cannon.,1,3.167701,Sympathizer
+CRgc-1970-oct-33,1970,CR 1880/1897/1970,,1,3.145389,Sympathizer
+GC1971-04-010,1971,1971-89,Mark E. Petersen,1,3.214539,Sympathizer
+GC1971-04-011,1971,1971-89,Joseph Fielding Smith,1,1.925549,Skeptic
+GC1972-04-011,1972,1971-89,Ezra Taft Benson,1,3.0238526,Sympathizer
+GC1972-04-032,1972,1971-89,Harold B. Lee,1,2.6252582,Sympathizer
+GC1973-04-010,1973,1971-89,N. Eldon Tanner,1,2.9447923,Sympathizer
+GC1974-04-000,1974,1971-89,Spencer W. Kimball,1,1.763908,Skeptic
+GC1974-10-026,1974,1971-89,Marion G. Romney,1,3.1081173,Sympathizer
+GC1975-10-001,1975,1971-89,Vaughn J. Featherstone,3,3.1982605,Sympathizer
+GC1975-10-012,1975,1971-89,Marion G. Romney,2,3.2088814,Sympathizer
+GC1975-10-015,1975,1971-89,John H. Vandenberg,1,3.2038176,Sympathizer
+GC1975-10-019,1975,1971-89,Paul H. Dunn,1,3.2085977,Sympathizer
+GC1975-10-031,1975,1971-89,N. Eldon Tanner,3,2.2234886,Skeptic
+GC1975-10-032,1975,1971-89,L. Tom Perry,1,2.6210194,Sympathizer
+GC1976-04-018,1976,1971-89,N. Eldon Tanner,2,2.911295,Sympathizer
+GC1976-04-035,1976,1971-89,Ezra Taft Benson,3,3.2101872,Sympathizer
+GC1976-10-009,1976,1971-89,Joseph B. Wirthlin,1,3.194371,Sympathizer
+GC1976-10-012,1976,1971-89,Ezra Taft Benson,2,3.2109628,Sympathizer
+GC1976-10-014,1976,1971-89,L. Tom Perry,1,3.1909237,Sympathizer
+GC1976-10-018,1976,1971-89,Mark E. Petersen,3,3.2080467,Sympathizer
+GC1977-10-000,1977,1971-89,Spencer W. Kimball,2,2.8589506,Sympathizer
+GC1978-04-011,1978,1971-89,Ezra Taft Benson,1,3.1769042,Sympathizer
+GC1979-10-001,1979,1971-89,Gordon B. Hinckley,2,3.1930656,Sympathizer
+GC1979-10-003,1979,1971-89,Mark E. Petersen,1,2.8845878,Sympathizer
+GC1979-10-010,1979,1971-89,Ezra Taft Benson,4,3.2075531,Sympathizer
+GC1980-04-002,1980,1971-89,David B. Haight,1,2.835088,Sympathizer
+GC1981-10-001,1981,1971-89,Neal A. Maxwell,1,3.1410596,Sympathizer
+GC1984-10-023,1984,1971-89,David B. Haight,1,1.9581909,Skeptic
+GC1987-10-000,1987,1971-89,Ezra Taft Benson,4,3.1820762,Sympathizer
+GC1987-10-003,1987,1971-89,David B. Haight,1,3.200992,Sympathizer
+GC1988-10-029,1988,1971-89,Ezra Taft Benson,2,3.2052307,Sympathizer
+GC1989-10-017,1989,1971-89,Gordon B. Hinckley,1,2.9601426,Sympathizer
+GC1991-10-006,1991,1990-2009,Howard W. Hunter,1,2.8886497,Sympathizer
+GC1993-10-035,1993,1990-2009,Russell M. Nelson,1,2.4786909,Skeptic
+GC1994-10-025,1994,1990-2009,Joseph B. Wirthlin,1,3.210872,Sympathizer
+GC1998-10-020,1998,1990-2009,Neal A. Maxwell,1,3.035128,Sympathizer
+GC1999-10-011,1999,1990-2009,David R. Stone,1,2.6040158,Sympathizer
+GC1999-10-019,1999,1990-2009,Gordon B. Hinckley,1,3.139019,Sympathizer
+GC2001-10-025,2001,1990-2009,Gordon B. Hinckley,1,3.2019207,Sympathizer
+GC2005-10-012,2005,1990-2009,M. Russell Ballard,1,3.2138278,Sympathizer
+GC2006-04-021,2006,1990-2009,Dallin H. Oaks,1,2.859487,Sympathizer
+GC2006-10-019,2006,1990-2009,James E. Faust,1,3.189647,Sympathizer
+GC2008-10-025,2008,1990-2009,Boyd K. Packer,1,1.8010218,Skeptic
+GC2010-10-008,2010,2010-26,Quentin L. Cook,2,2.8217607,Sympathizer
+GC2013-10-021,2013,2010-26,Dallin H. Oaks,2,2.741243,Sympathizer
+GC2013-10-026,2013,2010-26,Quentin L. Cook,1,2.7890182,Sympathizer
+GC2013-10-032,2013,2010-26,Russell M. Nelson,1,2.9733248,Sympathizer
+GC2014-10-007,2014,2010-26,Dallin H. Oaks,2,1.7886059,Skeptic
+GC2015-04-029,2015,2010-26,Robert D. Hales,1,1.7725841,Skeptic
+GC2017-04-007,2017,2010-26,Dale G. Renlund,1,1.77293,Skeptic
+GC2017-10-006,2017,2010-26,Dallin H. Oaks,1,3.1889913,Sympathizer
+GC2020-10-006,2020,2010-26,Dallin H. Oaks,2,1.7808536,Skeptic
+GC2021-04-028,2021,2010-26,Dallin H. Oaks,3,2.0334244,Skeptic
+GC2022-04-027,2022,2010-26,Dallin H. Oaks,2,3.166811,Sympathizer
+GC2025-10-006,2025,2010-26,Ronald A. Rasband,1,3.2169275,Sympathizer
+JD01-053,1852,1850-69,Orson Pratt,1,1.8571724,Skeptic
+JD01-079,1852,1850-69,George A. Smith,1,2.1830509,Skeptic
+JD01-137,1853,1850-69,Parley P. Pratt,1,2.4002702,Skeptic
+JD01-172,1853,1850-69,Parley P. Pratt,1,2.3023443,Skeptic
+JD01-221,1853,1850-69,John Taylor,1,2.4246225,Skeptic
+JD02-010,1854,1850-69,Jedediah M. Grant,1,2.431426,Skeptic
+JD02-025,1854,1850-69,Daniel H. Wells,1,2.2664843,Skeptic
+JD02-075,1854,1850-69,Orson Hyde,1,1.799562,Skeptic
+JD02-145,1854,1850-69,Jedediah M. Grant,2,2.275789,Skeptic
+JD02-163,1843,1850-69,Joseph Smith,1,1.768807,Skeptic
+JD02-170,1855,1850-69,Brigham Young,7,2.1957724,Skeptic
+JD02-179,1855,1850-69,Brigham Young,2,2.9217584,Sympathizer
+JD02-191,1855,1850-69,Wilford Woodruff,1,2.8474083,Sympathizer
+JD02-202,1855,1850-69,Orson Hyde,2,2.4672751,Skeptic
+JD02-309,1855,1850-69,Brigham Young,3,2.6444228,Sympathizer
+JD02-373,1855,1850-69,George A. Smith,1,2.4069467,Skeptic
+JD03-038,1855,1850-69,Parley P. Pratt,2,2.6923943,Sympathizer
+JD03-070,1855,1850-69,Orson Pratt,2,3.0789065,Sympathizer
+JD03-080,1852,1850-69,Brigham Young,1,1.8296822,Skeptic
+JD03-254,1856,1850-69,Brigham Young,1,3.0175028,Sympathizer
+JD03-316,1856,1850-69,Brigham Young,1,2.9048998,Sympathizer
+JD04-033,1856,1850-69,Brigham Young,2,2.4551063,Skeptic
+JD04-341,1857,1850-69,Brigham Young,1,2.8589106,Sympathizer
+JD04-360,1857,1850-69,Heber C. Kimball,1,2.8699975,Sympathizer
+JD05-011,1857,1850-69,George A. Smith,1,2.5174468,Sympathizer
+JD05-145,1857,1850-69,John Taylor,4,2.1036105,Skeptic
+JD05-158,1857,1850-69,Heber C. Kimball,1,2.9052942,Sympathizer
+JD05-182,1857,1850-69,John Taylor,5,2.1215608,Skeptic
+JD05-206,1857,1850-69,Brigham Young,1,2.7133942,Sympathizer
+JD05-213,1857,1850-69,Heber C. Kimball,1,2.6312978,Sympathizer
+JD05-317,1857,1850-69,Amasa M. Lyman,1,3.207638,Sympathizer
+JD05-344,1857,1850-69,Amasa M. Lyman,1,2.906575,Sympathizer
+JD06-001,1844,1850-69,Joseph Smith,1,1.8756647,Skeptic
+JD06-018,1857,1850-69,John Taylor,5,2.0169601,Skeptic
+JD06-047,1857,1850-69,Orson Hyde,2,2.884797,Sympathizer
+JD06-084,1857,1850-69,George A. Smith,1,2.2861133,Skeptic
+JD06-122,1857,1850-69,Heber C. Kimball,1,3.128888,Sympathizer
+JD06-130,1857,1850-69,Heber C. Kimball,1,1.8695104,Skeptic
+JD06-193,1858,1850-69,Brigham Young,1,2.4371133,Skeptic
+JD06-235,1857,1850-69,Lorenzo D. Young,1,2.993734,Sympathizer
+JD06-342,1859,1850-69,Brigham Young,1,3.0882812,Sympathizer
+JD06-349,1859,1850-69,Orson Pratt,7,1.7682906,Skeptic
+JD06-364,1854,1850-69,George A. Smith,1,2.992197,Sympathizer
+JD07-009,1854,1850-69,Brigham Young,3,3.1449015,Sympathizer
+JD07-071,1855,1850-69,George A. Smith,1,2.8095713,Sympathizer
+JD07-098,1858,1850-69,Wilford Woodruff,2,2.6765041,Sympathizer
+JD07-107,1853,1850-69,Orson Hyde,2,2.1571,Skeptic
+JD07-118,1858,1850-69,John Taylor,3,2.2416208,Skeptic
+JD07-139,1859,1850-69,Brigham Young,1,1.8692904,Skeptic
+JD07-167,1859,1850-69,Heber C. Kimball,1,2.8404768,Sympathizer
+JD07-176,1859,1850-69,Orson Pratt,2,2.6631954,Sympathizer
+JD07-210,1859,1850-69,Orson Pratt,6,2.0790157,Skeptic
+JD07-291,1859,1850-69,Daniel H. Wells,1,2.5549989,Sympathizer
+JD08-006,1860,1850-69,Brigham Young,1,2.6374702,Sympathizer
+JD08-011,1860,1850-69,Brigham Young,1,3.027308,Sympathizer
+JD08-044,1860,1850-69,Orson Pratt,1,3.0871968,Sympathizer
+JD08-095,1860,1850-69,John Taylor,1,2.681941,Sympathizer
+JD08-111,1860,1850-69,Orson Pratt,4,1.8327885,Skeptic
+JD08-364,1861,1850-69,Brigham Young,1,3.1558063,Sympathizer
+JD09-001,1861,1850-69,Brigham Young,2,2.365639,Skeptic
+JD09-008,1861,1850-69,John Taylor,1,3.0344684,Sympathizer
+JD09-015,1861,1850-69,George A. Smith,1,2.8312957,Sympathizer
+JD09-094,1860,1850-69,Daniel H. Wells,1,2.8996677,Sympathizer
+JD09-109,1861,1850-69,George A. Smith,3,2.158562,Skeptic
+JD09-262,1862,1850-69,George A. Smith,2,1.8745707,Skeptic
+JD09-266,1862,1850-69,Brigham Young,1,2.7814813,Sympathizer
+JD09-318,1862,1850-69,Brigham Young,2,1.8980061,Skeptic
+JD09-364,1862,1850-69,Brigham Young,2,3.1525521,Sympathizer
+JD10-007,1862,1850-69,Daniel H. Wells,1,3.019849,Sympathizer
+JD10-032,1862,1850-69,Brigham Young,1,2.5543375,Sympathizer
+JD10-038,1862,1850-69,Brigham Young,3,2.2994297,Skeptic
+JD10-104,1863,1850-69,Brigham Young,2,2.0405858,Skeptic
+JD10-113,1863,1850-69,John Taylor,1,3.2036688,Sympathizer
+JD10-155,1863,1850-69,Orson Hyde,1,3.1523335,Sympathizer
+JD10-187,1863,1850-69,Brigham Young,1,3.1877844,Sympathizer
+JD10-195,1863,1850-69,Daniel H. Wells,1,3.152939,Sympathizer
+JD10-229,1863,1850-69,Brigham Young,1,2.9644585,Sympathizer
+JD10-248,1863,1850-69,Brigham Young,1,2.0070767,Skeptic
+JD10-257,1863,1850-69,John Taylor,1,2.0023255,Skeptic
+JD10-274,1863,1850-69,John Taylor,3,2.4309838,Skeptic
+JD10-289,1864,1850-69,Brigham Young,1,3.1492538,Sympathizer
+JD10-299,1864,1850-69,Brigham Young,2,2.4660945,Skeptic
+JD10-318,1864,1850-69,Brigham Young,1,2.7473843,Sympathizer
+JD10-328,1864,1850-69,Brigham Young,1,3.1504126,Sympathizer
+JD11-020,1864,1850-69,John Taylor,2,2.978731,Sympathizer
+JD11-051,1865,1850-69,John Taylor,5,2.3062713,Skeptic
+JD11-060,1865,1850-69,Wilford Woodruff,1,3.1736863,Sympathizer
+JD11-087,1865,1850-69,John Taylor,4,2.1751633,Skeptic
+JD11-101,1865,1850-69,Brigham Young,1,3.1492212,Sympathizer
+JD11-119,1865,1850-69,Brigham Young,1,1.9202865,Skeptic
+JD11-147,1865,1850-69,Orson Hyde,1,3.162044,Sympathizer
+JD11-176,1865,1850-69,George A. Smith,2,1.9308982,Skeptic
+JD11-198,1866,1850-69,Amasa M. Lyman,3,1.9778405,Skeptic
+JD11-216,1866,1850-69,John Taylor,9,2.0589874,Skeptic
+JD11-233,1866,1850-69,Brigham Young,1,1.8053023,Skeptic
+JD11-249,1866,1850-69,Brigham Young,1,2.743746,Sympathizer
+JD11-266,1866,1850-69,Brigham Young,1,1.7579936,Skeptic
+JD11-273,1866,1850-69,Brigham Young,1,2.7181885,Sympathizer
+JD11-339,1867,1850-69,John Taylor,1,1.8057163,Skeptic
+JD11-353,1867,1850-69,John Taylor,1,2.8174458,Sympathizer
+JD12-027,1867,1850-69,Brigham Young,1,3.0589776,Sympathizer
+JD12-079,1867,1850-69,John Taylor,1,1.8113803,Skeptic
+JD12-117,1867,1850-69,Brigham Young,1,2.4393034,Skeptic
+JD12-138,1867,1850-69,George A. Smith,1,3.0429544,Sympathizer
+JD12-263,1868,1850-69,George A. Smith,1,2.2094445,Skeptic
+JD12-269,1868,1850-69,Brigham Young,1,1.7903332,Skeptic
+JD12-289,1868,1850-69,George Q. Cannon,1,1.7770807,Skeptic
+JD12-326,1868,1850-69,Joseph F. Smith,1,2.4813166,Skeptic
+JD12-338,1868,1850-69,Orson Pratt,1,3.207468,Sympathizer
+JD12-346,1869,1850-69,Joseph F. Smith,1,1.9913049,Skeptic
+JD13-037,1869,1850-69,George A. Smith,1,1.7665309,Skeptic
+JD13-056,1869,1850-69,Brigham Young,1,2.6042159,Sympathizer
+JD13-103,1868,1850-69,George A. Smith,1,2.092861,Skeptic
+JD13-124,1870,1870-86,Orson Pratt,2,3.0334563,Sympathizer
+JD13-139,1869,1850-69,Brigham Young,1,2.5908365,Sympathizer
+JD13-183,1869,1850-69,Orson Pratt,4,2.1667366,Skeptic
+JD13-197,1869,1850-69,George Q. Cannon,2,1.8937385,Skeptic
+JD13-209,1870,1870-86,Brigham Young,1,3.0787654,Sympathizer
+JD13-284,1870,1870-86,Lorenzo Snow,1,2.7220893,Sympathizer
+JD13-292,1870,1870-86,George A. Smith,1,2.4441655,Skeptic
+JD14-007,1871,1870-86,Orson Pratt,1,3.0256095,Sympathizer
+JD14-045,1869,1850-69,George Q. Cannon,1,3.198739,Sympathizer
+JD14-098,1869,1850-69,Brigham Young,1,2.7499363,Sympathizer
+JD14-114,1871,1870-86,Brigham Young,1,1.8241249,Skeptic
+JD14-250,1871,1870-86,John Taylor,1,1.7664157,Skeptic
+JD14-266,1871,1870-86,John Taylor,1,2.5608172,Sympathizer
+JD14-300,1872,1870-86,Lorenzo Snow,1,3.152225,Sympathizer
+JD14-323,1872,1870-86,Orson Pratt,1,2.5277128,Sympathizer
+JD15-067,1872,1870-86,Orson Pratt,1,3.119256,Sympathizer
+JD15-077,1872,1870-86,Wilford Woodruff,1,3.1894352,Sympathizer
+JD15-158,1872,1870-86,Brigham Young,1,3.1020446,Sympathizer
+JD15-366,1873,1870-86,George Q. Cannon,1,2.6372976,Sympathizer
+JD16-171,1873,1870-86,Orson Pratt,5,1.8303328,Skeptic
+JD16-228,1873,1870-86,Orson Hyde,1,2.6787505,Sympathizer
+JD17-001,1874,1870-86,John Taylor,2,2.7321072,Sympathizer
+JD17-047,1874,1870-86,John Taylor,1,2.388381,Skeptic
+JD17-120,1874,1870-86,George Q. Cannon,1,2.5375977,Sympathizer
+JD17-165,1874,1870-86,Albert Carrington,1,1.885669,Skeptic
+JD17-214,1874,1870-86,Orson Pratt,4,1.9957306,Skeptic
+JD18-002,1875,1870-86,George Q. Cannon,2,2.0413284,Skeptic
+JD18-041,1875,1870-86,Orson Pratt,2,1.7714951,Skeptic
+JD18-057,1875,1870-86,Orson Pratt,3,2.5228474,Sympathizer
+JD18-070,1875,1870-86,Brigham Young,1,2.8828971,Sympathizer
+JD18-082,1875,1870-86,George Q. Cannon,1,1.8452227,Skeptic
+JD18-335,1877,1870-86,Orson Pratt,2,2.452739,Skeptic
+JD19-322,1878,1870-86,Erastus Snow,1,2.5316136,Sympathizer
+JD19-330,1878,1870-86,Orson Pratt,1,2.0854688,Skeptic
+JD19-367,1878,1870-86,Daniel H. Wells,2,2.4649463,Skeptic
+JD20-001,1878,1870-86,George Q. Cannon,3,2.107999,Skeptic
+JD20-024,1878,1870-86,Joseph F. Smith,1,1.7747918,Skeptic
+JD20-032,1878,1870-86,George Q. Cannon,1,1.8070785,Skeptic
+JD20-097,1878,1870-86,Orson Hyde,1,1.8132117,Skeptic
+JD20-122,1879,1870-86,Charles W. Penrose,1,2.8964345,Sympathizer
+JD20-142,1879,1870-86,Orson Pratt,1,2.8162618,Sympathizer
+JD20-195,1879,1870-86,George Q. Cannon,4,2.363837,Skeptic
+JD20-252,1879,1870-86,John Taylor,1,3.1327064,Sympathizer
+JD20-309,1879,1870-86,Franklin D. Richards,5,1.7790692,Skeptic
+JD20-316,1879,1870-86,John Taylor,4,2.1328955,Skeptic
+JD20-321,1879,1870-86,Orson Pratt,7,1.8483124,Skeptic
+JD20-333,1879,1870-86,George Q. Cannon,3,2.523381,Sympathizer
+JD20-348,1879,1870-86,John Taylor,5,1.8767439,Skeptic
+JD21-001,1879,1870-86,John Taylor,1,3.054611,Sympathizer
+JD21-029,1879,1870-86,John Taylor,1,2.2315884,Skeptic
+JD21-061,1880,1870-86,John Taylor,2,1.786348,Skeptic
+JD21-296,1880,1870-86,Wilford Woodruff,1,3.1627734,Sympathizer
+JD21-331,1880,1870-86,Henry W. Naisbitt,1,1.9870868,Skeptic
+JD21-340,1881,1870-86,John Taylor,3,1.9239405,Skeptic
+JD21-351,1881,1870-86,Charles W. Penrose,1,2.801077,Sympathizer
+JD22-050,1880,1870-86,John Taylor,1,2.7386808,Sympathizer
+JD22-059,1881,1870-86,George G. Bywater,2,2.1617534,Skeptic
+JD22-144,1881,1870-86,Wilford Woodruff,1,1.8595747,Skeptic
+JD22-149,1881,1870-86,Erastus Snow,2,1.9382675,Skeptic
+JD22-169,1881,1870-86,Wilford Woodruff,3,2.4629204,Skeptic
+JD22-183,1881,1870-86,John Nicholson,1,1.9178945,Skeptic
+JD22-226,1881,1870-86,John Taylor,2,2.226337,Skeptic
+JD22-290,1881,1870-86,John Taylor,1,1.9527307,Skeptic
+JD22-321,1881,1870-86,George Q. Cannon,1,2.1842294,Skeptic
+JD23-028,1882,1870-86,John Taylor,2,2.25301,Skeptic
+JD23-047,1882,1870-86,John Taylor,12,1.887918,Skeptic
+JD23-076,1882,1870-86,Wilford Woodruff,1,2.2500415,Skeptic
+JD23-083,1882,1870-86,Erastus Snow,7,2.0556388,Skeptic
+JD23-093,1881,1870-86,George Q. Cannon,1,3.1954784,Sympathizer
+JD23-106,1882,1870-86,Franklin D. Richards,3,1.9206761,Skeptic
+JD23-150,1882,1870-86,Lorenzo Snow,2,2.2403774,Skeptic
+JD23-196,1882,1870-86,Moses Thatcher,8,2.025257,Skeptic
+JD23-224,1882,1870-86,Erastus Snow,6,1.9882716,Skeptic
+JD23-235,1882,1870-86,John Taylor,3,2.0020647,Skeptic
+JD23-250,1882,1870-86,George G. Bywater,1,1.7732031,Skeptic
+JD23-257,1882,1870-86,John Taylor,7,1.8617523,Skeptic
+JD23-294,1882,1870-86,Erastus Snow,7,2.0300064,Skeptic
+JD24-001,1883,1870-86,John Taylor,2,1.9379094,Skeptic
+JD24-020,1879,1870-86,Orson Pratt,1,2.3498197,Skeptic
+JD24-032,1883,1870-86,John Taylor,1,2.995532,Sympathizer
+JD24-038,1882,1870-86,George Q. Cannon,8,1.785963,Skeptic
+JD24-056,1883,1870-86,George Q. Cannon,2,2.0512238,Skeptic
+JD24-064,1883,1870-86,Erastus Snow,2,1.8063748,Skeptic
+JD24-099,1882,1870-86,George Q. Cannon,3,1.8172841,Skeptic
+JD24-110,1883,1870-86,Moses Thatcher,4,2.2651117,Skeptic
+JD24-123,1883,1870-86,John Taylor,2,2.2681022,Skeptic
+JD24-150,1882,1870-86,Joseph F. Smith,2,1.9816425,Skeptic
+JD24-236,1883,1870-86,Wilford Woodruff,1,2.1518152,Skeptic
+JD24-251,1883,1870-86,George Q. Cannon,3,2.2484102,Skeptic
+JD24-302,1883,1870-86,Charles W. Penrose,1,1.9007647,Skeptic
+JD24-347,1883,1870-86,John Taylor,1,1.7577069,Skeptic
+JD24-357,1833,1850-69,George Q. Cannon,1,2.063075,Skeptic
+JD25-004,1884,1870-86,Wilford Woodruff,1,3.071076,Sympathizer
+JD25-084,1884,1870-86,John Taylor,1,2.0246563,Skeptic
+JD25-101,1884,1870-86,Erastus Snow,5,1.8600813,Skeptic
+JD25-113,1884,1870-86,Moses Thatcher,3,1.9785986,Skeptic
+JD25-130,1884,1870-86,Brigham H. Roberts,1,2.732514,Sympathizer
+JD25-202,1884,1870-86,John Q. Cannon,3,2.3282964,Skeptic
+JD25-218,1884,1870-86,Charles W. Penrose,7,2.0719388,Skeptic
+JD25-238,1884,1870-86,George Q. Cannon,3,2.387906,Skeptic
+JD25-252,1878,1870-86,George Q. Cannon,2,2.541491,Sympathizer
+JD25-268,1884,1870-86,George Q. Cannon,1,1.8704374,Skeptic
+JD25-303,1884,1870-86,John Taylor,1,1.7645799,Skeptic
+JD25-318,1884,1870-86,George Q. Cannon,2,2.3951616,Skeptic
+JD25-329,1882,1870-86,Charles W. Penrose,1,3.0152192,Sympathizer
+JD25-341,1884,1870-86,John Taylor,5,1.7710168,Skeptic
+JD26-003,1884,1870-86,George Q. Cannon,2,2.1845555,Skeptic
+JD26-030,1884,1870-86,John Taylor,1,1.9095687,Skeptic
+JD26-039,1884,1870-86,George Q. Cannon,1,2.9245934,Sympathizer
+JD26-048,1885,1870-86,George Teasdale,1,2.6164393,Sympathizer
+JD26-087,1882,1870-86,John Taylor,1,1.8893795,Skeptic
+JD26-098,1885,1870-86,Franklin D. Richards,1,1.7566773,Skeptic
+JD26-114,1885,1870-86,Henry W. Naisbitt,7,2.1809242,Skeptic
+JD26-136,1885,1870-86,George Q. Cannon,4,2.177083,Skeptic
+JD26-148,1885,1870-86,John Taylor,5,1.7946123,Skeptic
+JD26-164,1885,1870-86,Franklin D. Richards,2,2.2631898,Skeptic
+JD26-174,1885,1870-86,John H. Smith,1,1.8231063,Skeptic
+JD26-194,1885,1870-86,Orson F. Whitney,3,2.5948317,Sympathizer
+JD26-213,1885,1870-86,Erastus Snow,5,1.8027222,Skeptic
+JD26-228,1885,1870-86,Henry W. Naisbitt,1,2.6838272,Sympathizer
+JD26-253,1885,1870-86,Franklin D. Richards,1,1.7795749,Skeptic
+JD26-269,1885,1870-86,Junius F. Wells,1,2.0323844,Skeptic
+JD26-276,1885,1870-86,John H. Smith,1,1.7634789,Skeptic
+JD26-281,1884,1870-86,George Q. Cannon,2,2.3047318,Skeptic
+JD26-303,1885,1870-86,Moses Thatcher,2,2.1152937,Skeptic
+JD26-327,1885,1870-86,Moses Thatcher,4,2.6608086,Sympathizer
+JD26-346,1884,1870-86,John Taylor,3,1.8632938,Skeptic
+JD26-369,1886,1870-86,Lorenzo Snow,2,2.4211712,Skeptic
