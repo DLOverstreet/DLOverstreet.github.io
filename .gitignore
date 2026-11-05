@@ -1,1 +1,3 @@
 ldscn/data/*.parquet
+ldscn/labels/*_text.jsonl
+ldscn/out/*.parquet
