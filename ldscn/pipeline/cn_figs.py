@@ -46,35 +46,49 @@ note(fig, "Share of ~300-word passages that take a position on any of PRRI's fiv
 fig.tight_layout(rect=(0, 0.07, 1, 1))
 fig.savefig(os.path.join(figs, "fig1_agree_disagree_by_era.png"), dpi=200)
 
-# ---- Fig 2: flagged passages per 1,000 by five-year period ----
+# ---- Fig 2: flagged passages per 1,000 by five-year period, 19th century and modern era on separate scales ----
 per = pd.read_csv(os.path.join(out, "cn_by_period.csv"))
 per["x"] = per.period.str[:4].astype(int) + 2.5
 per.loc[per.period.isin(["1885", "2025"]), "x"] -= 1.5  # these periods cover only two years (1885-86, 2025-26)
 cr = per.period.str.contains("CR")
 per.loc[cr, "x"] = per.loc[cr, "period"].str[:4].astype(int) + 0.5
-reg = per[~cr]
-fig, ax = plt.subplots(figsize=(10, 4.8))
-ax.axvspan(1887, 1969, color="#f2f3f5", zorder=0)
-ax.text(1928, 41, "1887–1969: conference text not in corpus\n(except the Apr 1880, Oct 1897 and 1970 reports, shown as points)",
-        ha="center", va="top", fontsize=8.5, color=MUTED)
-for col, c, lab in (("flag_agree_per1000", BLUE, "Agrees"), ("flag_disagree_per1000", ORANGE, "Disagrees")):
-    for seg in (reg[reg.x < 1890], reg[reg.x > 1965]):
-        ax.plot(seg.x, seg[col], color=c, lw=2, marker="o", ms=5, zorder=3, label=lab if seg.x.min() < 1890 else None)
-    ax.scatter(per.loc[cr, "x"], per.loc[cr, col], color=c, marker="D", s=40, zorder=4, edgecolor=SURF, linewidth=1.5)
-ax.set_ylim(0, 92)
-ax.set_xlim(1848, 2030)
-ax.set_ylabel("Passages per 1,000")
-ax.set_title("Passages the model flags as taking a Christian nationalism position, by five-year period")
-ax.legend(frameon=False, loc="upper right")
-pk = reg.loc[reg.flag_disagree_per1000.idxmax()]
-ax.annotate("1885–86: the anti-polygamy “Raid”\nunder the Edmunds Act; sermons against\nCongress legislating Christian monogamy", (pk.x, pk.flag_disagree_per1000), (1893, 78),
-            fontsize=8, color=INK, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
-b = reg[reg.period == "1975"].iloc[0]
-ax.annotate("1975–79: Benson, Petersen and the\nBicentennial: “serve the God of the\nland, who is Jesus Christ”", (b.x, b.flag_agree_per1000), (1985, 33),
-            fontsize=8, color=INK, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
-note(fig, "Flagged = student salience score above the threshold that gives 60% out-of-fold precision (recall 60%); split by the predicted direction of the "
-          "passage. Counts after 1980 are small (1–10 passages per period), so year-to-year wiggles there are noise.")
-fig.tight_layout(rect=(0, 0.06, 1, 1))
+per["old"] = per.x < 1950
+SPANS = ((True, "1851–1897: Journal of Discourses + 1880, 1897 reports", (1849, 1900)),
+         (False, "1970–2026: General Conference", (1968, 2029)))
+
+
+def era_panel(ax, old, col, c, lab=None, scale=1, marker="o"):
+    d = per[per.old == old]
+    reg_, crd = d[~d.period.str.contains("CR")], d[d.period.str.contains("CR")]
+    ax.plot(reg_.x, scale * reg_[col], color=c, lw=2, marker=marker, ms=5 if marker else 0, zorder=3, label=lab)
+    ax.scatter(crd.x, scale * crd[col], color=c, marker="D", s=40, zorder=4, edgecolor=SURF, linewidth=1.5)
+
+
+fig, axs = plt.subplots(1, 2, figsize=(11, 4.8))
+for ax, (old, title, xl) in zip(axs, SPANS):
+    for col, c, lab in (("flag_agree_per1000", BLUE, "Agrees"), ("flag_disagree_per1000", ORANGE, "Disagrees")):
+        era_panel(ax, old, col, c, lab)
+    ax.set_xlim(*xl)
+    ax.set_ylim(0, None)
+    ax.set_title(title, fontsize=10)
+    ax.set_ylabel("Passages per 1,000")
+axs[0].set_ylim(0, 100)
+axs[1].set_ylim(0, 25)
+axs[0].legend(frameon=False, loc="upper left")
+pk = per.loc[per.flag_disagree_per1000.idxmax()]
+axs[0].annotate("1885–86: the anti-polygamy “Raid”\nunder the Edmunds Act; sermons\nagainst Congress legislating\nChristian monogamy",
+                (pk.x, pk.flag_disagree_per1000), (1852, 55), fontsize=8, color=INK, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+cr70 = per[per.period == "1970 CR"].iloc[0]
+axs[1].annotate("1970 Conference Reports\n(Sill, Richards and others)", (cr70.x, cr70.flag_agree_per1000), (1976, 21.5),
+                fontsize=8, color=INK, va="center", arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+bb = per[per.period == "1975"].iloc[0]
+axs[1].annotate("1975–79: Benson, Petersen and the\nBicentennial: “serve the God of the\nland, who is Jesus Christ”", (bb.x, bb.flag_agree_per1000), (1986, 15),
+                fontsize=8, color=INK, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8))
+fig.suptitle("Passages the model flags as taking a Christian nationalism position, by five-year period", x=0.01, ha="left", fontweight="bold", fontsize=12)
+note(fig, "The two panels have different vertical scales. Diamonds: single Conference Reports (Apr 1880, Oct 1897, 1970). Flagged = student salience score above "
+          "the threshold that gives 60% out-of-fold precision (recall 60%), split by predicted direction. 1887–1969 is not in the corpus. Counts after 1980 are "
+          "small (1–10 passages per period), so wiggles there are noise.")
+fig.tight_layout(rect=(0, 0.08, 1, 0.95))
 fig.savefig(os.path.join(figs, "fig2_flagged_by_period.png"), dpi=200)
 
 # ---- Fig 3: PRRI-equivalent stance among coded passages that address an item ----
@@ -98,20 +112,23 @@ note(fig, "Mean PRRI-equivalent score (1–4) of the item codes in teacher-coded
 fig.tight_layout(rect=(0, 0.05, 1, 1))
 fig.savefig(os.path.join(figs, "fig3_prri_stance_by_era.png"), dpi=200)
 
-# ---- Fig 4: supplemental codes, small multiples ----
-fig, axs = plt.subplots(2, 2, figsize=(10, 6), sharex=True)
-for ax, (c, col, title) in zip(axs.flat, (("THEO", BLUE, "Kingdom of God / Zion theocracy"), ("ANTI", ORANGE, "U.S. as Babylon or persecutor"),
-                                          ("AMER", GREEN, "American civil religion"), ("LIB", GOLD, "Religious liberty for all"))):
-    ax.axvspan(1887, 1969, color="#f2f3f5", zorder=0)
-    for seg in (reg[reg.x < 1890], reg[reg.x > 1965]):
-        ax.plot(seg.x, 100 * seg[c], color=col, lw=2, zorder=3)
-    ax.scatter(per.loc[cr, "x"], 100 * per.loc[cr, c], color=col, marker="D", s=28, zorder=4, edgecolor=SURF, linewidth=1.2)
-    ax.set_title(title, fontsize=10.5)
-    ax.set_ylim(0, None)
-    ax.set_ylabel("% of passages", fontsize=8.5)
+# ---- Fig 4: supplemental codes, small multiples; each era on its own scale ----
+fig, axs = plt.subplots(4, 2, figsize=(10, 10), sharex="col")
+THEMES = (("THEO", BLUE, "Kingdom of God / Zion theocracy"), ("ANTI", ORANGE, "U.S. as Babylon or persecutor"),
+          ("AMER", GREEN, "American civil religion"), ("LIB", GOLD, "Religious liberty for all"))
+for i, (c, col, title) in enumerate(THEMES):
+    for j, (old, span, xl) in enumerate(SPANS):
+        ax = axs[i, j]
+        era_panel(ax, old, c, col, scale=100, marker=None)
+        ax.set_xlim(*xl)
+        ax.set_ylim(0, None)
+        ax.set_title(f"{title}, {'1851–1897' if old else '1970–2026'}", fontsize=9.5)
+        if j == 0:
+            ax.set_ylabel("% of passages", fontsize=8.5)
 fig.suptitle("Related themes, by five-year period", x=0.01, ha="left", fontweight="bold", fontsize=12)
-note(fig, "Mean calibrated student probability that a passage carries each code (AUC 0.87–0.95 against the teacher codes). The calibration has a floor "
-          "of a few percent, so low values overstate rare themes. Grey band: 1887–1969 not in corpus; diamonds: 1880, 1897, 1970 Conference Reports.")
-fig.tight_layout(rect=(0, 0.06, 1, 0.96))
+note(fig, "Left and right columns have different vertical scales. Mean calibrated student probability that a passage carries each code (AUC 0.87–0.95 against "
+          "the teacher codes); the calibration has a floor of a few percent, so low values overstate rare themes. Diamonds: Apr 1880, Oct 1897 and 1970 "
+          "Conference Reports. 1887–1969 is not in the corpus.")
+fig.tight_layout(rect=(0, 0.05, 1, 0.97))
 fig.savefig(os.path.join(figs, "fig4_related_themes.png"), dpi=200)
 print("figures written to", figs)
