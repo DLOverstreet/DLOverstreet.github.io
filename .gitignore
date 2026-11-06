@@ -2,3 +2,7 @@ ldscn/data/*.parquet
 ldscn/labels/*_text.jsonl
 ldscn/out/*.parquet
 ldscn/out/cn_exemplars.jsonl
+ldsbreak/data/*.parquet
+ldsbreak/labels/*_text.jsonl
+ldsbreak/out/*.parquet
+ldsbreak/out/*exemplars*

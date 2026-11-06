@@ -1,0 +1,187 @@
+
+== DiD (treated x post) ==
+outcome                                                        D1     D2     D3     D4
+case     window         spec                                                          
+MINISTER 2006-26 window + speaker FE (within-speaker)       0.085  0.126  0.008  0.042
+                        p_rel >= 0.5 only                   0.059  0.016 -0.039  0.014
+                        topic+conference FE, p_rel weights  0.059  0.031  0.004  0.005
+                        unweighted                          0.054  0.051  0.031  0.011
+         full 1970-2026 + speaker FE (within-speaker)       0.082  0.054  0.020  0.022
+                        p_rel >= 0.5 only                   0.116  0.046  0.013  0.079
+                        topic+conference FE, p_rel weights  0.081  0.031  0.033  0.043
+                        unweighted                          0.048  0.027  0.040  0.025
+RACE     1971-89 window + speaker FE (within-speaker)      -0.099 -0.122  0.084 -0.183
+                        p_rel >= 0.5 only                  -0.033 -0.067  0.094 -0.248
+                        topic+conference FE, p_rel weights -0.027 -0.033  0.156 -0.142
+                        unweighted                         -0.029 -0.004  0.153  0.034
+         full 1970-2026 + speaker FE (within-speaker)      -0.063 -0.016  0.180 -0.102
+                        p_rel >= 0.5 only                  -0.057 -0.018  0.165 -0.242
+                        topic+conference FE, p_rel weights -0.041  0.015  0.219 -0.123
+                        unweighted                         -0.034  0.020  0.195  0.055
+
+== Race multi-break DiD (incremental step at each date) ==
+           beta                           p                     
+outcome      D1     D2     D3     D4     D1     D2     D3     D4
+step                                                            
+post1978 -0.021  0.001  0.180 -0.134  0.703  0.995  0.009  0.238
+post2014 -0.027  0.037  0.078  0.118  0.577  0.527  0.257  0.142
+post2020 -0.066  0.017  0.084 -0.142  0.312  0.825  0.299  0.138
+
+== Ministering pre-period (2004-14) event-study coefficients vs 2015-17 (mean, max |t|) ==
+         mean_beta  max_abs_t
+outcome                      
+D1           0.054      3.174
+D2           0.162      2.624
+D3           0.054      3.178
+D4           0.072      2.160
+
+== Break-date scan: year with the largest |t| for the treated-minus-control step ==
+    case  tau outcome   beta    se      t
+MINISTER 2018      D1  0.066 0.029  2.270
+MINISTER 2022      D2  0.078 0.054  1.444
+MINISTER 1998      D3  0.042 0.030  1.414
+MINISTER 2022      D4  0.104 0.070  1.481
+    RACE 2003      D1 -0.098 0.034 -2.872
+    RACE 2021      D2  0.110 0.065  1.689
+    RACE 1978      D3  0.208 0.065  3.183
+    RACE 1977      D4 -0.183 0.114 -1.600
+RACE 1978 [{'outcome': 'D1', 'beta': -0.05, 't': -0.925}, {'outcome': 'D2', 'beta': 0.005, 't': 0.061}, {'outcome': 'D3', 'beta': 0.208, 't': 3.183}, {'outcome': 'D4', 'beta': -0.134, 't': -1.191}]
+RACE 2014 [{'outcome': 'D1', 'beta': -0.067, 't': -1.705}, {'outcome': 'D2', 'beta': 0.046, 't': 0.957}, {'outcome': 'D3', 'beta': 0.147, 't': 2.813}, {'outcome': 'D4', 'beta': 0.021, 't': 0.348}]
+RACE 2020 [{'outcome': 'D1', 'beta': -0.089, 't': -1.848}, {'outcome': 'D2', 'beta': 0.05, 't': 0.858}, {'outcome': 'D3', 'beta': 0.171, 't': 2.891}, {'outcome': 'D4', 'beta': -0.052, 't': -0.774}]
+MINISTER 2018 [{'outcome': 'D1', 'beta': 0.066, 't': 2.27}, {'outcome': 'D2', 'beta': 0.025, 't': 0.565}, {'outcome': 'D3', 'beta': 0.013, 't': 0.403}, {'outcome': 'D4', 'beta': 0.0, 't': 0.007}]
+
+== Synthetic control (treated unit): mean post gap, RMSPE ratio and permutation p over 7 units ==
+    case outcome  mean_post_gap  rmspe_pre  ratio  perm_p                                                                                                                                                                      weights
+MINISTER      D1          0.127      0.079  2.186   0.286 {'TITHING': np.float64(0.084), 'WOW': np.float64(0.144), 'SABBATH': np.float64(0.0), 'PRAYER': np.float64(0.0), 'WELFARE': np.float64(0.073), 'CHASTITY': np.float64(0.699)}
+MINISTER      D2          0.011      0.109  1.228   1.000 {'TITHING': np.float64(0.12), 'WOW': np.float64(0.0), 'SABBATH': np.float64(0.37), 'PRAYER': np.float64(0.192), 'WELFARE': np.float64(0.139), 'CHASTITY': np.float64(0.179)}
+MINISTER      D3         -0.036      0.078  0.926   1.000 {'TITHING': np.float64(0.0), 'WOW': np.float64(0.192), 'SABBATH': np.float64(0.028), 'PRAYER': np.float64(0.533), 'WELFARE': np.float64(0.0), 'CHASTITY': np.float64(0.247)}
+MINISTER      D4          0.112      0.133  1.200   0.714 {'TITHING': np.float64(0.0), 'WOW': np.float64(0.269), 'SABBATH': np.float64(0.186), 'PRAYER': np.float64(0.169), 'WELFARE': np.float64(0.3), 'CHASTITY': np.float64(0.077)}
+    RACE      D1         -0.118      0.110  1.808   0.714   {'TITHING': np.float64(0.0), 'WOW': np.float64(0.409), 'SABBATH': np.float64(0.582), 'PRAYER': np.float64(0.0), 'WELFARE': np.float64(0.009), 'CHASTITY': np.float64(0.0)}
+    RACE      D2         -0.135      0.114  2.757   0.571    {'TITHING': np.float64(0.0), 'WOW': np.float64(0.122), 'SABBATH': np.float64(0.498), 'PRAYER': np.float64(0.38), 'WELFARE': np.float64(0.0), 'CHASTITY': np.float64(0.0)}
+    RACE      D3          0.196      0.117  2.475   0.714     {'TITHING': np.float64(0.0), 'WOW': np.float64(0.0), 'SABBATH': np.float64(0.0), 'PRAYER': np.float64(0.853), 'WELFARE': np.float64(0.147), 'CHASTITY': np.float64(0.0)}
+    RACE      D4         -0.182      0.194  1.774   0.714     {'TITHING': np.float64(0.0), 'WOW': np.float64(0.931), 'SABBATH': np.float64(0.0), 'PRAYER': np.float64(0.069), 'WELFARE': np.float64(0.0), 'CHASTITY': np.float64(0.0)}
+
+== Placebo-topic permutation: share of placebo |beta| >= treated |beta| ==
+MINISTER D1 treated beta 0.059 placebo betas [0.064, -0.001, 0.037, -0.018, 0.038, -0.117] perm p 0.429
+MINISTER D2 treated beta 0.031 placebo betas [0.154, 0.099, -0.012, -0.024, -0.057, -0.103] perm p 0.714
+MINISTER D3 treated beta 0.004 placebo betas [0.065, -0.013, 0.08, -0.06, -0.037, 0.034] perm p 1.0
+MINISTER D4 treated beta 0.005 placebo betas [0.288, -0.047, -0.081, 0.0, -0.09, -0.119] perm p 0.857
+RACE D1 treated beta -0.027 placebo betas [-0.01, -0.049, 0.126, 0.01, -0.022, -0.002] perm p 0.429
+RACE D2 treated beta -0.033 placebo betas [-0.054, -0.066, 0.113, -0.016, -0.077, 0.125] perm p 0.857
+RACE D3 treated beta 0.156 placebo betas [-0.032, 0.019, 0.008, -0.052, 0.019, 0.054] perm p 0.143
+RACE D4 treated beta -0.142 placebo betas [0.068, -0.11, 0.014, 0.061, -0.042, 0.014] perm p 0.143
+outcome              D1     D2     D3     D4
+case     placebo                            
+MINISTER 2009     0.010 -0.013 -0.028 -0.076
+         2010    -0.007 -0.042 -0.036 -0.014
+         2011    -0.064 -0.115 -0.081 -0.057
+         2012    -0.095 -0.150 -0.097  0.000
+         2013    -0.089 -0.152 -0.129  0.076
+         2014    -0.029 -0.138 -0.081 -0.018
+         2015    -0.055 -0.159 -0.047 -0.067
+         2016    -0.081 -0.208 -0.035 -0.102
+RACE     1973     0.177  0.177 -0.134  0.315
+         1974     0.110  0.107 -0.131  0.171
+         1975     0.042  0.066 -0.180 -0.024
+         1976     0.027  0.042 -0.237 -0.206
+         1977    -0.030 -0.018 -0.367 -0.605
+
+== Attention DiD (conference x topic panel; relevant passages per 1,000 conference passages) ==
+    case         window                            outcome  beta    se     p   n  n_treated  treated_pre  treated_post  control_pre  control_post
+    RACE 1971-89 window log(1+relevant passages per 1,000) 0.538 0.341 0.114 280         40        3.091         6.559       12.914        12.964
+    RACE full 1970-2026 log(1+relevant passages per 1,000) 0.939 0.278 0.001 798        114        3.091         9.654       12.914        12.447
+MINISTER 2006-26 window log(1+relevant passages per 1,000) 1.185 0.247 0.000 294         42       16.717        30.101       12.801         8.048
+MINISTER full 1970-2026 log(1+relevant passages per 1,000) 1.433 0.211 0.000 798        114       14.446        30.101       13.189         8.048
+
+== Race passages, teacher codes (GC census + JoD sample), relevant passages only ==
+       period  candidates  relevant    D1    D2    D3    D4  flag_L  flag_R  flag_V  flag_E  flag_A  flag_G  flag_S  flag_N  relevant_per_1000_passages
+  JoD 1851-86          70        47 -0.06 -0.31 -0.43 -0.06    0.34    0.09    0.00    0.15    0.00    0.00    0.45    0.19                         NaN
+1971-Apr 1978          31        12 -0.12  0.38  0.50  0.25    0.00    0.08    0.00    0.58    0.25    0.08    0.08    0.17                        3.15
+  Oct 1978-89          48        32 -0.09  0.50  0.64  0.06    0.03    0.03    0.19    0.66    0.06    0.22    0.03    0.00                        7.61
+    1990-2005         102        66 -0.03  0.58  0.64  0.13    0.05    0.00    0.14    0.62    0.18    0.14    0.00    0.02                       10.38
+      2006-13          38        19 -0.05  0.58  0.79  0.24    0.00    0.00    0.26    0.68    0.16    0.21    0.00    0.00                        5.95
+2014-Apr 2020          45        28  0.09  0.68  0.77  0.25    0.00    0.00    0.04    0.57    0.32    0.21    0.00    0.00                       12.03
+  Oct 2020-26          50        41  0.00  0.71  0.78  0.23    0.00    0.02    0.02    0.68    0.44    0.02    0.02    0.00                       20.48
+                 A                      D3                      n                  
+rank           AUX    FP    GA   Q12   AUX    FP    GA   Q12  AUX    FP    GA   Q12
+period                                                                             
+1971-Apr 1978  NaN  1.00  0.12  0.00   NaN  0.75  0.44  0.50  NaN   2.0   8.0   2.0
+Oct 1978-89    0.0  0.00  0.09  0.06  0.50  0.88  0.59  0.62  1.0   4.0  11.0  16.0
+1990-2005      0.0  0.25  0.11  0.23  0.75  0.75  0.67  0.54  6.0  16.0  18.0  26.0
+2006-13        0.0  0.75  0.00  0.00  0.50  1.00  0.90  0.67  1.0   4.0   5.0   9.0
+2014-Apr 2020  0.0  0.00  0.14  0.47  0.75  1.00  0.50  0.85  2.0   2.0   7.0  17.0
+Oct 2020-26    1.0  0.54  0.25  0.39  0.75  0.92  0.38  0.86  2.0  13.0   8.0  18.0
+
+== Race D3 within speaker, pre vs post June 1978 (teacher codes) ==
+                 mean      size      
+post                0    1    0     1
+speaker_n                            
+Ezra Taft Benson  0.5  0.5  1.0   1.0
+James E. Faust    0.5  0.8  2.0  10.0
+N. Eldon Tanner   1.0  1.0  1.0   1.0
+
+== Race teacher-code DiD, 1970-Jun 1978 vs Oct 1978-89 (race census vs design-weighted controls) ==
+outcome   beta  ci_lo  ci_hi  n_race_pre  n_race_post
+     D1  0.064 -0.224  0.332          12           32
+     D2 -0.170 -0.622  0.303          12           32
+     D3  0.119 -0.069  0.305          12           32
+     D4 -0.215 -0.695  0.261          12           32
+race teacher D3: best k by BIC=1 breaks=[]; single-break=[2004]; bootstrap single-break modes {1999: 0.16, 2017: 0.13, 2004: 0.13, 2006: 0.1}
+race teacher D2: best k by BIC=2 breaks=[2008]; single-break=[2008]; bootstrap single-break modes {2008: 0.13, 2021: 0.12, 1995: 0.07, 2004: 0.07}
+race teacher A: best k by BIC=2 breaks=[2014]; single-break=[2014]; bootstrap single-break modes {2014: 0.23, 2020: 0.22, 2015: 0.18, 2017: 0.14}
+race teacher E: best k by BIC=1 breaks=[]; single-break=[2023]; bootstrap single-break modes {2023: 0.18, 2021: 0.1, 1997: 0.08, 1981: 0.06}
+race teacher V: best k by BIC=1 breaks=[]; single-break=[2014]; bootstrap single-break modes {2014: 0.48, 2021: 0.13, 2008: 0.09, 1997: 0.08}
+
+== Ministering teacher-code DiD 2006-26 (design-weighted; flags rows give pre, post share in ci_lo, ci_hi) ==
+                                              outcome   beta  ci_lo  ci_hi   n
+                                                   D1  0.101 -0.122  0.335 156
+                                                   D2  0.117 -0.150  0.406 156
+                                                   D3  0.067 -0.008  0.158 156
+                                                   D4 -0.008 -0.315  0.300 156
+flag P share pre/post (relevant ministering passages) -0.055  0.100  0.045  32
+flag C share pre/post (relevant ministering passages)  0.073  0.700  0.773  32
+flag M share pre/post (relevant ministering passages)  0.818  0.000  0.818  32
+flag H share pre/post (relevant ministering passages) -0.718  0.900  0.182  32
+
+== DiD by speaker rank (full span) ==
+outcome           D1     D2     D3     D4
+case     rank                            
+MINISTER AUX  -0.053 -0.212 -0.031 -0.367
+         FP    0.102  0.078  0.014  0.030
+         GA    0.081  0.007  0.087 -0.000
+         Q12   0.100  0.071  0.002  0.063
+RACE     FP   -0.106 -0.032  0.308  0.068
+         GA    0.037  0.138  0.184 -0.129
+         Q12  -0.010  0.007  0.198 -0.086
+
+== Ministering within speaker (n=9 speakers on both sides): mean post-pre change ==
+{'D1': 0.23000000417232513, 'D2': 0.15299999713897705, 'D3': 0.14100000262260437, 'D4': 0.14900000393390656} share positive: {'D1': 1.0, 'D2': 0.78, 'D3': 0.67, 'D4': 0.78}
+
+== Lexical use by rank (share of talks using the term) ==
+rank                                   FP    Q12     GA    AUX    ALL
+term              window                                             
+old_ht_vt         2014-01..2017-12  0.138  0.022  0.073  0.042  0.065
+                  2018-03..2019-12  0.094  0.083  0.062  0.048  0.075
+                  2020-01..2022-12  0.000  0.000  0.061  0.000  0.019
+                  2023-01..2026-12  0.037  0.011  0.008  0.000  0.011
+mormon_name       2020-01..2022-12  0.000  0.028  0.000  0.031  0.014
+                  2023-01..2026-12  0.000  0.011  0.008  0.000  0.007
+                  2014-01..2018-06  0.119  0.126  0.114  0.094  0.116
+                  2018-09..2019-12  0.130  0.000  0.000  0.000  0.031
+racism            2023-01..2026-12  0.000  0.000  0.000  0.000  0.000
+                  2006-01..2013-12  0.000  0.000  0.000  0.000  0.000
+                  2014-01..2020-06  0.000  0.026  0.000  0.000  0.009
+                  2020-07..2022-12  0.125  0.033  0.000  0.000  0.034
+alike_unto_god    2006-01..2013-12  0.000  0.016  0.006  0.000  0.007
+                  2014-01..2020-06  0.010  0.020  0.000  0.014  0.011
+                  1971-01..1978-06  0.000  0.000  0.000    NaN  0.000
+                  1978-06..1989-12  0.000  0.004  0.008  0.000  0.004
+                  1990-01..2005-12  0.000  0.011  0.014  0.013  0.010
+                  2020-07..2026-12  0.085  0.047  0.011  0.000  0.031
+every_worthy_male 1971-01..1978-06  0.000  0.000  0.003    NaN  0.002
+                  1978-06..1989-12  0.007  0.008  0.004  0.000  0.006
+                  1990-01..2026-12  0.004  0.002  0.004  0.000  0.003
+old HT/VT vocabulary after Sept 2018: 13 talks; {'GA': 7, 'Q12': 3, 'FP': 2, 'AUX': 1}
+'Mormon' name usage after Oct 2018: 5 talks; {'Q12': 3, 'AUX': 1, 'GA': 1}
+first conference using 'racism' after June 2020, by rank: {'FP': '2020-10', 'Q12': '2020-10'}
+done
