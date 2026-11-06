@@ -6,3 +6,4 @@ ldsbreak/data/*.parquet
 ldsbreak/labels/*_text.jsonl
 ldsbreak/out/*.parquet
 ldsbreak/out/*exemplars*
+__pycache__/
